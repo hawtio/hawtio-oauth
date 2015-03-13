@@ -24,9 +24,9 @@ module Example {
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     KeycloakConfig = {
-      clientId: 'hawtio',
+      clientId: 'hawtio-client',
       url: 'http://localhost:8080/auth',
-      realm: 'MyRealm' 
+      realm: 'hawtio-demo' 
     }
     next();
   }, true);

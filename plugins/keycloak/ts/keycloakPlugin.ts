@@ -19,7 +19,15 @@ module HawtioKeycloak {
             redirectUri: window.location.href,
           });
         } else {
-          log.debug("Token: ", keycloak.token);
+          keycloak.loadUserProfile()
+            .success((profile) => {
+              log.debug("Auth Token: ", keycloak.token);
+              log.debug("Profile: ", profile);
+              next();
+            }).error(() => {
+              log.debug("Failed to load user profile");
+              next();
+            });
         }
       })
       .error(() => {

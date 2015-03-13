@@ -32,7 +32,14 @@ var HawtioKeycloak;
                 });
             }
             else {
-                HawtioKeycloak.log.debug("Token: ", keycloak.token);
+                keycloak.loadUserProfile().success(function (profile) {
+                    HawtioKeycloak.log.debug("Auth Token: ", keycloak.token);
+                    HawtioKeycloak.log.debug("Profile: ", profile);
+                    next();
+                }).error(function () {
+                    HawtioKeycloak.log.debug("Failed to load user profile");
+                    next();
+                });
             }
         }).error(function () {
             HawtioKeycloak.log.debug("Failed to initialize keycloak, token unavailable");
