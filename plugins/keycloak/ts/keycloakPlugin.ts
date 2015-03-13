@@ -2,7 +2,19 @@
 /// <reference path="keycloakHelpers.ts"/>
 module HawtioKeycloak {
   export var _module = angular.module(pluginName, []);
+  var userProfile:any = {};
   hawtioPluginLoader.addModule(pluginName);
+
+  _module.config(['$provide', ($provide) => {
+    $provide.decorator('userDetails', ['$delegate', ($delegate) => {
+      return _.merge($delegate, userProfile);
+    }]);
+  }]);
+
+  _module.run(['userDetails', (userDetails) => {
+    log.debug("loaded, userDetails: ", userDetails);
+  }]);
+
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     if (!window['KeycloakConfig']) {
@@ -21,8 +33,8 @@ module HawtioKeycloak {
         } else {
           keycloak.loadUserProfile()
             .success((profile) => {
-              log.debug("Auth Token: ", keycloak.token);
-              log.debug("Profile: ", profile);
+              userProfile = profile;
+              userProfile.token = keycloak.token;
               next();
             }).error(() => {
               log.debug("Failed to load user profile");
