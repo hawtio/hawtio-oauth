@@ -13,6 +13,21 @@ module OSOAuth {
     }));
   }
 
+  export function doLogout(config, userDetails) {
+    var currentURI = new URI(window.location.href);
+    var uri = new URI(config.oauth_authorize_uri);
+    uri.path('/osapi/v1beta1/oAuthAccessTokens' + userDetails.token);
+    authenticatedHttpRequest({
+      type: 'DELETE',
+      url: uri.toString()
+    }, userDetails).always(() => {
+      clearTokenStorage();
+      doLogin(OSOAuthConfig, {
+        uri: currentURI.toString()
+      });
+    });
+  }
+
   export function doLogin(config, options) {
     var clientId = config.oauth_client_id;
     var targetURI = config.oauth_authorize_uri;

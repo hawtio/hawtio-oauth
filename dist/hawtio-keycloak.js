@@ -77,6 +77,21 @@ var OSOAuth;
         }));
     }
     OSOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    function doLogout(config, userDetails) {
+        var currentURI = new URI(window.location.href);
+        var uri = new URI(config.oauth_authorize_uri);
+        uri.path('/osapi/v1beta1/oAuthAccessTokens' + userDetails.token);
+        authenticatedHttpRequest({
+            type: 'DELETE',
+            url: uri.toString()
+        }, userDetails).always(function () {
+            clearTokenStorage();
+            doLogin(OSOAuthConfig, {
+                uri: currentURI.toString()
+            });
+        });
+    }
+    OSOAuth.doLogout = doLogout;
     function doLogin(config, options) {
         var clientId = config.oauth_client_id;
         var targetURI = config.oauth_authorize_uri;
@@ -144,7 +159,11 @@ var OSOAuth;
     hawtioPluginLoader.addModule(OSOAuth.pluginName);
     OSOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            return _.merge($delegate, userProfile);
+            return _.merge($delegate, userProfile, {
+                logout: function () {
+                    OSOAuth.doLogout(OSOAuthConfig, userProfile);
+                }
+            });
         }]);
     }]);
     OSOAuth._module.config(['$httpProvider', function ($httpProvider) {

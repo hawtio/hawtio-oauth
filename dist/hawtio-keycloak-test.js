@@ -56,9 +56,11 @@ var Example;
 /// <reference path="examplePlugin.ts"/>
 var Example;
 (function (Example) {
-    Example.Page1Controller = Example._module.controller("Example.Page1Controller", ['$scope', function ($scope) {
+    Example.Page1Controller = Example._module.controller("Example.Page1Controller", ['$scope', 'userDetails', function ($scope, userDetails) {
+        $scope.userDetails = userDetails;
+        $scope.userDetailsStr = angular.toJson(userDetails, true);
         $scope.target = "World!";
     }]);
 })(Example || (Example = {}));
 
-angular.module("hawtio-keycloak-test-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("test-plugins/example/html/page1.html","<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page1Controller\">\n    <h1>Page 1</h1>\n    <p>Hello {{target}}</p>\n  </div>\n</div>\n");}]); hawtioPluginLoader.addModule("hawtio-keycloak-test-templates");
+angular.module("hawtio-keycloak-test-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("test-plugins/example/html/page1.html","<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page1Controller\">\n    <h1>User Details</h1>\n    <button class=\"btn btn-primary\" ng-click=\"userDetails.logout()\">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n");}]); hawtioPluginLoader.addModule("hawtio-keycloak-test-templates");

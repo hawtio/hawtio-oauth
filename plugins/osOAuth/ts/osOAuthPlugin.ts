@@ -7,7 +7,11 @@ module OSOAuth {
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
-      return _.merge($delegate, userProfile);
+      return _.merge($delegate, userProfile, {
+        logout: () => {
+          doLogout(OSOAuthConfig, userProfile);
+        }
+      });
     }]);
   }]);
 
