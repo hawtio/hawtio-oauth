@@ -7,14 +7,31 @@ module HawtioKeycloak {
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
-      return _.merge($delegate, userProfile);
+      if (userProfile) {
+        return _.merge($delegate, userProfile, {
+          logout: () => {
+            if (userProfile && keycloak) {
+              keycloak.logout();
+            }
+          }
+        });
+      } else {
+        return $delegate;
+      }
     }]);
+  }]);
+
+  _module.config(['$httpProvider', ($httpProvider) => {
+    if (userProfile) {
+      $httpProvider.defaults.headers.common = {
+        'Authorization': 'Bearer ' + userProfile.token
+      }
+    }
   }]);
 
   _module.run(['userDetails', (userDetails) => {
     // log.debug("loaded, userDetails: ", userDetails);
   }]);
-
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     if (!window['KeycloakConfig']) {

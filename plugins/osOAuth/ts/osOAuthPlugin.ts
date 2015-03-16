@@ -2,16 +2,21 @@
 
 module OSOAuth {
   export var _module = angular.module(pluginName, []);
-  var userProfile:any = {};
+  var userProfile:any = undefined
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
-      return _.merge($delegate, userProfile, {
-        logout: () => {
-          doLogout(OSOAuthConfig, userProfile);
-        }
-      });
+      if (userProfile) {
+        return _.merge($delegate, userProfile, {
+          username: userProfile.fullName,
+          logout: () => {
+            doLogout(OSOAuthConfig, userProfile);
+          }
+        });
+      } else {
+        return $delegate;
+      }
     }]);
   }]);
 
@@ -24,7 +29,7 @@ module OSOAuth {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    log.debug("loaded, userDetails: ", userDetails);
+    // log.debug("loaded, userDetails: ", userDetails);
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {

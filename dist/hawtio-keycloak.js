@@ -19,8 +19,26 @@ var HawtioKeycloak;
     hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
     HawtioKeycloak._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            return _.merge($delegate, userProfile);
+            if (userProfile) {
+                return _.merge($delegate, userProfile, {
+                    logout: function () {
+                        if (userProfile && HawtioKeycloak.keycloak) {
+                            HawtioKeycloak.keycloak.logout();
+                        }
+                    }
+                });
+            }
+            else {
+                return $delegate;
+            }
         }]);
+    }]);
+    HawtioKeycloak._module.config(['$httpProvider', function ($httpProvider) {
+        if (userProfile) {
+            $httpProvider.defaults.headers.common = {
+                'Authorization': 'Bearer ' + userProfile.token
+            };
+        }
     }]);
     HawtioKeycloak._module.run(['userDetails', function (userDetails) {
         // log.debug("loaded, userDetails: ", userDetails);
@@ -155,15 +173,21 @@ var OSOAuth;
 var OSOAuth;
 (function (OSOAuth) {
     OSOAuth._module = angular.module(OSOAuth.pluginName, []);
-    var userProfile = {};
+    var userProfile = undefined;
     hawtioPluginLoader.addModule(OSOAuth.pluginName);
     OSOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            return _.merge($delegate, userProfile, {
-                logout: function () {
-                    OSOAuth.doLogout(OSOAuthConfig, userProfile);
-                }
-            });
+            if (userProfile) {
+                return _.merge($delegate, userProfile, {
+                    username: userProfile.fullName,
+                    logout: function () {
+                        OSOAuth.doLogout(OSOAuthConfig, userProfile);
+                    }
+                });
+            }
+            else {
+                return $delegate;
+            }
         }]);
     }]);
     OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
@@ -174,7 +198,7 @@ var OSOAuth;
         }
     }]);
     OSOAuth._module.run(['userDetails', function (userDetails) {
-        OSOAuth.log.debug("loaded, userDetails: ", userDetails);
+        // log.debug("loaded, userDetails: ", userDetails);
     }]);
     hawtioPluginLoader.registerPreBootstrapTask(function (next) {
         if (!window['OSOAuthConfig']) {
