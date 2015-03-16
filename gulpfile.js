@@ -165,7 +165,7 @@ gulp.task('connect', ['watch'], function() {
   */
 
   hawtio.setConfig({
-    port: 2772,
+    port: 9000,
     staticProxies: [
     /*  
     // proxy to a service, in this case kubernetes

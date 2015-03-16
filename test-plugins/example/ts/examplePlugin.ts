@@ -22,12 +22,32 @@ module Example {
     log.debug("loaded");
   }]);
 
+  /*
+  // Standard Keycloak server
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     KeycloakConfig = {
       clientId: 'hawtio-client',
       url: 'http://localhost:8080/auth',
       realm: 'hawtio-demo' 
     }
+    next();
+  }, true);
+  */
+
+  // openshift
+  hawtioPluginLoader.registerPreBootstrapTask((next) => {
+    OSOAuthConfig = {
+      oauth_authorize_uri: "https://localhost:8443/oauth/authorize",
+      oauth_client_id: "openshift-web-console",
+      logout_uri: ""
+    };
+    /*
+    KeycloakConfig = {
+      clientId: 'openshift-web-console',
+      url: 'https://localhost:8443/oauth/authorize',
+      realm: 'hawtio-demo' 
+    }
+    */
     next();
   }, true);
 

@@ -12,7 +12,7 @@ module HawtioKeycloak {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    log.debug("loaded, userDetails: ", userDetails);
+    // log.debug("loaded, userDetails: ", userDetails);
   }]);
 
 
