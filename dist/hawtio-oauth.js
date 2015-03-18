@@ -15,7 +15,7 @@ var HawtioKeycloak;
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    var userProfile = {};
+    var userProfile = undefined;
     hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
     HawtioKeycloak._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
@@ -34,7 +34,7 @@ var HawtioKeycloak;
         }]);
     }]);
     HawtioKeycloak._module.config(['$httpProvider', function ($httpProvider) {
-        if (userProfile) {
+        if (userProfile && userProfile.token) {
             $httpProvider.defaults.headers.common = {
                 'Authorization': 'Bearer ' + userProfile.token
             };
@@ -191,7 +191,7 @@ var OSOAuth;
         }]);
     }]);
     OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (userProfile) {
+        if (userProfile && userProfile.token) {
             $httpProvider.defaults.headers.common = {
                 'Authorization': 'Bearer ' + userProfile.token
             };
@@ -215,7 +215,7 @@ var OSOAuth;
         var currentURI = new URI(window.location.href);
         var fragmentParams = OSOAuth.checkToken(currentURI);
         if (fragmentParams) {
-            userProfile = {
+            var tmp = {
                 token: fragmentParams.access_token,
                 expiry: fragmentParams.expires_in,
                 type: fragmentParams.token_type
@@ -225,8 +225,9 @@ var OSOAuth;
             OSOAuth.authenticatedHttpRequest({
                 type: 'GET',
                 url: uri.toString(),
-            }, userProfile).done(function (response) {
-                _.extend(userProfile, response);
+            }, tmp).done(function (response) {
+                userProfile = {};
+                _.extend(userProfile, tmp, response);
             }).fail(function () {
                 OSOAuth.clearTokenStorage();
                 OSOAuth.doLogin(OSOAuthConfig, {
@@ -235,7 +236,6 @@ var OSOAuth;
             }).always(function () {
                 next();
             });
-            OSOAuth.log.debug("Have token");
         }
         else {
             OSOAuth.clearTokenStorage();

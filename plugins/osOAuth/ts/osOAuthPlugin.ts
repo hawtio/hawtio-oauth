@@ -21,7 +21,7 @@ module OSOAuth {
   }]);
 
   _module.config(['$httpProvider', ($httpProvider) => {
-    if (userProfile) {
+    if (userProfile && userProfile.token) {
       $httpProvider.defaults.headers.common = {
         'Authorization': 'Bearer ' + userProfile.token
       }
@@ -50,7 +50,7 @@ module OSOAuth {
     var currentURI = new URI(window.location.href);
     var fragmentParams = checkToken(currentURI);
     if (fragmentParams) {
-      userProfile = {
+      var tmp = {
         token: fragmentParams.access_token,
         expiry: fragmentParams.expires_in,
         type: fragmentParams.token_type
@@ -60,8 +60,9 @@ module OSOAuth {
       authenticatedHttpRequest({
         type: 'GET',
         url: uri.toString(),
-      }, userProfile).done((response) => {
-        _.extend(userProfile, response);
+      }, tmp).done((response) => {
+        userProfile = {};
+        _.extend(userProfile, tmp, response);
       }).fail(() => {
         clearTokenStorage();
         doLogin(OSOAuthConfig, {
@@ -70,7 +71,6 @@ module OSOAuth {
       }).always(() => {
         next();
       });
-      log.debug("Have token");
     } else {
       clearTokenStorage();
       doLogin(OSOAuthConfig, {

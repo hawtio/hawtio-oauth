@@ -2,7 +2,7 @@
 /// <reference path="keycloakHelpers.ts"/>
 module HawtioKeycloak {
   export var _module = angular.module(pluginName, []);
-  var userProfile:any = {};
+  var userProfile:any = undefined;
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', ($provide) => {
@@ -22,7 +22,7 @@ module HawtioKeycloak {
   }]);
 
   _module.config(['$httpProvider', ($httpProvider) => {
-    if (userProfile) {
+    if (userProfile && userProfile.token) {
       $httpProvider.defaults.headers.common = {
         'Authorization': 'Bearer ' + userProfile.token
       }
