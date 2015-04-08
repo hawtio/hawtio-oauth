@@ -1,44 +1,49 @@
-## hawtio-oauth
+# hawtio-oauth
 
-This module contains a couple different oauth clients that can be configured by other plugins:
+This module contains a couple different OAuth clients that can be configured by other plugins:
 
 1. keycloak - a plugin that integrates with Keycloak
-1. osoauth - a plugin that integrates with the OAuth backend used in openshift origin
+1. osoauth - a plugin that integrates with the OAuth backend used in OpenShift origin
 
 In either case these plugins need to be configured at application bootstrap.
 
-* Keycloak
+## Keycloak
 
-Simple create a keycloak configuration at bootstrap.  You can also set KeycloakConfig to a string that is the URL to fetch a keycloak JSON configuration file:
+Simply create a KeycloakConfig at bootstrap:
 
-```
-  hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    KeycloakConfig = {
-      clientId: 'hawtio-client',
-      url: 'http://localhost:8080/auth',
-      realm: 'hawtio-demo' 
-    }
-    next();
-  }, true);
+    hawtioPluginLoader.registerPreBootstrapTask((next) => {
+      KeycloakConfig = {
+        clientId: 'hawtio-client',
+        url: 'http://localhost:8080/auth',
+        realm: 'hawtio-demo' 
+      };
+      next();
+    }, true);
 
-```
+You can also set ``KeycloakConfig`` to a string that is the URL to fetch a Keycloak JSON configuration file:
 
-* Openshift
+    hawtioPluginLoader.registerPreBootstrapTask((next) => {
+      KeycloakConfig = "/keycloak.json";
+      next();
+    }, true);
 
-Very similar to keycloak, except you initialize the OSOAuthConfig object with the location of the Openshift API:
+The ``KeycloakConfig`` accepts all the parameters that the official Keycloak JavaScript adapter supports.
 
-```
-  hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    OSOAuthConfig = {
-      oauth_authorize_uri: "https://localhost:8443/oauth/authorize",
-      oauth_client_id: "openshift-web-console",
-      logout_uri: ""
-    };
-    next();
-  }, true);
+## Openshift
 
-```
+Very similar to Keycloak, except you initialize the OSOAuthConfig object with the location of the OpenShift API:
 
-Note in either case we need to pass 'true' to hawtioPluginLoader.registerPreBootstrapTask so that it's added to the start of the bootstrap queue.
+    hawtioPluginLoader.registerPreBootstrapTask((next) => {
+      OSOAuthConfig = {
+        oauth_authorize_uri: "https://localhost:8443/oauth/authorize",
+        oauth_client_id: "openshift-web-console",
+        logout_uri: ""
+      };
+      next();
+    }, true);
 
-In general for oauth we want to establish the user's credentials at app bootstrap, as many services tend to need them to access backend services.
+Note in either case we need to pass 'true' to ``hawtioPluginLoader.registerPreBootstrapTask`` so that it's added to the 
+start of the bootstrap queue.
+
+In general for OAuth we want to establish the user's credentials at app bootstrap, as many services tend to need them
+ to access backend services.
