@@ -1,2 +1,7 @@
 node_modules/
 libs/
+*.js.map
+**/ts/*.js
+*.iml
+plugins/includes.js
+test-plugins/includes.js
