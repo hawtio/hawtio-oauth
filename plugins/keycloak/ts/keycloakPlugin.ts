@@ -5,7 +5,7 @@ module HawtioKeycloak {
   var userProfile:any = undefined;
   hawtioPluginLoader.addModule(pluginName);
 
-  _module.config(['$provide', ($provide) => {
+  _module.config(['$provide', '$httpProvider', ($provide, $httpProvider) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
       if (userProfile) {
         return _.merge($delegate, userProfile, {
@@ -19,18 +19,22 @@ module HawtioKeycloak {
         return $delegate;
       }
     }]);
+
+    $httpProvider.interceptors.push(AuthInterceptorService.Factory);
   }]);
 
-  _module.config(['$httpProvider', ($httpProvider) => {
-    if (userProfile && userProfile.token) {
-      $httpProvider.defaults.headers.common = {
-        'Authorization': 'Bearer ' + userProfile.token
-      }
-    }
-  }]);
-
-  _module.run(['userDetails', (userDetails) => {
+  _module.run(['userDetails', 'Idle', '$rootScope', (userDetails, Idle, $rootScope) => {
     // log.debug("loaded, userDetails: ", userDetails);
+
+    Idle.watch();
+
+    $rootScope.$on('IdleTimeout', function() {
+      userDetails.logout();
+    });
+
+    $rootScope.$on('Keepalive', function() {
+      HawtioKeycloak.keycloak.updateToken(30);
+    });
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
@@ -60,9 +64,45 @@ module HawtioKeycloak {
         }
       })
       .error(() => {
-        log.debug("Failed to initialize keycloak, token unavailable");
+        log.debug("Failed to initialize Keycloak, token unavailable");
         next();
       });
   });
 
+  class AuthInterceptorService {
+    public static $inject = ['$q'];
+
+    public static Factory($q:ng.IQService) {
+      return new AuthInterceptorService($q);
+    }
+
+    constructor(private $q:ng.IQService) {
+    }
+
+    request = (request) => {
+      var addBearer, deferred;
+      addBearer = () => {
+        return HawtioKeycloak.keycloak.updateToken(5).success(() => {
+          var token = HawtioKeycloak.keycloak.token;
+          request.headers.Authorization = 'Bearer ' + token;
+          deferred.notify();
+          return deferred.resolve(request);
+        }).error(() => {
+          console.log("Couldn't update token");
+        });
+      };
+      deferred = this.$q.defer();
+      addBearer();
+      return this.$q.when(deferred.promise);
+    };
+
+    responseError = (rejection) => {
+      if (rejection.status === 401) {
+        HawtioKeycloak.keycloak.logout();
+      }
+      return this.$q.reject(rejection);
+    };
+  }
+
+  _module.requires.push("ngIdle");
 }

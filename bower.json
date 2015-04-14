@@ -20,7 +20,8 @@
     "hawtio-core": "~2.0.0",
     "hawtio-core-navigation": "~2.0.0",
     "hawtio-utilities": "~2.0.0",
-    "keycloak": "~1.1.0"
+    "keycloak": "~1.1.0",
+    "ng-idle": "~1.0.4"
   },
   "devDependencies": {
     "bootstrap": "~3.3.1",
