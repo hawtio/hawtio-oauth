@@ -32,7 +32,11 @@ var HawtioKeycloak;
                 return $delegate;
             }
         }]);
-        $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+        // only add the itnerceptor if we have keycloak otherwise
+        // we'll get an undefined exception in the interceptor
+        if (HawtioKeycloak.keycloak) {
+            $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+        }
     }]);
     HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
         // log.debug("loaded, userDetails: ", userDetails);
@@ -81,10 +85,6 @@ var HawtioKeycloak;
                 var addBearer, deferred;
                 addBearer = function () {
                     var keycloak = HawtioKeycloak.keycloak;
-                    if (!keycloak) {
-                        console.log("No keycloak");
-                        return;
-                    }
                     return keycloak.updateToken(5).success(function () {
                         var token = HawtioKeycloak.keycloak.token;
                         request.headers.Authorization = 'Bearer ' + token;
