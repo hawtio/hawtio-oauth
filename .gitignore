@@ -5,3 +5,4 @@ libs/
 *.iml
 plugins/includes.js
 test-plugins/includes.js
+.idea

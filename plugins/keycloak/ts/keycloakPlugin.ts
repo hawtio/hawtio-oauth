@@ -82,7 +82,12 @@ module HawtioKeycloak {
     request = (request) => {
       var addBearer, deferred;
       addBearer = () => {
-        return HawtioKeycloak.keycloak.updateToken(5).success(() => {
+        var keycloak = HawtioKeycloak.keycloak;
+        if (!keycloak) {
+          console.log("No keycloak");
+          return;
+        }
+        return keycloak.updateToken(5).success(() => {
           var token = HawtioKeycloak.keycloak.token;
           request.headers.Authorization = 'Bearer ' + token;
           deferred.notify();

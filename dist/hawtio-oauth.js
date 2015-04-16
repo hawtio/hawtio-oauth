@@ -80,7 +80,12 @@ var HawtioKeycloak;
             this.request = function (request) {
                 var addBearer, deferred;
                 addBearer = function () {
-                    return HawtioKeycloak.keycloak.updateToken(5).success(function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    if (!keycloak) {
+                        console.log("No keycloak");
+                        return;
+                    }
+                    return keycloak.updateToken(5).success(function () {
                         var token = HawtioKeycloak.keycloak.token;
                         request.headers.Authorization = 'Bearer ' + token;
                         deferred.notify();
