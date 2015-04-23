@@ -22,7 +22,7 @@ module HawtioKeycloak {
 
     // only add the itnerceptor if we have keycloak otherwise
     // we'll get an undefined exception in the interceptor
-    if ( HawtioKeycloak.keycloak) {
+    if (HawtioKeycloak.keycloak) {
       $httpProvider.interceptors.push(AuthInterceptorService.Factory);
     }
   }]);
@@ -37,7 +37,10 @@ module HawtioKeycloak {
     });
 
     $rootScope.$on('Keepalive', function() {
-      HawtioKeycloak.keycloak.updateToken(30);
+      var keycloak = HawtioKeycloak.keycloak;
+      if (keycloak) {
+        keycloak.updateToken(30);
+      }
     });
   }]);
 
