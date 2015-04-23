@@ -45,7 +45,10 @@ var HawtioKeycloak;
             userDetails.logout();
         });
         $rootScope.$on('Keepalive', function () {
-            HawtioKeycloak.keycloak.updateToken(30);
+            var keycloak = HawtioKeycloak.keycloak;
+            if (keycloak) {
+                keycloak.updateToken(30);
+            }
         });
     }]);
     hawtioPluginLoader.registerPreBootstrapTask(function (next) {
