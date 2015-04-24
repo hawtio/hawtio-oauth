@@ -33,7 +33,8 @@ module HawtioKeycloak {
     Idle.watch();
 
     $rootScope.$on('IdleTimeout', function() {
-      userDetails.logout();
+      // let the end application handle this event
+      // userDetails.logout();
     });
 
     $rootScope.$on('Keepalive', function() {
