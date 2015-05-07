@@ -42,7 +42,8 @@ var HawtioKeycloak;
         // log.debug("loaded, userDetails: ", userDetails);
         Idle.watch();
         $rootScope.$on('IdleTimeout', function () {
-            userDetails.logout();
+            // let the end application handle this event
+            // userDetails.logout();
         });
         $rootScope.$on('Keepalive', function () {
             var keycloak = HawtioKeycloak.keycloak;
@@ -176,8 +177,20 @@ var OSOAuth;
         if (fragmentParams.access_token && fragmentParams.token_type === "bearer") {
             OSOAuth.log.debug("Got token");
             var localStorage = Core.getLocalStorage();
-            localStorage['osAuthCreds'] = angular.toJson(fragmentParams);
-            return fragmentParams;
+            var creds = {
+                token_type: fragmentParams.token_type,
+                access_token: fragmentParams.access_token,
+                expires_in: fragmentParams.expires_in
+            };
+            localStorage['osAuthCreds'] = angular.toJson(creds);
+            delete fragmentParams.token_type;
+            delete fragmentParams.access_token;
+            delete fragmentParams.expires_in;
+            uri.fragment("").query(fragmentParams);
+            var target = uri.toString();
+            OSOAuth.log.debug("redirecting to: ", target);
+            window.location.href = target;
+            return creds;
         }
         else {
             OSOAuth.log.debug("No token in URI");

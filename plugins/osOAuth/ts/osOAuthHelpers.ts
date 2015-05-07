@@ -42,7 +42,7 @@ module OSOAuth {
     log.debug("Redirecting to URI: ", target);
     window.location.href = target;
   }
-
+	
   export function extractToken(uri) {
     var query = uri.query(true);
     log.debug("Query: ", query);
@@ -51,8 +51,20 @@ module OSOAuth {
     if (fragmentParams.access_token && fragmentParams.token_type === "bearer") {
       log.debug("Got token");
       var localStorage = Core.getLocalStorage();
-      localStorage['osAuthCreds'] = angular.toJson(fragmentParams);
-      return fragmentParams;
+			var creds = {
+				token_type: fragmentParams.token_type,
+				access_token: fragmentParams.access_token,
+				expires_in: fragmentParams.expires_in
+			}
+      localStorage['osAuthCreds'] = angular.toJson(creds);
+			delete fragmentParams.token_type;
+			delete fragmentParams.access_token;
+			delete fragmentParams.expires_in;
+			uri.fragment("").query(fragmentParams);
+			var target = uri.toString();
+			log.debug("redirecting to: ", target);
+      window.location.href = target;
+			return creds;
     } else {
       log.debug("No token in URI");
       return undefined;
