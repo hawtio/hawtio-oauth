@@ -284,6 +284,11 @@ var OSOAuth;
             }, tmp).done(function (response) {
                 userProfile = {};
                 _.extend(userProfile, tmp, response);
+                $.ajaxSetup({
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                    }
+                });
             }).fail(function () {
                 OSOAuth.clearTokenStorage();
                 OSOAuth.doLogin(OSOAuthConfig, {

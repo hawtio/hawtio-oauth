@@ -63,6 +63,11 @@ module OSOAuth {
       }, tmp).done((response) => {
         userProfile = {};
         _.extend(userProfile, tmp, response);
+        $.ajaxSetup({
+          beforeSend: (xhr) => {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+          }
+        });
       }).fail(() => {
         clearTokenStorage();
         doLogin(OSOAuthConfig, {
