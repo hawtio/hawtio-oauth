@@ -28,21 +28,25 @@ module HawtioKeycloak {
   }]);
 
   _module.run(['userDetails', 'Idle', '$rootScope', (userDetails, Idle, $rootScope) => {
-    // log.debug("loaded, userDetails: ", userDetails);
+    if (HawtioKeycloak.keycloak) {
+      log.debug("Enabling idle timeout");
+      Idle.watch();
 
-    Idle.watch();
+      $rootScope.$on('IdleTimeout', function() {
+        log.debug("Idle timeout triggered");
+        // let the end application handle this event
+        // userDetails.logout();
+      });
 
-    $rootScope.$on('IdleTimeout', function() {
-      // let the end application handle this event
-      // userDetails.logout();
-    });
-
-    $rootScope.$on('Keepalive', function() {
-      var keycloak = HawtioKeycloak.keycloak;
-      if (keycloak) {
-        keycloak.updateToken(30);
-      }
-    });
+      $rootScope.$on('Keepalive', function() {
+        var keycloak = HawtioKeycloak.keycloak;
+        if (keycloak) {
+          keycloak.updateToken(30);
+        }
+      });
+    } else {
+      log.debug("Not enabling idle timeout");
+    }
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {

@@ -39,18 +39,24 @@ var HawtioKeycloak;
         }
     }]);
     HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
-        // log.debug("loaded, userDetails: ", userDetails);
-        Idle.watch();
-        $rootScope.$on('IdleTimeout', function () {
-            // let the end application handle this event
-            // userDetails.logout();
-        });
-        $rootScope.$on('Keepalive', function () {
-            var keycloak = HawtioKeycloak.keycloak;
-            if (keycloak) {
-                keycloak.updateToken(30);
-            }
-        });
+        if (HawtioKeycloak.keycloak) {
+            HawtioKeycloak.log.debug("Enabling idle timeout");
+            Idle.watch();
+            $rootScope.$on('IdleTimeout', function () {
+                HawtioKeycloak.log.debug("Idle timeout triggered");
+                // let the end application handle this event
+                // userDetails.logout();
+            });
+            $rootScope.$on('Keepalive', function () {
+                var keycloak = HawtioKeycloak.keycloak;
+                if (keycloak) {
+                    keycloak.updateToken(30);
+                }
+            });
+        }
+        else {
+            HawtioKeycloak.log.debug("Not enabling idle timeout");
+        }
     }]);
     hawtioPluginLoader.registerPreBootstrapTask(function (next) {
         if (!window['KeycloakConfig']) {
