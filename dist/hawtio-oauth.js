@@ -283,7 +283,7 @@ var OSOAuth;
                 type: fragmentParams.token_type
             };
             var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-            uri.path('/osapi/v1beta1/users/~');
+            uri.path('/osapi/v1beta3/users/~');
             OSOAuth.authenticatedHttpRequest({
                 type: 'GET',
                 url: uri.toString(),
