@@ -7,7 +7,7 @@ module OSOAuth {
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
         if (userDetails.token) {
-          request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token); 
+          request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
         }
       }
     }));
@@ -16,7 +16,7 @@ module OSOAuth {
   export function doLogout(config, userDetails) {
     var currentURI = new URI(window.location.href);
     var uri = new URI(config.oauth_authorize_uri);
-    uri.path('/osapi/v1beta1/oAuthAccessTokens' + userDetails.token);
+    uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);
     authenticatedHttpRequest({
       type: 'DELETE',
       url: uri.toString()
@@ -42,11 +42,11 @@ module OSOAuth {
     log.debug("Redirecting to URI: ", target);
     window.location.href = target;
   }
-	
+
   export function extractToken(uri) {
     var query = uri.query(true);
     log.debug("Query: ", query);
-    var fragmentParams:any = new URI("?" + uri.fragment()).query(true); 
+    var fragmentParams:any = new URI("?" + uri.fragment()).query(true);
     log.debug("FragmentParams: ", fragmentParams);
     if (fragmentParams.access_token && fragmentParams.token_type === "bearer") {
       log.debug("Got token");
