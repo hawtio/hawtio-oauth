@@ -2,3 +2,4 @@
 declare var KeycloakConfig: any;
 declare var Keycloak: any;
 declare var OSOAuthConfig: any;
+declare var GoogleOAuthConfig: any;

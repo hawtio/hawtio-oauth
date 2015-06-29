@@ -6,4 +6,4 @@ declare var Keycloak;
 
 // variable for getting openshift oauth config from
 declare var OSOAuthConfig;
-
+declare var GoogleOAuthConfig;
