@@ -54,29 +54,33 @@ module GoogleOAuth {
     var target = uri.toString();
     log.debug("Redirecting to URI: ", target);
 
-    window.location.href = target;
+    return $.ajax({
+      type: 'POST',
+      url: target
+    });
   }
 
-  export function extractToken(uri) {
-    var query = uri.query(true);
-    var fragmentParams:any = new URI("?" + uri.fragment()).query(true);
+  export function extractToken(query) {
+    log.debug("query: ", query);
 
-    if (fragmentParams.access_token && fragmentParams.token_type === "Bearer") {
+    if (query.access_token && query.token_type === "Bearer") {
       log.debug("Got token");
       var localStorage = Core.getLocalStorage();
 			var creds = {
-				token_type: fragmentParams.token_type,
-				access_token: fragmentParams.access_token,
-				expires_in: fragmentParams.expires_in
+				token_type: query.token_type.toLowerCase(),
+				access_token: query.access_token,
+				expires_in: query.expires_in
 			}
       localStorage['googleAuthCreds'] = angular.toJson(creds);
-			delete fragmentParams.token_type;
-			delete fragmentParams.access_token;
-			delete fragmentParams.expires_in;
-			uri.fragment("").query(fragmentParams);
-			var target = uri.toString();
-			log.debug("redirecting to: ", target);
-      window.location.href = target;
+			delete query.token_type;
+			delete query.access_token;
+			delete query.expires_in;
+
+      // SHOULD THIS BE CALLED?
+			//var target = query.toString();
+			//log.debug("redirecting to: ", target);
+      //window.location.href = target;
+
 			return creds;
     } else {
       log.info("No token in URI");
@@ -89,7 +93,7 @@ module GoogleOAuth {
     delete localStorage[GOOGLE_TOKEN_STORAGE_KEY];
   }
 
-  export function checkToken(uri) {
+  export function checkToken(query) {
     var localStorage = Core.getLocalStorage();
     var answer = undefined;
     if (GOOGLE_TOKEN_STORAGE_KEY in localStorage) {
@@ -102,7 +106,7 @@ module GoogleOAuth {
       }
     }
     if (!answer) {
-      answer = extractToken(uri);
+      answer = extractToken(query);
     }
     log.debug("Using creds: ", answer);
     return answer;
