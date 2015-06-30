@@ -22,7 +22,15 @@ var GoogleOAuth;
     }
     GoogleOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
     function doLogout(config, userDetails) {
-        // todo
+        console.debug("Logging out!");
+        var token = getTokenStorage() || userDetails.token;
+        var uri = new URI(window.location.href).removeQuery("code");
+        var target = uri.toString();
+        GoogleOAuth.log.debug("Now logging in with URI: " + target);
+        clearTokenStorage();
+        doLogin(GoogleOAuthConfig, {
+            uri: target
+        });
     }
     GoogleOAuth.doLogout = doLogout;
     function doLogin(config, options) {
@@ -35,7 +43,8 @@ var GoogleOAuth;
             response_type: 'code',
             client_id: clientId,
             redirect_uri: redirectURI,
-            scope: scope
+            scope: scope,
+            approval_prompt: 'force'
         });
         var target = uri.toString();
         GoogleOAuth.log.debug("Redirecting to URI: ", target);
@@ -93,6 +102,16 @@ var GoogleOAuth;
         delete localStorage[GOOGLE_TOKEN_STORAGE_KEY];
     }
     GoogleOAuth.clearTokenStorage = clearTokenStorage;
+    function getTokenStorage() {
+        var localStorage = Core.getLocalStorage();
+        return localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+    }
+    GoogleOAuth.getTokenStorage = getTokenStorage;
+    function setTokenStorage(token) {
+        var localStorage = Core.getLocalStorage();
+        localStorage[GOOGLE_TOKEN_STORAGE_KEY] = token;
+    }
+    GoogleOAuth.setTokenStorage = setTokenStorage;
     function checkToken(query) {
         var localStorage = Core.getLocalStorage();
         var answer = undefined;
@@ -123,7 +142,7 @@ var GoogleOAuth;
 var GoogleOAuth;
 (function (GoogleOAuth) {
     GoogleOAuth._module = angular.module(GoogleOAuth.pluginName, []);
-    var userProfile = undefined;
+    var userProfile = {};
     hawtioPluginLoader.addModule(GoogleOAuth.pluginName);
     GoogleOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
@@ -163,9 +182,13 @@ var GoogleOAuth;
         }
         GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
         var currentURI = new URI(window.location.href);
+        if ((userProfile && userProfile.token) || GoogleOAuth.getTokenStorage()) {
+            next();
+            return;
+        }
         var authorizationCode = GoogleOAuth.checkAuthorizationCode(currentURI);
         if (authorizationCode) {
-            GoogleOAuth.log.debug("found an authorization code so need to go back to google and get a token");
+            GoogleOAuth.log.info("found an authorization code so need to go back to google and get a token");
             GoogleOAuth.exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
                 uri: currentURI.toString(),
             }).done(function (response) {
@@ -177,20 +200,23 @@ var GoogleOAuth;
                         type: response.token_type
                     };
                     GoogleOAuth.log.debug("Got bearer token: " + tmp.token);
-                    /*
-                              var uri = new URI(GoogleOAuthConfig.url);
-                              authenticatedHttpRequest({
-                                type: 'GET',
-                                url: uri.toString(),
-                              }, tmp).done((response) => {
-                    */
+                    GoogleOAuth.setTokenStorage(tmp.token);
                     userProfile = {};
                     _.extend(userProfile, tmp, response);
                     $.ajaxSetup({
                         beforeSend: function (xhr) {
-                            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                            var token = userProfile.token;
+                            if (token) {
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                            }
                         }
                     });
+                    GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
+                    // lets remove the auth code
+                    var uri = new URI(window.location.href).removeQuery("code");
+                    var target = uri.toString();
+                    GoogleOAuth.log.info("Now redirecting to: " + target);
+                    window.location.href = target;
                 }
                 else {
                     GoogleOAuth.log.debug("No access token received!");

@@ -15,8 +15,18 @@ module GoogleOAuth {
   }
 
   export function doLogout(config, userDetails) {
-    // todo
+    console.debug("Logging out!");
+    var token = getTokenStorage() || userDetails.token;
+
+    var uri = new URI(window.location.href).removeQuery("code");
+    var target = uri.toString();
+    log.debug("Now logging in with URI: " + target);
+    clearTokenStorage();
+    doLogin(GoogleOAuthConfig, {
+      uri: target
+    });
   }
+
 
   export function doLogin(config, options) {
     var clientId = config.clientId;
@@ -29,7 +39,8 @@ module GoogleOAuth {
       response_type: 'code',
       client_id: clientId,
       redirect_uri: redirectURI,
-      scope: scope
+      scope: scope,
+      approval_prompt: 'force'
     });
     var target = uri.toString();
     log.debug("Redirecting to URI: ", target);
@@ -93,6 +104,16 @@ module GoogleOAuth {
     delete localStorage[GOOGLE_TOKEN_STORAGE_KEY];
   }
 
+  export function getTokenStorage() {
+    var localStorage = Core.getLocalStorage();
+    return localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+  }
+
+  export function setTokenStorage(token) {
+    var localStorage = Core.getLocalStorage();
+    localStorage[GOOGLE_TOKEN_STORAGE_KEY] = token;
+  }
+
   export function checkToken(query) {
     var localStorage = Core.getLocalStorage();
     var answer = undefined;
@@ -113,9 +134,6 @@ module GoogleOAuth {
   }
 
   export function checkAuthorizationCode(uri) {
-
     return uri.query(true).code;
   }
-
-
 }

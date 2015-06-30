@@ -10,6 +10,8 @@ declare module GoogleOAuth {
         expires_in: any;
     };
     function clearTokenStorage(): void;
+    function getTokenStorage(): any;
+    function setTokenStorage(token: any): void;
     function checkToken(query: any): any;
     function checkAuthorizationCode(uri: any): any;
 }

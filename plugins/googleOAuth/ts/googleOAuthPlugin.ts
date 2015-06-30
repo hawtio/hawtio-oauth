@@ -2,7 +2,9 @@
 
 module GoogleOAuth {
   export var _module = angular.module(pluginName, []);
-  var userProfile:any = undefined
+
+  var userProfile:any = {};
+
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', ($provide) => {
@@ -50,9 +52,14 @@ module GoogleOAuth {
     log.debug("config: ", GoogleOAuthConfig);
 
     var currentURI = new URI(window.location.href);
+    if ((userProfile && userProfile.token) || getTokenStorage()) {
+      next();
+      return;
+    }
+
     var authorizationCode = checkAuthorizationCode(currentURI);
     if (authorizationCode) {
-      log.debug("found an authorization code so need to go back to google and get a token");
+      log.info("found an authorization code so need to go back to google and get a token");
       exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
         uri: currentURI.toString(),
       }).done((response) => {
@@ -66,30 +73,26 @@ module GoogleOAuth {
           };
           log.debug("Got bearer token: " + tmp.token);
 
-/*
-          var uri = new URI(GoogleOAuthConfig.url);
-          authenticatedHttpRequest({
-            type: 'GET',
-            url: uri.toString(),
-          }, tmp).done((response) => {
-*/
-            userProfile = {};
-            _.extend(userProfile, tmp, response);
-            $.ajaxSetup({
-              beforeSend: (xhr) => {
-                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+          setTokenStorage(tmp.token);
+
+          userProfile = {};
+          _.extend(userProfile, tmp, response);
+          $.ajaxSetup({
+            beforeSend: (xhr) => {
+              var token = userProfile.token;
+              if (token) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
               }
-            });
-/*
-          }).fail((xhr, textStatus, errorThrown) => {
-            clearTokenStorage();
-            doLogin(GoogleOAuthConfig, {
-              uri: currentURI.toString()
-            });
-          }).always(() => {
-            next();
+            }
           });
-*/
+
+          log.info("Logged in with URL: " + window.location.href);
+
+          // lets remove the auth code
+          var uri = new URI(window.location.href).removeQuery("code");
+          var target = uri.toString();
+          log.info("Now redirecting to: " + target);
+          window.location.href = target;
         } else {
           log.debug("No access token received!");
           clearTokenStorage();
@@ -109,6 +112,5 @@ module GoogleOAuth {
         uri: currentURI.toString()
       });
     }
-
   });
 }
