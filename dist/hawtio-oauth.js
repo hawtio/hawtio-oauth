@@ -212,6 +212,12 @@ var GoogleOAuth;
                 next();
             });
         }
+        else {
+            GoogleOAuth.clearTokenStorage();
+            GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                uri: currentURI.toString()
+            });
+        }
     });
 })(GoogleOAuth || (GoogleOAuth = {}));
 

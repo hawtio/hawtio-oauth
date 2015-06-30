@@ -99,6 +99,11 @@ module GoogleOAuth {
         log.debug("Next");
         next();
       });
+    } else {
+      clearTokenStorage();
+      doLogin(GoogleOAuthConfig, {
+        uri: currentURI.toString()
+      });
     }
 
   });
