@@ -177,25 +177,19 @@ var GoogleOAuth;
                         type: response.token_type
                     };
                     GoogleOAuth.log.debug("Got bearer token: " + tmp.token);
-                    var uri = new URI(GoogleOAuthConfig.url);
-                    GoogleOAuth.authenticatedHttpRequest({
-                        type: 'GET',
-                        url: uri.toString(),
-                    }, tmp).done(function (response) {
-                        userProfile = {};
-                        _.extend(userProfile, tmp, response);
-                        $.ajaxSetup({
-                            beforeSend: function (xhr) {
-                                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-                            }
-                        });
-                    }).fail(function () {
-                        GoogleOAuth.clearTokenStorage();
-                        GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                            uri: currentURI.toString()
-                        });
-                    }).always(function () {
-                        next();
+                    /*
+                              var uri = new URI(GoogleOAuthConfig.url);
+                              authenticatedHttpRequest({
+                                type: 'GET',
+                                url: uri.toString(),
+                              }, tmp).done((response) => {
+                    */
+                    userProfile = {};
+                    _.extend(userProfile, tmp, response);
+                    $.ajaxSetup({
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                        }
                     });
                 }
                 else {
@@ -205,7 +199,7 @@ var GoogleOAuth;
                         uri: currentURI.toString()
                     });
                 }
-            }).fail(function () {
+            }).fail(function (response) {
                 GoogleOAuth.log.error("Failed");
             }).always(function () {
                 GoogleOAuth.log.debug("Next");

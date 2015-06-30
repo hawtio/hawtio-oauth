@@ -66,11 +66,13 @@ module GoogleOAuth {
           };
           log.debug("Got bearer token: " + tmp.token);
 
+/*
           var uri = new URI(GoogleOAuthConfig.url);
           authenticatedHttpRequest({
             type: 'GET',
             url: uri.toString(),
           }, tmp).done((response) => {
+*/
             userProfile = {};
             _.extend(userProfile, tmp, response);
             $.ajaxSetup({
@@ -78,7 +80,8 @@ module GoogleOAuth {
                 xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
               }
             });
-          }).fail(() => {
+/*
+          }).fail((xhr, textStatus, errorThrown) => {
             clearTokenStorage();
             doLogin(GoogleOAuthConfig, {
               uri: currentURI.toString()
@@ -86,6 +89,7 @@ module GoogleOAuth {
           }).always(() => {
             next();
           });
+*/
         } else {
           log.debug("No access token received!");
           clearTokenStorage();
@@ -93,7 +97,7 @@ module GoogleOAuth {
             uri: currentURI.toString()
           });
         }
-      }).fail(() => {
+      }).fail((response) => {
         log.error("Failed");
       }).always(() => {
         log.debug("Next");
