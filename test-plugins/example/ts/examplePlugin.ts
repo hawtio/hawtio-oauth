@@ -22,15 +22,27 @@ module Example {
     log.debug("loaded");
   }]);
 
-  // Standard Keycloak server
+  // Google
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    KeycloakConfig = {
-      clientId: 'hawtio-client',
-      url: 'http://localhost:8080/auth',
-      realm: 'hawtio-demo' 
+    GoogleOAuthConfig = {
+      clientId: '520210845630-173pe9uuvejqvahls9td8b5n4nae0tvm.apps.googleusercontent.com',
+      clientSecret: 'Uza-yS-E2Ph1eCcs6OZy-4ui',
+      url: 'https://accounts.google.com/o/oauth2/auth',
+      scope: 'profile',
+      redirectURI: 'http://localhost:9000'
     };
     next();
   }, true);
+
+  // Standard Keycloak server
+  // hawtioPluginLoader.registerPreBootstrapTask((next) => {
+  //   KeycloakConfig = {
+  //     clientId: 'hawtio-client',
+  //     url: 'http://localhost:8080/auth',
+  //     realm: 'hawtio-demo'
+  //   };
+  //   next();
+  // }, true);
 
   // openshift
   //hawtioPluginLoader.registerPreBootstrapTask((next) => {
