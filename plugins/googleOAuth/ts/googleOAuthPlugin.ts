@@ -51,13 +51,48 @@ module GoogleOAuth {
 
     var currentURI = new URI(window.location.href);
     var authorizationCode = checkAuthorizationCode(currentURI);
-    var query;
     if (authorizationCode) {
       log.debug("found an authorization code so need to go back to google and get a token");
       exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
         uri: currentURI.toString(),
       }).done((response) => {
         log.debug("Done", response);
+
+        if (response && response.access_token) {
+          var tmp = {
+            token: response.access_token,
+            expiry: response.expires_in,
+            type: response.token_type
+          };
+          log.debug("Got bearer token: " + tmp.token);
+
+          var uri = new URI(GoogleOAuthConfig.url);
+          authenticatedHttpRequest({
+            type: 'GET',
+            url: uri.toString(),
+          }, tmp).done((response) => {
+            userProfile = {};
+            _.extend(userProfile, tmp, response);
+            $.ajaxSetup({
+              beforeSend: (xhr) => {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+              }
+            });
+          }).fail(() => {
+            clearTokenStorage();
+            doLogin(GoogleOAuthConfig, {
+              uri: currentURI.toString()
+            });
+          }).always(() => {
+            next();
+          });
+        } else {
+          log.debug("No access token received!");
+          clearTokenStorage();
+          doLogin(GoogleOAuthConfig, {
+            uri: currentURI.toString()
+          });
+        }
       }).fail(() => {
         log.error("Failed");
       }).always(() => {
@@ -66,44 +101,5 @@ module GoogleOAuth {
       });
     }
 
-    log.debug("need to get the response from above", query);
-
-    if (!query){
-      query = currentURI.query(true);
-    }
-    var fragmentParams = checkToken(query);
-    if (fragmentParams) {
-      var tmp = {
-        token: fragmentParams.access_token,
-        expiry: fragmentParams.expires_in,
-        type: fragmentParams.token_type
-      }
-
-      var uri = new URI(GoogleOAuthConfig.url);
-      authenticatedHttpRequest({
-        type: 'GET',
-        url: uri.toString(),
-      }, tmp).done((response) => {
-        userProfile = {};
-        _.extend(userProfile, tmp, response);
-        $.ajaxSetup({
-          beforeSend: (xhr) => {
-            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-          }
-        });
-      }).fail(() => {
-        clearTokenStorage();
-        doLogin(GoogleOAuthConfig, {
-          uri: currentURI.toString()
-        });
-      }).always(() => {
-        next();
-      });
-    } else {
-      clearTokenStorage();
-      doLogin(GoogleOAuthConfig, {
-        uri: currentURI.toString()
-      });
-    }
   });
 }
