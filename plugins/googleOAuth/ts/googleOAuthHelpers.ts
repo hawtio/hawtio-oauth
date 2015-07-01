@@ -53,7 +53,7 @@ module GoogleOAuth {
     var clientId = config.clientId;
     var clientSecret = config.clientSecret;
     var redirectURI = config.redirectURI;
-    var uri = new URI('https://www.googleapis.com/oauth2/v3/token');
+    var uri = new URI(config.tokenUrl || 'https://www.googleapis.com/oauth2/v3/token');
 
     uri.query({
       code: code,
