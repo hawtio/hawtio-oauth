@@ -45,7 +45,7 @@ module GoogleOAuth {
         !GoogleOAuthConfig.scope ||
         !GoogleOAuthConfig.authenticationURI)
     {
-      log.warn("Invalid oauth config, disabled oauth");
+      log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
       next();
       return;
     }

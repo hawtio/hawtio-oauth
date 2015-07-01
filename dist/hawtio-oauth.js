@@ -176,7 +176,7 @@ var GoogleOAuth;
             return;
         }
         if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.authenticationURI) {
-            GoogleOAuth.log.warn("Invalid oauth config, disabled oauth");
+            GoogleOAuth.log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
             next();
             return;
         }
