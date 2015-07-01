@@ -27,7 +27,7 @@ module Example {
     GoogleOAuthConfig = {
       clientId: '520210845630-173pe9uuvejqvahls9td8b5n4nae0tvm.apps.googleusercontent.com',
       clientSecret: 'Uza-yS-E2Ph1eCcs6OZy-4ui',
-      url: 'https://accounts.google.com/o/oauth2/auth',
+      authenticationURI: 'https://accounts.google.com/o/oauth2/auth',
       scope: 'profile',
       redirectURI: 'http://localhost:9000'
     };

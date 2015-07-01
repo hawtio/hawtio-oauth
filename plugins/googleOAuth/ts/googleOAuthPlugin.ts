@@ -43,7 +43,7 @@ module GoogleOAuth {
     if (!GoogleOAuthConfig.clientId ||
         !GoogleOAuthConfig.redirectURI ||
         !GoogleOAuthConfig.scope ||
-        !GoogleOAuthConfig.url)
+        !GoogleOAuthConfig.authenticationURI)
     {
       log.warn("Invalid oauth config, disabled oauth");
       next();

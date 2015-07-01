@@ -37,7 +37,7 @@ var GoogleOAuth;
         var clientId = config.clientId;
         var redirectURI = config.redirectURI;
         var scope = config.scope;
-        var targetURI = config.url;
+        var targetURI = config.authenticationURI;
         var uri = new URI(targetURI);
         uri.query({
             response_type: 'code',
@@ -55,7 +55,7 @@ var GoogleOAuth;
         var clientId = config.clientId;
         var clientSecret = config.clientSecret;
         var redirectURI = config.redirectURI;
-        var uri = new URI(config.tokenUrl || 'https://www.googleapis.com/oauth2/v3/token');
+        var uri = new URI(config.tokenURI || 'https://www.googleapis.com/oauth2/v3/token');
         uri.query({
             code: code,
             client_id: clientId,
@@ -175,7 +175,7 @@ var GoogleOAuth;
             next();
             return;
         }
-        if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.url) {
+        if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.authenticationURI) {
             GoogleOAuth.log.warn("Invalid oauth config, disabled oauth");
             next();
             return;
