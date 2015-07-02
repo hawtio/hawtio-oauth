@@ -23,9 +23,10 @@ module GoogleOAuth {
   }]);
 
   _module.config(['$httpProvider', ($httpProvider) => {
-    if (userProfile && userProfile.token) {
+    var token = getTokenStorage();
+    if (token) {
       $httpProvider.defaults.headers.common = {
-        'Authorization': 'Bearer ' + userProfile.token
+        'Authorization': 'Bearer ' + token
       }
     }
   }]);
@@ -52,7 +53,7 @@ module GoogleOAuth {
     log.debug("config: ", GoogleOAuthConfig);
 
     var currentURI = new URI(window.location.href);
-    if ((userProfile && userProfile.token) || getTokenStorage()) {
+    if (getTokenStorage()) {
       next();
       return;
     }
@@ -71,28 +72,30 @@ module GoogleOAuth {
             expiry: response.expires_in,
             type: response.token_type
           };
-          log.debug("Got bearer token: " + tmp.token);
+          var token = tmp.token;
+          if (token) {
+            log.debug("Got bearer token: " + token);
+            setTokenStorage(token);
 
-          setTokenStorage(tmp.token);
-
-          userProfile = {};
-          _.extend(userProfile, tmp, response);
-          $.ajaxSetup({
-            beforeSend: (xhr) => {
-              var token = userProfile.token;
-              if (token) {
-                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            userProfile = {};
+            _.extend(userProfile, tmp, response);
+            $.ajaxSetup({
+              beforeSend: (xhr) => {
+                if (token) {
+                  xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
               }
-            }
-          });
+            });
 
-          log.info("Logged in with URL: " + window.location.href);
+            log.info("Logged in with URL: " + window.location.href);
 
-          // lets remove the auth code
-          var uri = new URI(window.location.href).removeQuery("code");
-          var target = uri.toString();
-          log.info("Now redirecting to: " + target);
-          window.location.href = target;
+            // lets remove the auth code
+            var uri = new URI(window.location.href).removeQuery("code");
+            var target = uri.toString();
+            log.info("Now redirecting to: " + target);
+            window.location.href = target;
+          }
+
         } else {
           log.debug("No access token received!");
           clearTokenStorage();

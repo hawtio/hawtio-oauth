@@ -160,9 +160,10 @@ var GoogleOAuth;
         }]);
     }]);
     GoogleOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (userProfile && userProfile.token) {
+        var token = GoogleOAuth.getTokenStorage();
+        if (token) {
             $httpProvider.defaults.headers.common = {
-                'Authorization': 'Bearer ' + userProfile.token
+                'Authorization': 'Bearer ' + token
             };
         }
     }]);
@@ -182,7 +183,7 @@ var GoogleOAuth;
         }
         GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
         var currentURI = new URI(window.location.href);
-        if ((userProfile && userProfile.token) || GoogleOAuth.getTokenStorage()) {
+        if (GoogleOAuth.getTokenStorage()) {
             next();
             return;
         }
@@ -199,24 +200,26 @@ var GoogleOAuth;
                         expiry: response.expires_in,
                         type: response.token_type
                     };
-                    GoogleOAuth.log.debug("Got bearer token: " + tmp.token);
-                    GoogleOAuth.setTokenStorage(tmp.token);
-                    userProfile = {};
-                    _.extend(userProfile, tmp, response);
-                    $.ajaxSetup({
-                        beforeSend: function (xhr) {
-                            var token = userProfile.token;
-                            if (token) {
-                                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    var token = tmp.token;
+                    if (token) {
+                        GoogleOAuth.log.debug("Got bearer token: " + token);
+                        GoogleOAuth.setTokenStorage(token);
+                        userProfile = {};
+                        _.extend(userProfile, tmp, response);
+                        $.ajaxSetup({
+                            beforeSend: function (xhr) {
+                                if (token) {
+                                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                                }
                             }
-                        }
-                    });
-                    GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
-                    // lets remove the auth code
-                    var uri = new URI(window.location.href).removeQuery("code");
-                    var target = uri.toString();
-                    GoogleOAuth.log.info("Now redirecting to: " + target);
-                    window.location.href = target;
+                        });
+                        GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
+                        // lets remove the auth code
+                        var uri = new URI(window.location.href).removeQuery("code");
+                        var target = uri.toString();
+                        GoogleOAuth.log.info("Now redirecting to: " + target);
+                        window.location.href = target;
+                    }
                 }
                 else {
                     GoogleOAuth.log.debug("No access token received!");
