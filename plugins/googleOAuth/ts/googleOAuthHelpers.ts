@@ -4,7 +4,6 @@ module GoogleOAuth {
   var GOOGLE_TOKEN_STORAGE_KEY = 'googleAuthCreds';
 
   export function authenticatedHttpRequest(options, userDetails) {
-
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
         if (userDetails.token) {
@@ -12,6 +11,17 @@ module GoogleOAuth {
         }
       }
     }));
+  }
+
+  export function setupJQueryAjax(userDetails) {
+    $.ajaxSetup({
+      beforeSend: (xhr) => {
+        var token = userDetails.token;
+        if (token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    });
   }
 
   export function doLogout(config, userDetails) {
@@ -64,7 +74,6 @@ module GoogleOAuth {
     });
     var target = uri.toString();
     log.debug("Redirecting to URI: ", target);
-
     return $.ajax({
       type: 'POST',
       url: target
@@ -78,11 +87,11 @@ module GoogleOAuth {
       log.debug("Got token");
       var localStorage = Core.getLocalStorage();
 			var creds = {
-				token_type: query.token_type.toLowerCase(),
-				access_token: query.access_token,
-				expires_in: query.expires_in
+				type: query.token_type.toLowerCase(),
+				token: query.access_token,
+				expiry: query.expires_in
 			}
-      localStorage['googleAuthCreds'] = angular.toJson(creds);
+      localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(creds);
 			delete query.token_type;
 			delete query.access_token;
 			delete query.expires_in;
@@ -106,12 +115,12 @@ module GoogleOAuth {
 
   export function getTokenStorage() {
     var localStorage = Core.getLocalStorage();
-    return localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+    return angular.fromJson(localStorage[GOOGLE_TOKEN_STORAGE_KEY]);
   }
 
-  export function setTokenStorage(token) {
+  export function setTokenStorage(userDetails) {
     var localStorage = Core.getLocalStorage();
-    localStorage[GOOGLE_TOKEN_STORAGE_KEY] = token;
+    localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(userDetails);
   }
 
   export function checkToken(query) {

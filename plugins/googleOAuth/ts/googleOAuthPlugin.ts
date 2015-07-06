@@ -3,22 +3,23 @@
 module GoogleOAuth {
   export var _module = angular.module(pluginName, []);
 
-  var userProfile:any = {};
+  // Keep this unset unless we have a token
+  var userProfile:any = null;
 
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
+      var answer = $delegate;
       if (userProfile) {
-        return _.merge($delegate, userProfile, {
+        _.merge(answer, $delegate, userProfile, {
           username: userProfile.fullName,
           logout: () => {
             doLogout(GoogleOAuthConfig, userProfile);
           }
         });
-      } else {
-        return $delegate;
       }
+      return answer;
     }]);
   }]);
 
@@ -32,7 +33,7 @@ module GoogleOAuth {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    // log.debug("loaded, userDetails: ", userDetails);
+    log.debug("loaded, userDetails: ", userDetails);
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
@@ -51,11 +52,22 @@ module GoogleOAuth {
       return;
     }
     log.debug("config: ", GoogleOAuthConfig);
-
     var currentURI = new URI(window.location.href);
-    if (getTokenStorage()) {
-      next();
-      return;
+
+
+    try {
+      userProfile = getTokenStorage();
+      if (userProfile && userProfile.token) {
+        setupJQueryAjax(userProfile);
+        next();
+        return;
+      } else {
+        // old format, let's force an update by re-authenticating
+        clearTokenStorage();
+      }
+    } catch (err) {
+      // must be a bad stored token
+      clearTokenStorage();
     }
 
     var authorizationCode = checkAuthorizationCode(currentURI);
@@ -64,38 +76,22 @@ module GoogleOAuth {
       exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
         uri: currentURI.toString(),
       }).done((response) => {
-        log.debug("Done", response);
-
         if (response && response.access_token) {
           var tmp = {
             token: response.access_token,
             expiry: response.expires_in,
             type: response.token_type
           };
-          var token = tmp.token;
-          if (token) {
-            log.debug("Got bearer token: " + token);
-            setTokenStorage(token);
-
-            userProfile = {};
-            _.extend(userProfile, tmp, response);
-            $.ajaxSetup({
-              beforeSend: (xhr) => {
-                if (token) {
-                  xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                }
-              }
-            });
-
-            log.info("Logged in with URL: " + window.location.href);
-
-            // lets remove the auth code
-            var uri = new URI(window.location.href).removeQuery("code");
-            var target = uri.toString();
-            log.info("Now redirecting to: " + target);
-            window.location.href = target;
-          }
-
+          userProfile = {};
+          _.extend(userProfile, tmp);
+          setTokenStorage(userProfile);
+          setupJQueryAjax(userProfile);
+          log.info("Logged in with URL: " + window.location.href);
+          // lets remove the auth code
+          var uri = new URI(window.location.href).removeQuery("code");
+          var target = uri.toString();
+          log.info("Now redirecting to: " + target);
+          window.location.href = target;
         } else {
           log.debug("No access token received!");
           clearTokenStorage();

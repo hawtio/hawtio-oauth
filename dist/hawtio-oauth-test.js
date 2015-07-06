@@ -59,6 +59,7 @@ var Example;
 var Example;
 (function (Example) {
     Example.Page1Controller = Example._module.controller("Example.Page1Controller", ['$scope', 'userDetails', function ($scope, userDetails) {
+        Example.log.debug("userDetails: ", userDetails);
         $scope.userDetails = userDetails;
         $scope.userDetailsStr = angular.toJson(userDetails, true);
         $scope.target = "World!";
