@@ -24,10 +24,10 @@ module GoogleOAuth {
   }]);
 
   _module.config(['$httpProvider', ($httpProvider) => {
-    var token = getTokenStorage();
-    if (token) {
+    var userDetails = getTokenStorage();
+    if (userDetails && userDetails.token) {
       $httpProvider.defaults.headers.common = {
-        'Authorization': 'Bearer ' + token
+        'Authorization': 'Bearer ' + userDetails.token
       }
     }
   }]);
