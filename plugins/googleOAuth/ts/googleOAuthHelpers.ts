@@ -115,7 +115,15 @@ module GoogleOAuth {
 
   export function getTokenStorage() {
     var localStorage = Core.getLocalStorage();
-    return angular.fromJson(localStorage[GOOGLE_TOKEN_STORAGE_KEY]);
+    var value = localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+    if (value) {
+      try {
+        return angular.fromJson(value);
+      } catch (e) {
+        log.warn("Failed to parse token json: " + value + ". " + e);
+      }
+    }
+    return null;
   }
 
   export function setTokenStorage(userDetails) {
