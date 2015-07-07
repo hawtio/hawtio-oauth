@@ -10,24 +10,22 @@ module GoogleOAuth {
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
-      var answer = $delegate;
       if (userProfile) {
-        _.merge(answer, $delegate, userProfile, {
+        return _.merge($delegate, userProfile, {
           username: userProfile.fullName,
           logout: () => {
             doLogout(GoogleOAuthConfig, userProfile);
           }
         });
       }
-      return answer;
+      return $delegate;
     }]);
   }]);
 
   _module.config(['$httpProvider', ($httpProvider) => {
-    var userDetails = getTokenStorage();
-    if (userDetails && userDetails.token) {
+    if (userProfile && userProfile.token) {
       $httpProvider.defaults.headers.common = {
-        'Authorization': 'Bearer ' + userDetails.token
+        'Authorization': 'Bearer ' + userProfile.token
       }
     }
   }]);
@@ -58,6 +56,7 @@ module GoogleOAuth {
     try {
       var userDetails = getTokenStorage();
       if (userDetails && userDetails.token) {
+        userProfile = userDetails;
         setupJQueryAjax(userDetails);
         next();
         return;
@@ -82,8 +81,7 @@ module GoogleOAuth {
             expiry: response.expires_in,
             type: response.token_type
           };
-          userProfile = {};
-          _.extend(userProfile, tmp);
+          userProfile = _.merge(tmp, response, { provider: pluginName });
           setTokenStorage(userProfile);
           setupJQueryAjax(userProfile);
           log.info("Logged in with URL: " + window.location.href);
@@ -99,8 +97,8 @@ module GoogleOAuth {
             uri: currentURI.toString()
           });
         }
-      }).fail((response) => {
-        log.error("Failed");
+      }).fail((jqHXR, textStatus, errorThrown) => {
+        log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
       }).always(() => {
         log.debug("Next");
         next();

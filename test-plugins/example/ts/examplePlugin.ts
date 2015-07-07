@@ -23,6 +23,7 @@ module Example {
   }]);
 
   // Google
+  /*
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     GoogleOAuthConfig = {
       clientId: '520210845630-173pe9uuvejqvahls9td8b5n4nae0tvm.apps.googleusercontent.com',
@@ -33,6 +34,7 @@ module Example {
     };
     next();
   }, true);
+  */
 
   // Standard Keycloak server
   // hawtioPluginLoader.registerPreBootstrapTask((next) => {
@@ -45,14 +47,14 @@ module Example {
   // }, true);
 
   // openshift
-  //hawtioPluginLoader.registerPreBootstrapTask((next) => {
-  //  OSOAuthConfig = {
-  //    oauth_authorize_uri: "https://localhost:8443/oauth/authorize",
-  //    oauth_client_id: "openshift-web-console",
-  //    logout_uri: ""
-  //  };
-  //  next();
-  //}, true);
+  hawtioPluginLoader.registerPreBootstrapTask((next) => {
+    OSOAuthConfig = {
+      oauth_authorize_uri: "https://172.28.128.4:8443/oauth/authorize",
+      oauth_client_id: "fabric8",
+      logout_uri: ""
+    };
+    next();
+  }, true);
 
 
   hawtioPluginLoader.addModule(Example.pluginName);

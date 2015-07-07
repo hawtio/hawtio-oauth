@@ -2,8 +2,9 @@
 
 module OSOAuth {
   export var _module = angular.module(pluginName, []);
-  var userProfile:any = undefined
-  hawtioPluginLoader.addModule(pluginName);
+
+  // Keep this unset unless we have a token
+  var userProfile:any = null;
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
@@ -14,9 +15,8 @@ module OSOAuth {
             doLogout(OSOAuthConfig, userProfile);
           }
         });
-      } else {
-        return $delegate;
       }
+      return $delegate;
     }]);
   }]);
 
@@ -29,7 +29,7 @@ module OSOAuth {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    // log.debug("loaded, userDetails: ", userDetails);
+    log.debug("loaded, userDetails: ", userDetails);
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
@@ -46,7 +46,6 @@ module OSOAuth {
       return;
     }
     log.debug("config: ", OSOAuthConfig);
-
     var currentURI = new URI(window.location.href);
     var fragmentParams = checkToken(currentURI);
     if (fragmentParams) {
@@ -61,14 +60,14 @@ module OSOAuth {
         type: 'GET',
         url: uri.toString(),
       }, tmp).done((response) => {
-        userProfile = {};
-        _.extend(userProfile, tmp, response);
+        userProfile = _.merge(tmp, response, { provider: pluginName });
         $.ajaxSetup({
           beforeSend: (xhr) => {
             xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
           }
         });
-      }).fail(() => {
+      }).fail((jqXHR, textStatus, errorThrown) => {
+        log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
         clearTokenStorage();
         doLogin(OSOAuthConfig, {
           uri: currentURI.toString()
@@ -85,7 +84,5 @@ module OSOAuth {
 
   });
 
-
-
-
-  }
+  hawtioPluginLoader.addModule(pluginName);
+}

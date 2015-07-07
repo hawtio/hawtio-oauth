@@ -24,16 +24,18 @@ var Example;
         Example.log.debug("loaded");
     }]);
     // Google
-    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
-        GoogleOAuthConfig = {
-            clientId: '520210845630-173pe9uuvejqvahls9td8b5n4nae0tvm.apps.googleusercontent.com',
-            clientSecret: 'Uza-yS-E2Ph1eCcs6OZy-4ui',
-            authenticationURI: 'https://accounts.google.com/o/oauth2/auth',
-            scope: 'profile',
-            redirectURI: 'http://localhost:9000'
-        };
-        next();
+    /*
+    hawtioPluginLoader.registerPreBootstrapTask((next) => {
+      GoogleOAuthConfig = {
+        clientId: '520210845630-173pe9uuvejqvahls9td8b5n4nae0tvm.apps.googleusercontent.com',
+        clientSecret: 'Uza-yS-E2Ph1eCcs6OZy-4ui',
+        authenticationURI: 'https://accounts.google.com/o/oauth2/auth',
+        scope: 'profile',
+        redirectURI: 'http://localhost:9000'
+      };
+      next();
     }, true);
+    */
     // Standard Keycloak server
     // hawtioPluginLoader.registerPreBootstrapTask((next) => {
     //   KeycloakConfig = {
@@ -44,14 +46,14 @@ var Example;
     //   next();
     // }, true);
     // openshift
-    //hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    //  OSOAuthConfig = {
-    //    oauth_authorize_uri: "https://localhost:8443/oauth/authorize",
-    //    oauth_client_id: "openshift-web-console",
-    //    logout_uri: ""
-    //  };
-    //  next();
-    //}, true);
+    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
+        OSOAuthConfig = {
+            oauth_authorize_uri: "https://172.28.128.4:8443/oauth/authorize",
+            oauth_client_id: "fabric8",
+            logout_uri: ""
+        };
+        next();
+    }, true);
     hawtioPluginLoader.addModule(Example.pluginName);
 })(Example || (Example = {}));
 
