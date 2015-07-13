@@ -32,56 +32,58 @@ module OSOAuth {
     log.debug("loaded, userDetails: ", userDetails);
   }]);
 
-  hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    if (!window['OSOAuthConfig']) {
-      log.debug("oauth disabled");
-      next();
-      return;
-    }
-    if (!OSOAuthConfig.oauth_client_id ||
-        !OSOAuthConfig.oauth_authorize_uri)
-    {
-      log.debug("Invalid oauth config, disabled oauth");
-      next();
-      return;
-    }
-    log.debug("config: ", OSOAuthConfig);
-    var currentURI = new URI(window.location.href);
-    var fragmentParams = checkToken(currentURI);
-    if (fragmentParams) {
-      var tmp = {
-        token: fragmentParams.access_token,
-        expiry: fragmentParams.expires_in,
-        type: fragmentParams.token_type
+  hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'OpenShiftOAuth',
+    task: (next) => {
+      if (!window['OSOAuthConfig']) {
+        log.debug("oauth disabled");
+        next();
+        return;
       }
-      var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-      uri.path('/oapi/v1/users/~');
-      authenticatedHttpRequest({
-        type: 'GET',
-        url: uri.toString(),
-      }, tmp).done((response) => {
-        userProfile = _.merge(tmp, response, { provider: pluginName });
-        $.ajaxSetup({
-          beforeSend: (xhr) => {
-            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-          }
+      if (!OSOAuthConfig.oauth_client_id ||
+          !OSOAuthConfig.oauth_authorize_uri)
+      {
+        log.debug("Invalid oauth config, disabled oauth");
+        next();
+        return;
+      }
+      log.debug("config: ", OSOAuthConfig);
+      var currentURI = new URI(window.location.href);
+      var fragmentParams = checkToken(currentURI);
+      if (fragmentParams) {
+        var tmp = {
+          token: fragmentParams.access_token,
+          expiry: fragmentParams.expires_in,
+          type: fragmentParams.token_type
+        }
+        var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+        uri.path('/oapi/v1/users/~');
+        authenticatedHttpRequest({
+          type: 'GET',
+          url: uri.toString(),
+        }, tmp).done((response) => {
+          userProfile = _.merge(tmp, response, { provider: pluginName });
+          $.ajaxSetup({
+            beforeSend: (xhr) => {
+              xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+            }
+          });
+        }).fail((jqXHR, textStatus, errorThrown) => {
+          log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+          clearTokenStorage();
+          doLogin(OSOAuthConfig, {
+            uri: currentURI.toString()
+          });
+        }).always(() => {
+          next();
         });
-      }).fail((jqXHR, textStatus, errorThrown) => {
-        log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+      } else {
         clearTokenStorage();
         doLogin(OSOAuthConfig, {
           uri: currentURI.toString()
         });
-      }).always(() => {
-        next();
-      });
-    } else {
-      clearTokenStorage();
-      doLogin(OSOAuthConfig, {
-        uri: currentURI.toString()
-      });
+      }
     }
-
   });
 
   hawtioPluginLoader.addModule(pluginName);

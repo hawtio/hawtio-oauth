@@ -49,36 +49,39 @@ module HawtioKeycloak {
     }
   }]);
 
-  hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    if (!window['KeycloakConfig']) {
-      log.debug("Keycloak disabled");
-      next();
-      return;
-    }
-    var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-    keycloak.init()
-      .success((authenticated) => {
-        log.debug("Authenticated: ", authenticated);
-        if (!authenticated) {
-          keycloak.login({
-            redirectUri: window.location.href,
-          });
-        } else {
-          keycloak.loadUserProfile()
-            .success((profile) => {
-              userProfile = profile;
-              userProfile.token = keycloak.token;
-              next();
-            }).error(() => {
-              log.debug("Failed to load user profile");
-              next();
+  hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'KeycloakOAuth',
+    task: (next) => {
+      if (!window['KeycloakConfig']) {
+        log.debug("Keycloak disabled");
+        next();
+        return;
+      }
+      var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+      keycloak.init()
+        .success((authenticated) => {
+          log.debug("Authenticated: ", authenticated);
+          if (!authenticated) {
+            keycloak.login({
+              redirectUri: window.location.href,
             });
-        }
-      })
+          } else {
+            keycloak.loadUserProfile()
+              .success((profile) => {
+                userProfile = profile;
+                userProfile.token = keycloak.token;
+                next();
+              }).error(() => {
+                log.debug("Failed to load user profile");
+                next();
+              });
+          }
+        })
       .error(() => {
         log.debug("Failed to initialize Keycloak, token unavailable");
         next();
       });
+    }
   });
 
   class AuthInterceptorService {

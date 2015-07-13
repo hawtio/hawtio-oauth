@@ -1,128 +1,15 @@
 /// <reference path="../libs/hawtio-utilities/defs.d.ts"/>
-
-/// <reference path="../../includes.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioKeycloak.pluginName = 'hawtio-keycloak';
-    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
-    HawtioKeycloak.keycloak = undefined;
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="keycloakGlobals.ts"/>
-
-/// <reference path="keycloakGlobals.ts"/>
-/// <reference path="keycloakHelpers.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    var userProfile = undefined;
-    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
-    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-        $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (userProfile) {
-                return _.merge($delegate, userProfile, {
-                    logout: function () {
-                        if (userProfile && HawtioKeycloak.keycloak) {
-                            HawtioKeycloak.keycloak.logout();
-                        }
-                    }
-                });
-            }
-            else {
-                return $delegate;
-            }
-        }]);
-        // only add the itnerceptor if we have keycloak otherwise
-        // we'll get an undefined exception in the interceptor
-        if (HawtioKeycloak.keycloak) {
-            $httpProvider.interceptors.push(AuthInterceptorService.Factory);
-        }
-    }]);
-    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
-        if (HawtioKeycloak.keycloak) {
-            HawtioKeycloak.log.debug("Enabling idle timeout");
-            Idle.watch();
-            $rootScope.$on('IdleTimeout', function () {
-                HawtioKeycloak.log.debug("Idle timeout triggered");
-                // let the end application handle this event
-                // userDetails.logout();
-            });
-            $rootScope.$on('Keepalive', function () {
-                var keycloak = HawtioKeycloak.keycloak;
-                if (keycloak) {
-                    keycloak.updateToken(30);
-                }
-            });
-        }
-        else {
-            HawtioKeycloak.log.debug("Not enabling idle timeout");
-        }
-    }]);
-    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
-        if (!window['KeycloakConfig']) {
-            HawtioKeycloak.log.debug("Keycloak disabled");
-            next();
-            return;
-        }
-        var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-        keycloak.init().success(function (authenticated) {
-            HawtioKeycloak.log.debug("Authenticated: ", authenticated);
-            if (!authenticated) {
-                keycloak.login({
-                    redirectUri: window.location.href,
-                });
-            }
-            else {
-                keycloak.loadUserProfile().success(function (profile) {
-                    userProfile = profile;
-                    userProfile.token = keycloak.token;
-                    next();
-                }).error(function () {
-                    HawtioKeycloak.log.debug("Failed to load user profile");
-                    next();
-                });
-            }
-        }).error(function () {
-            HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
-            next();
-        });
-    });
-    var AuthInterceptorService = (function () {
-        function AuthInterceptorService($q) {
-            var _this = this;
-            this.$q = $q;
-            this.request = function (request) {
-                var addBearer, deferred;
-                addBearer = function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    return keycloak.updateToken(5).success(function () {
-                        var token = HawtioKeycloak.keycloak.token;
-                        request.headers.Authorization = 'Bearer ' + token;
-                        deferred.notify();
-                        return deferred.resolve(request);
-                    }).error(function () {
-                        console.log("Couldn't update token");
-                    });
-                };
-                deferred = _this.$q.defer();
-                addBearer();
-                return _this.$q.when(deferred.promise);
-            };
-            this.responseError = function (rejection) {
-                if (rejection.status === 401) {
-                    HawtioKeycloak.keycloak.logout();
-                }
-                return _this.$q.reject(rejection);
-            };
-        }
-        AuthInterceptorService.Factory = function ($q) {
-            return new AuthInterceptorService($q);
-        };
-        AuthInterceptorService.$inject = ['$q'];
-        return AuthInterceptorService;
-    })();
-    HawtioKeycloak._module.requires.push("ngIdle");
-})(HawtioKeycloak || (HawtioKeycloak = {}));
+// global pre-bootstrap task that plugins can use to wait
+// until all oauth plugins have been processed, add any
+// new oauth plugins to the 'depends' list
+hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'hawtio-oauth',
+    depends: ['KeycloakOAuth', 'GoogleOAuth', 'OpenShiftOAuth'],
+    task: function (next) {
+        Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+        next();
+    }
+});
 
 /// <reference path="../../includes.ts"/>
 var GoogleOAuth;
@@ -312,80 +199,210 @@ var GoogleOAuth;
     GoogleOAuth._module.run(['userDetails', function (userDetails) {
         GoogleOAuth.log.debug("loaded, userDetails: ", userDetails);
     }]);
-    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
-        if (!window['GoogleOAuthConfig']) {
-            GoogleOAuth.log.debug("oauth disabled");
-            next();
-            return;
-        }
-        if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.authenticationURI) {
-            GoogleOAuth.log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
-            next();
-            return;
-        }
-        GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
-        var currentURI = new URI(window.location.href);
-        try {
-            var userDetails = GoogleOAuth.getTokenStorage();
-            if (userDetails && userDetails.token) {
-                userProfile = userDetails;
-                GoogleOAuth.setupJQueryAjax(userDetails);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GoogleOAuth',
+        task: function (next) {
+            if (!window['GoogleOAuthConfig']) {
+                GoogleOAuth.log.debug("oauth disabled");
                 next();
                 return;
             }
-            else {
-                // old format, let's force an update by re-authenticating
-                GoogleOAuth.clearTokenStorage();
+            if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.authenticationURI) {
+                GoogleOAuth.log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
+                next();
+                return;
             }
-        }
-        catch (err) {
-            // must be a bad stored token
-            GoogleOAuth.clearTokenStorage();
-        }
-        var authorizationCode = GoogleOAuth.checkAuthorizationCode(currentURI);
-        if (authorizationCode) {
-            GoogleOAuth.log.info("found an authorization code so need to go back to google and get a token");
-            GoogleOAuth.exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
-                uri: currentURI.toString(),
-            }).done(function (response) {
-                if (response && response.access_token) {
-                    var tmp = {
-                        token: response.access_token,
-                        expiry: response.expires_in,
-                        type: response.token_type
-                    };
-                    userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
-                    GoogleOAuth.setTokenStorage(userProfile);
-                    GoogleOAuth.setupJQueryAjax(userProfile);
-                    GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
-                    // lets remove the auth code
-                    var uri = new URI(window.location.href).removeQuery("code");
-                    var target = uri.toString();
-                    GoogleOAuth.log.info("Now redirecting to: " + target);
-                    window.location.href = target;
+            GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
+            var currentURI = new URI(window.location.href);
+            try {
+                var userDetails = GoogleOAuth.getTokenStorage();
+                if (userDetails && userDetails.token) {
+                    userProfile = userDetails;
+                    GoogleOAuth.setupJQueryAjax(userDetails);
+                    next();
+                    return;
                 }
                 else {
-                    GoogleOAuth.log.debug("No access token received!");
+                    // old format, let's force an update by re-authenticating
                     GoogleOAuth.clearTokenStorage();
-                    GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                        uri: currentURI.toString()
-                    });
                 }
-            }).fail(function (jqHXR, textStatus, errorThrown) {
-                GoogleOAuth.log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
-            }).always(function () {
-                GoogleOAuth.log.debug("Next");
-                next();
-            });
-        }
-        else {
-            GoogleOAuth.clearTokenStorage();
-            GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                uri: currentURI.toString()
-            });
+            }
+            catch (err) {
+                // must be a bad stored token
+                GoogleOAuth.clearTokenStorage();
+            }
+            var authorizationCode = GoogleOAuth.checkAuthorizationCode(currentURI);
+            if (authorizationCode) {
+                GoogleOAuth.log.info("found an authorization code so need to go back to google and get a token");
+                GoogleOAuth.exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
+                    uri: currentURI.toString(),
+                }).done(function (response) {
+                    if (response && response.access_token) {
+                        var tmp = {
+                            token: response.access_token,
+                            expiry: response.expires_in,
+                            type: response.token_type
+                        };
+                        userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
+                        GoogleOAuth.setTokenStorage(userProfile);
+                        GoogleOAuth.setupJQueryAjax(userProfile);
+                        GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
+                        // lets remove the auth code
+                        var uri = new URI(window.location.href).removeQuery("code");
+                        var target = uri.toString();
+                        GoogleOAuth.log.info("Now redirecting to: " + target);
+                        window.location.href = target;
+                    }
+                    else {
+                        GoogleOAuth.log.debug("No access token received!");
+                        GoogleOAuth.clearTokenStorage();
+                        GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                            uri: currentURI.toString()
+                        });
+                    }
+                }).fail(function (jqHXR, textStatus, errorThrown) {
+                    GoogleOAuth.log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
+                }).always(function () {
+                    GoogleOAuth.log.debug("Next");
+                    next();
+                });
+            }
+            else {
+                GoogleOAuth.clearTokenStorage();
+                GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                    uri: currentURI.toString()
+                });
+            }
         }
     });
 })(GoogleOAuth || (GoogleOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioKeycloak.pluginName = 'hawtio-keycloak';
+    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
+    HawtioKeycloak.keycloak = undefined;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
+/// <reference path="keycloakGlobals.ts"/>
+
+/// <reference path="keycloakGlobals.ts"/>
+/// <reference path="keycloakHelpers.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
+    var userProfile = undefined;
+    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
+    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
+        $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+            if (userProfile) {
+                return _.merge($delegate, userProfile, {
+                    logout: function () {
+                        if (userProfile && HawtioKeycloak.keycloak) {
+                            HawtioKeycloak.keycloak.logout();
+                        }
+                    }
+                });
+            }
+            else {
+                return $delegate;
+            }
+        }]);
+        // only add the itnerceptor if we have keycloak otherwise
+        // we'll get an undefined exception in the interceptor
+        if (HawtioKeycloak.keycloak) {
+            $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+        }
+    }]);
+    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
+        if (HawtioKeycloak.keycloak) {
+            HawtioKeycloak.log.debug("Enabling idle timeout");
+            Idle.watch();
+            $rootScope.$on('IdleTimeout', function () {
+                HawtioKeycloak.log.debug("Idle timeout triggered");
+                // let the end application handle this event
+                // userDetails.logout();
+            });
+            $rootScope.$on('Keepalive', function () {
+                var keycloak = HawtioKeycloak.keycloak;
+                if (keycloak) {
+                    keycloak.updateToken(30);
+                }
+            });
+        }
+        else {
+            HawtioKeycloak.log.debug("Not enabling idle timeout");
+        }
+    }]);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'KeycloakOAuth',
+        task: function (next) {
+            if (!window['KeycloakConfig']) {
+                HawtioKeycloak.log.debug("Keycloak disabled");
+                next();
+                return;
+            }
+            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+            keycloak.init().success(function (authenticated) {
+                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
+                if (!authenticated) {
+                    keycloak.login({
+                        redirectUri: window.location.href,
+                    });
+                }
+                else {
+                    keycloak.loadUserProfile().success(function (profile) {
+                        userProfile = profile;
+                        userProfile.token = keycloak.token;
+                        next();
+                    }).error(function () {
+                        HawtioKeycloak.log.debug("Failed to load user profile");
+                        next();
+                    });
+                }
+            }).error(function () {
+                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
+                next();
+            });
+        }
+    });
+    var AuthInterceptorService = (function () {
+        function AuthInterceptorService($q) {
+            var _this = this;
+            this.$q = $q;
+            this.request = function (request) {
+                var addBearer, deferred;
+                addBearer = function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    return keycloak.updateToken(5).success(function () {
+                        var token = HawtioKeycloak.keycloak.token;
+                        request.headers.Authorization = 'Bearer ' + token;
+                        deferred.notify();
+                        return deferred.resolve(request);
+                    }).error(function () {
+                        console.log("Couldn't update token");
+                    });
+                };
+                deferred = _this.$q.defer();
+                addBearer();
+                return _this.$q.when(deferred.promise);
+            };
+            this.responseError = function (rejection) {
+                if (rejection.status === 401) {
+                    HawtioKeycloak.keycloak.logout();
+                }
+                return _this.$q.reject(rejection);
+            };
+        }
+        AuthInterceptorService.Factory = function ($q) {
+            return new AuthInterceptorService($q);
+        };
+        AuthInterceptorService.$inject = ['$q'];
+        return AuthInterceptorService;
+    })();
+    HawtioKeycloak._module.requires.push("ngIdle");
+})(HawtioKeycloak || (HawtioKeycloak = {}));
 
 /// <reference path="../../includes.ts"/>
 var OSOAuth;
@@ -523,53 +540,56 @@ var OSOAuth;
     OSOAuth._module.run(['userDetails', function (userDetails) {
         OSOAuth.log.debug("loaded, userDetails: ", userDetails);
     }]);
-    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
-        if (!window['OSOAuthConfig']) {
-            OSOAuth.log.debug("oauth disabled");
-            next();
-            return;
-        }
-        if (!OSOAuthConfig.oauth_client_id || !OSOAuthConfig.oauth_authorize_uri) {
-            OSOAuth.log.debug("Invalid oauth config, disabled oauth");
-            next();
-            return;
-        }
-        OSOAuth.log.debug("config: ", OSOAuthConfig);
-        var currentURI = new URI(window.location.href);
-        var fragmentParams = OSOAuth.checkToken(currentURI);
-        if (fragmentParams) {
-            var tmp = {
-                token: fragmentParams.access_token,
-                expiry: fragmentParams.expires_in,
-                type: fragmentParams.token_type
-            };
-            var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-            uri.path('/oapi/v1/users/~');
-            OSOAuth.authenticatedHttpRequest({
-                type: 'GET',
-                url: uri.toString(),
-            }, tmp).done(function (response) {
-                userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
-                $.ajaxSetup({
-                    beforeSend: function (xhr) {
-                        xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-                    }
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'OpenShiftOAuth',
+        task: function (next) {
+            if (!window['OSOAuthConfig']) {
+                OSOAuth.log.debug("oauth disabled");
+                next();
+                return;
+            }
+            if (!OSOAuthConfig.oauth_client_id || !OSOAuthConfig.oauth_authorize_uri) {
+                OSOAuth.log.debug("Invalid oauth config, disabled oauth");
+                next();
+                return;
+            }
+            OSOAuth.log.debug("config: ", OSOAuthConfig);
+            var currentURI = new URI(window.location.href);
+            var fragmentParams = OSOAuth.checkToken(currentURI);
+            if (fragmentParams) {
+                var tmp = {
+                    token: fragmentParams.access_token,
+                    expiry: fragmentParams.expires_in,
+                    type: fragmentParams.token_type
+                };
+                var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+                uri.path('/oapi/v1/users/~');
+                OSOAuth.authenticatedHttpRequest({
+                    type: 'GET',
+                    url: uri.toString(),
+                }, tmp).done(function (response) {
+                    userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
+                    $.ajaxSetup({
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                        }
+                    });
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+                    OSOAuth.clearTokenStorage();
+                    OSOAuth.doLogin(OSOAuthConfig, {
+                        uri: currentURI.toString()
+                    });
+                }).always(function () {
+                    next();
                 });
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+            }
+            else {
                 OSOAuth.clearTokenStorage();
                 OSOAuth.doLogin(OSOAuthConfig, {
                     uri: currentURI.toString()
                 });
-            }).always(function () {
-                next();
-            });
-        }
-        else {
-            OSOAuth.clearTokenStorage();
-            OSOAuth.doLogin(OSOAuthConfig, {
-                uri: currentURI.toString()
-            });
+            }
         }
     });
     hawtioPluginLoader.addModule(OSOAuth.pluginName);
