@@ -63,19 +63,20 @@ module OSOAuth {
           url: uri.toString(),
         }, tmp).done((response) => {
           userProfile = _.merge(tmp, response, { provider: pluginName });
-          $.ajaxSetup({
-            beforeSend: (xhr) => {
-              xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-            }
-          });
+          setTimeout(() => {
+            $.ajaxSetup({
+              beforeSend: (xhr) => {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+              }
+            });
+            next();
+          }, 10);
         }).fail((jqXHR, textStatus, errorThrown) => {
           log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
           clearTokenStorage();
           doLogin(OSOAuthConfig, {
             uri: currentURI.toString()
           });
-        }).always(() => {
-          next();
         });
       } else {
         clearTokenStorage();

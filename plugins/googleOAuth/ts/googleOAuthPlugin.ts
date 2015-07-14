@@ -54,7 +54,6 @@ module GoogleOAuth {
       log.debug("config: ", GoogleOAuthConfig);
       var currentURI = new URI(window.location.href);
 
-
       try {
         var userDetails = getTokenStorage();
         if (userDetails && userDetails.token) {
@@ -101,9 +100,10 @@ module GoogleOAuth {
           }
         }).fail((jqHXR, textStatus, errorThrown) => {
           log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
-        }).always(() => {
-          log.debug("Next");
-          next();
+          clearTokenStorage();
+          doLogin(GoogleOAuthConfig, {
+            uri: currentURI.toString()
+          });
         });
       } else {
         clearTokenStorage();

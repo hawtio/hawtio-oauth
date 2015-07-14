@@ -262,9 +262,10 @@ var GoogleOAuth;
                     }
                 }).fail(function (jqHXR, textStatus, errorThrown) {
                     GoogleOAuth.log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
-                }).always(function () {
-                    GoogleOAuth.log.debug("Next");
-                    next();
+                    GoogleOAuth.clearTokenStorage();
+                    GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                        uri: currentURI.toString()
+                    });
                 });
             }
             else {
@@ -569,19 +570,20 @@ var OSOAuth;
                     url: uri.toString(),
                 }, tmp).done(function (response) {
                     userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
-                    $.ajaxSetup({
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
-                        }
-                    });
+                    setTimeout(function () {
+                        $.ajaxSetup({
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                            }
+                        });
+                        next();
+                    }, 10);
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
                     OSOAuth.clearTokenStorage();
                     OSOAuth.doLogin(OSOAuthConfig, {
                         uri: currentURI.toString()
                     });
-                }).always(function () {
-                    next();
                 });
             }
             else {
