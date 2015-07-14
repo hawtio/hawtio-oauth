@@ -1,10 +1,58 @@
 /// <reference path="../libs/hawtio-utilities/defs.d.ts"/>
+var HawtioOAuth;
+(function (HawtioOAuth) {
+    var log = Logger.get('hawtio-oauth');
+    HawtioOAuth.oauthPlugins = [];
+    function getTasks() {
+        return _.map(HawtioOAuth.oauthPlugins, function (entry) { return entry.task; });
+    }
+    HawtioOAuth.getTasks = getTasks;
+    var userProfile = undefined;
+    function getUserProfile() {
+        if (!userProfile) {
+            _.forEach(HawtioOAuth.oauthPlugins, function (module) {
+                if (!userProfile) {
+                    userProfile = Core.pathGet(window, [module, 'userProfile']);
+                }
+            });
+            log.debug("Found userProfile: ", userProfile);
+        }
+        return userProfile;
+    }
+    HawtioOAuth.getUserProfile = getUserProfile;
+    function getOAuthToken() {
+        var userProfile = getUserProfile();
+        if (!userProfile) {
+            return null;
+        }
+        return userProfile.token;
+    }
+    HawtioOAuth.getOAuthToken = getOAuthToken;
+    function authenticatedHttpRequest(options) {
+        return $.ajax(_.extend(options, {
+            beforeSend: function (request) {
+                var token = getOAuthToken();
+                if (token) {
+                    request.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
+            }
+        }));
+    }
+    HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+})(HawtioOAuth || (HawtioOAuth = {}));
 // global pre-bootstrap task that plugins can use to wait
-// until all oauth plugins have been processed, add any
-// new oauth plugins to the 'depends' list
+// until all oauth plugins have been processed
+// 
+// OAuth plugins can add to this list via:
+//
+// HawtioOAuth.oauthPlugins.push(<plugin name>);
+//
+// and then use a named task with the same name as <plugin name>
+//
+console.log("Tasks: ", HawtioOAuth.getTasks());
 hawtioPluginLoader.registerPreBootstrapTask({
     name: 'hawtio-oauth',
-    depends: ['KeycloakOAuth', 'GoogleOAuth', 'OpenShiftOAuth'],
+    depends: HawtioOAuth.oauthPlugins,
     task: function (next) {
         Logger.get('hawtio-oauth').info("All oauth plugins have executed");
         next();
@@ -172,17 +220,18 @@ var GoogleOAuth;
 /// <reference path="googleOAuthHelpers.ts"/>
 var GoogleOAuth;
 (function (GoogleOAuth) {
+    HawtioOAuth.oauthPlugins.push('GoogleOAuth');
     GoogleOAuth._module = angular.module(GoogleOAuth.pluginName, []);
     // Keep this unset unless we have a token
-    var userProfile = null;
+    GoogleOAuth.userProfile = null;
     hawtioPluginLoader.addModule(GoogleOAuth.pluginName);
     GoogleOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (userProfile) {
-                return _.merge($delegate, userProfile, {
-                    username: userProfile.fullName,
+            if (GoogleOAuth.userProfile) {
+                return _.merge($delegate, GoogleOAuth.userProfile, {
+                    username: GoogleOAuth.userProfile.fullName,
                     logout: function () {
-                        GoogleOAuth.doLogout(GoogleOAuthConfig, userProfile);
+                        GoogleOAuth.doLogout(GoogleOAuthConfig, GoogleOAuth.userProfile);
                     }
                 });
             }
@@ -190,14 +239,13 @@ var GoogleOAuth;
         }]);
     }]);
     GoogleOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (userProfile && userProfile.token) {
+        if (GoogleOAuth.userProfile && GoogleOAuth.userProfile.token) {
             $httpProvider.defaults.headers.common = {
-                'Authorization': 'Bearer ' + userProfile.token
+                'Authorization': 'Bearer ' + GoogleOAuth.userProfile.token
             };
         }
     }]);
     GoogleOAuth._module.run(['userDetails', function (userDetails) {
-        GoogleOAuth.log.debug("loaded, userDetails: ", userDetails);
     }]);
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'GoogleOAuth',
@@ -217,7 +265,7 @@ var GoogleOAuth;
             try {
                 var userDetails = GoogleOAuth.getTokenStorage();
                 if (userDetails && userDetails.token) {
-                    userProfile = userDetails;
+                    GoogleOAuth.userProfile = userDetails;
                     GoogleOAuth.setupJQueryAjax(userDetails);
                     next();
                     return;
@@ -243,9 +291,9 @@ var GoogleOAuth;
                             expiry: response.expires_in,
                             type: response.token_type
                         };
-                        userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
-                        GoogleOAuth.setTokenStorage(userProfile);
-                        GoogleOAuth.setupJQueryAjax(userProfile);
+                        GoogleOAuth.userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
+                        GoogleOAuth.setTokenStorage(GoogleOAuth.userProfile);
+                        GoogleOAuth.setupJQueryAjax(GoogleOAuth.userProfile);
                         GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
                         // lets remove the auth code
                         var uri = new URI(window.location.href).removeQuery("code");
@@ -292,15 +340,16 @@ var HawtioKeycloak;
 /// <reference path="keycloakHelpers.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
+    HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
     HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    var userProfile = undefined;
+    HawtioKeycloak.userProfile = undefined;
     hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
     HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (userProfile) {
-                return _.merge($delegate, userProfile, {
+            if (HawtioKeycloak.userProfile) {
+                return _.merge($delegate, HawtioKeycloak.userProfile, {
                     logout: function () {
-                        if (userProfile && HawtioKeycloak.keycloak) {
+                        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
                             HawtioKeycloak.keycloak.logout();
                         }
                     }
@@ -337,7 +386,7 @@ var HawtioKeycloak;
         }
     }]);
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'KeycloakOAuth',
+        name: 'HawtioKeycloak',
         task: function (next) {
             if (!window['KeycloakConfig']) {
                 HawtioKeycloak.log.debug("Keycloak disabled");
@@ -354,8 +403,8 @@ var HawtioKeycloak;
                 }
                 else {
                     keycloak.loadUserProfile().success(function (profile) {
-                        userProfile = profile;
-                        userProfile.token = keycloak.token;
+                        HawtioKeycloak.userProfile = profile;
+                        HawtioKeycloak.userProfile.token = keycloak.token;
                         next();
                     }).error(function () {
                         HawtioKeycloak.log.debug("Failed to load user profile");
@@ -515,16 +564,17 @@ var OSOAuth;
 /// <reference path="osOAuthHelpers.ts"/>
 var OSOAuth;
 (function (OSOAuth) {
+    HawtioOAuth.oauthPlugins.push('OSOAuth');
     OSOAuth._module = angular.module(OSOAuth.pluginName, []);
     // Keep this unset unless we have a token
-    var userProfile = null;
+    OSOAuth.userProfile = null;
     OSOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (userProfile) {
-                return _.merge($delegate, userProfile, {
-                    username: userProfile.fullName,
+            if (OSOAuth.userProfile) {
+                return _.merge($delegate, OSOAuth.userProfile, {
+                    username: OSOAuth.userProfile.fullName,
                     logout: function () {
-                        OSOAuth.doLogout(OSOAuthConfig, userProfile);
+                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
                     }
                 });
             }
@@ -532,17 +582,16 @@ var OSOAuth;
         }]);
     }]);
     OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (userProfile && userProfile.token) {
+        if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
             $httpProvider.defaults.headers.common = {
-                'Authorization': 'Bearer ' + userProfile.token
+                'Authorization': 'Bearer ' + OSOAuth.userProfile.token
             };
         }
     }]);
     OSOAuth._module.run(['userDetails', function (userDetails) {
-        OSOAuth.log.debug("loaded, userDetails: ", userDetails);
     }]);
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'OpenShiftOAuth',
+        name: 'OSOAuth',
         task: function (next) {
             if (!window['OSOAuthConfig']) {
                 OSOAuth.log.debug("oauth disabled");
@@ -569,7 +618,7 @@ var OSOAuth;
                     type: 'GET',
                     url: uri.toString(),
                 }, tmp).done(function (response) {
-                    userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
+                    OSOAuth.userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
                     setTimeout(function () {
                         $.ajaxSetup({
                             beforeSend: function (xhr) {

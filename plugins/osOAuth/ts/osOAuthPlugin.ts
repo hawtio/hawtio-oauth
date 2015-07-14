@@ -1,10 +1,13 @@
 /// <reference path="osOAuthHelpers.ts"/>
 
 module OSOAuth {
+
+  HawtioOAuth.oauthPlugins.push('OSOAuth');
+
   export var _module = angular.module(pluginName, []);
 
   // Keep this unset unless we have a token
-  var userProfile:any = null;
+  export var userProfile:any = null;
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
@@ -29,11 +32,11 @@ module OSOAuth {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    log.debug("loaded, userDetails: ", userDetails);
+
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask({
-    name: 'OpenShiftOAuth',
+    name: 'OSOAuth',
     task: (next) => {
       if (!window['OSOAuthConfig']) {
         log.debug("oauth disabled");

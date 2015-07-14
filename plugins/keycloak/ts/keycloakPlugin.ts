@@ -1,8 +1,9 @@
 /// <reference path="keycloakGlobals.ts"/>
 /// <reference path="keycloakHelpers.ts"/>
 module HawtioKeycloak {
+  HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
   export var _module = angular.module(pluginName, []);
-  var userProfile:any = undefined;
+  export var userProfile:any = undefined;
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', '$httpProvider', ($provide, $httpProvider) => {
@@ -50,7 +51,7 @@ module HawtioKeycloak {
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask({
-    name: 'KeycloakOAuth',
+    name: 'HawtioKeycloak',
     task: (next) => {
       if (!window['KeycloakConfig']) {
         log.debug("Keycloak disabled");

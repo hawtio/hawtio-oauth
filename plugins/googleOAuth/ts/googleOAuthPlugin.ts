@@ -1,10 +1,11 @@
 /// <reference path="googleOAuthHelpers.ts"/>
 
 module GoogleOAuth {
+  HawtioOAuth.oauthPlugins.push('GoogleOAuth');
   export var _module = angular.module(pluginName, []);
 
   // Keep this unset unless we have a token
-  var userProfile:any = null;
+  export var userProfile:any = null;
 
   hawtioPluginLoader.addModule(pluginName);
 
@@ -31,7 +32,7 @@ module GoogleOAuth {
   }]);
 
   _module.run(['userDetails', (userDetails) => {
-    log.debug("loaded, userDetails: ", userDetails);
+
   }]);
 
   hawtioPluginLoader.registerPreBootstrapTask({

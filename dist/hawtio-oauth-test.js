@@ -54,6 +54,23 @@ var Example;
         };
         next();
     }, true);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'test-init',
+        depends: ['hawtio-oauth'],
+        task: function (next) {
+            var uri = new URI('https://172.28.128.4:8443/api/v1');
+            uri.path('/api/v1/namespaces');
+            var url = uri.toString();
+            HawtioOAuth.authenticatedHttpRequest({
+                url: uri.toString()
+            }).done(function (data) {
+                Example.log.debug("Got data: ", data);
+                next();
+            }).error(function () {
+                next();
+            });
+        }
+    });
     hawtioPluginLoader.addModule(Example.pluginName);
 })(Example || (Example = {}));
 
