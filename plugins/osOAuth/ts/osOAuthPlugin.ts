@@ -6,9 +6,6 @@ module OSOAuth {
 
   export var _module = angular.module(pluginName, []);
 
-  // Keep this unset unless we have a token
-  export var userProfile:any = null;
-
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
       if (userProfile) {

@@ -6,6 +6,7 @@ declare var GoogleOAuthConfig: any;
 declare module HawtioOAuth {
     var oauthPlugins: any[];
     function getTasks(): any[];
+    function doLogout(): void;
     function getUserProfile(): any;
     function getOAuthToken(): any;
     function authenticatedHttpRequest(options: any): JQueryXHR;

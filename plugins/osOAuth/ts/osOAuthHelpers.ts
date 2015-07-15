@@ -13,7 +13,7 @@ module OSOAuth {
     }));
   }
 
-  export function doLogout(config, userDetails) {
+  export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile) {
     var currentURI = new URI(window.location.href);
     var uri = new URI(config.oauth_authorize_uri);
     uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);

@@ -66,8 +66,9 @@ var Example;
             }).done(function (data) {
                 Example.log.debug("Got data: ", data);
                 next();
-            }).error(function () {
-                next();
+            }).fail(function (xHr, textStatus, errorThrown) {
+                Example.log.warn(textStatus, errorThrown);
+                HawtioOAuth.doLogout();
             });
         }
     });

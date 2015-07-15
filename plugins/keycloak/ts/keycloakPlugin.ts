@@ -3,7 +3,7 @@
 module HawtioKeycloak {
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
   export var _module = angular.module(pluginName, []);
-  export var userProfile:any = undefined;
+
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', '$httpProvider', ($provide, $httpProvider) => {

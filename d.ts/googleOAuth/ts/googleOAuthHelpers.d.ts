@@ -2,7 +2,7 @@
 declare module GoogleOAuth {
     function authenticatedHttpRequest(options: any, userDetails: any): JQueryXHR;
     function setupJQueryAjax(userDetails: any): void;
-    function doLogout(config: any, userDetails: any): void;
+    function doLogout(config?: any, userDetails?: any): void;
     function doLogin(config: any, options: any): void;
     function exchangeCodeForToken(config: any, code: any, options: any): JQueryXHR;
     function extractToken(query: any): {
