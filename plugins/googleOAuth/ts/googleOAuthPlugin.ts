@@ -4,9 +4,6 @@ module GoogleOAuth {
   HawtioOAuth.oauthPlugins.push('GoogleOAuth');
   export var _module = angular.module(pluginName, []);
 
-  // Keep this unset unless we have a token
-  export var userProfile:any = null;
-
   hawtioPluginLoader.addModule(pluginName);
 
   _module.config(['$provide', ($provide) => {

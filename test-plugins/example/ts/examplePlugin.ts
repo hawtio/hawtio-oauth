@@ -68,8 +68,9 @@ module Example {
       }).done((data) => {
         log.debug("Got data: ", data);
         next();
-      }).error(() => {
-        next();
+      }).fail((xHr, textStatus, errorThrown) => {
+        log.warn(textStatus, errorThrown);
+        HawtioOAuth.doLogout();
       });
     }
   });

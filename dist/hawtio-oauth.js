@@ -8,14 +8,24 @@ var HawtioOAuth;
     }
     HawtioOAuth.getTasks = getTasks;
     var userProfile = undefined;
+    var activePlugin = undefined;
+    function doLogout() {
+        if (!activePlugin) {
+            return;
+        }
+        var plugin = window[activePlugin];
+        plugin.doLogout();
+    }
+    HawtioOAuth.doLogout = doLogout;
     function getUserProfile() {
         if (!userProfile) {
             _.forEach(HawtioOAuth.oauthPlugins, function (module) {
                 if (!userProfile) {
                     userProfile = Core.pathGet(window, [module, 'userProfile']);
+                    activePlugin = module;
                 }
             });
-            log.debug("Found userProfile: ", userProfile);
+            log.debug("Found userProfile from plugin: ", activePlugin);
         }
         return userProfile;
     }
@@ -64,6 +74,8 @@ var GoogleOAuth;
 (function (GoogleOAuth) {
     GoogleOAuth.pluginName = 'hawtio-google-oauth';
     GoogleOAuth.log = Logger.get(GoogleOAuth.pluginName);
+    // Keep this unset unless we have a token
+    GoogleOAuth.userProfile = null;
 })(GoogleOAuth || (GoogleOAuth = {}));
 
 /// <reference path="googleOAuthGlobals.ts"/>
@@ -92,6 +104,8 @@ var GoogleOAuth;
     }
     GoogleOAuth.setupJQueryAjax = setupJQueryAjax;
     function doLogout(config, userDetails) {
+        if (config === void 0) { config = window['GoogleOAuthConfig']; }
+        if (userDetails === void 0) { userDetails = GoogleOAuth.userProfile; }
         console.debug("Logging out!");
         var token = getTokenStorage() || userDetails.token;
         var uri = new URI(window.location.href).removeQuery("code");
@@ -222,8 +236,6 @@ var GoogleOAuth;
 (function (GoogleOAuth) {
     HawtioOAuth.oauthPlugins.push('GoogleOAuth');
     GoogleOAuth._module = angular.module(GoogleOAuth.pluginName, []);
-    // Keep this unset unless we have a token
-    GoogleOAuth.userProfile = null;
     hawtioPluginLoader.addModule(GoogleOAuth.pluginName);
     GoogleOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
@@ -332,9 +344,21 @@ var HawtioKeycloak;
     HawtioKeycloak.pluginName = 'hawtio-keycloak';
     HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
     HawtioKeycloak.keycloak = undefined;
+    // used by HawtioOAuth, must have a 'token' field when set, otherwise
+    // leave undefined
+    HawtioKeycloak.userProfile = undefined;
 })(HawtioKeycloak || (HawtioKeycloak = {}));
 
 /// <reference path="keycloakGlobals.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    function doLogout() {
+        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+            HawtioKeycloak.keycloak.logout();
+        }
+    }
+    HawtioKeycloak.doLogout = doLogout;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
 
 /// <reference path="keycloakGlobals.ts"/>
 /// <reference path="keycloakHelpers.ts"/>
@@ -342,7 +366,6 @@ var HawtioKeycloak;
 (function (HawtioKeycloak) {
     HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
     HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    HawtioKeycloak.userProfile = undefined;
     hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
     HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
@@ -459,6 +482,8 @@ var OSOAuth;
 (function (OSOAuth) {
     OSOAuth.pluginName = 'hawtio-os-oauth';
     OSOAuth.log = Logger.get(OSOAuth.pluginName);
+    // Keep this unset unless we have a token
+    OSOAuth.userProfile = null;
 })(OSOAuth || (OSOAuth = {}));
 
 /// <reference path="osOAuthGlobals.ts"/>
@@ -476,6 +501,8 @@ var OSOAuth;
     }
     OSOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
     function doLogout(config, userDetails) {
+        if (config === void 0) { config = window['OSOAuthConfig']; }
+        if (userDetails === void 0) { userDetails = OSOAuth.userProfile; }
         var currentURI = new URI(window.location.href);
         var uri = new URI(config.oauth_authorize_uri);
         uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);
@@ -566,8 +593,6 @@ var OSOAuth;
 (function (OSOAuth) {
     HawtioOAuth.oauthPlugins.push('OSOAuth');
     OSOAuth._module = angular.module(OSOAuth.pluginName, []);
-    // Keep this unset unless we have a token
-    OSOAuth.userProfile = null;
     OSOAuth._module.config(['$provide', function ($provide) {
         $provide.decorator('userDetails', ['$delegate', function ($delegate) {
             if (OSOAuth.userProfile) {

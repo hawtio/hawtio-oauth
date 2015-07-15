@@ -18,15 +18,25 @@ module HawtioOAuth {
   }
 
   var userProfile:any = undefined;
+  var activePlugin:string = undefined;
+
+  export function doLogout() {
+    if (!activePlugin) {
+      return;
+    }
+    var plugin = window[activePlugin];
+    plugin.doLogout();
+  }
 
   export function getUserProfile() {
     if (!userProfile) {
       _.forEach(oauthPlugins, (module) => {
         if (!userProfile) {
           userProfile = Core.pathGet(window, [module, 'userProfile']);
+          activePlugin = module;
         }
       });
-      log.debug("Found userProfile: ", userProfile);
+      log.debug("Found userProfile from plugin: ", activePlugin);
     }
     return userProfile;
   }

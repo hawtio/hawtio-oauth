@@ -24,7 +24,7 @@ module GoogleOAuth {
     });
   }
 
-  export function doLogout(config, userDetails) {
+  export function doLogout(config = window['GoogleOAuthConfig'], userDetails = GoogleOAuth.userProfile) {
     console.debug("Logging out!");
     var token = getTokenStorage() || userDetails.token;
 
