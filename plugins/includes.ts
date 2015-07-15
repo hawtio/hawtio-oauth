@@ -30,13 +30,9 @@ module HawtioOAuth {
 
   export function getUserProfile() {
     if (!userProfile) {
-      _.forEach(oauthPlugins, (module) => {
-        if (!userProfile) {
-          userProfile = Core.pathGet(window, [module, 'userProfile']);
-          activePlugin = module;
-        }
-      });
-      log.debug("Found userProfile from plugin: ", activePlugin);
+      activePlugin = _.find(oauthPlugins, (module) => Core.pathGet(window, [module, 'userProfile']));
+      userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
+      log.debug("Active OAuth plugin: ", activePlugin);
     }
     return userProfile;
   }

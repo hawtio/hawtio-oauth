@@ -19,13 +19,9 @@ var HawtioOAuth;
     HawtioOAuth.doLogout = doLogout;
     function getUserProfile() {
         if (!userProfile) {
-            _.forEach(HawtioOAuth.oauthPlugins, function (module) {
-                if (!userProfile) {
-                    userProfile = Core.pathGet(window, [module, 'userProfile']);
-                    activePlugin = module;
-                }
-            });
-            log.debug("Found userProfile from plugin: ", activePlugin);
+            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (module) { return Core.pathGet(window, [module, 'userProfile']); });
+            userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
+            log.debug("Active OAuth plugin: ", activePlugin);
         }
         return userProfile;
     }
