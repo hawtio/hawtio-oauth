@@ -153,4 +153,10 @@ module GoogleOAuth {
   export function checkAuthorizationCode(uri) {
     return uri.query(true).code;
   }
+
+  export function fetchUserInfo(http, successCallback, failureCallback) {
+    http.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + HawtioOAuth.getUserProfile().access_token).
+        success(successCallback).error(failureCallback);
+  }
+
 }
