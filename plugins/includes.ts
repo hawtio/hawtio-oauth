@@ -9,7 +9,18 @@ declare var OSOAuthConfig;
 declare var GoogleOAuthConfig;
 
 module HawtioOAuth {
-  var log:Logging.Logger = Logger.get('hawtio-oauth');
+  var pluginName = 'HawtioOAuth';
+  var log:Logging.Logger = Logger.get(pluginName);
+  var _module = angular.module(pluginName, []);
+
+  _module.run(['HawtioExtension', '$compile', (ext, $compile) => {
+    ext.add('hawtio-user', ($scope) => {
+      $scope.doLogout = doLogout;
+      return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+    });
+  }]);
+
+  hawtioPluginLoader.addModule(pluginName);
 
   export var oauthPlugins = [];
 

@@ -1,7 +1,16 @@
 /// <reference path="../libs/hawtio-utilities/defs.d.ts"/>
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    var log = Logger.get('hawtio-oauth');
+    var pluginName = 'HawtioOAuth';
+    var log = Logger.get(pluginName);
+    var _module = angular.module(pluginName, []);
+    _module.run(['HawtioExtension', '$compile', function (ext, $compile) {
+            ext.add('hawtio-user', function ($scope) {
+                $scope.doLogout = doLogout;
+                return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+            });
+        }]);
+    hawtioPluginLoader.addModule(pluginName);
     HawtioOAuth.oauthPlugins = [];
     function getTasks() {
         return _.map(HawtioOAuth.oauthPlugins, function (entry) { return entry.task; });
