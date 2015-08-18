@@ -620,7 +620,28 @@ var OSOAuth;
                 };
             }
         }]);
-    OSOAuth._module.run(['userDetails', function (userDetails) {
+    var keepaliveUri = undefined;
+    var keepaliveInterval = undefined;
+    OSOAuth._module.config(['KeepaliveProvider', function (KeepaliveProvider) {
+            OSOAuth.log.debug("keepalive URI: ", keepaliveUri);
+            OSOAuth.log.debug("keepalive interval: ", keepaliveInterval);
+            if (keepaliveUri && keepaliveInterval) {
+                KeepaliveProvider.http(keepaliveUri);
+                KeepaliveProvider.interval(keepaliveInterval);
+            }
+        }]);
+    OSOAuth._module.run(['userDetails', 'Keepalive', '$rootScope', function (userDetails, Keepalive, $rootScope) {
+            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
+                OSOAuth.log.debug("Starting keepalive");
+                $rootScope.$on('KeepaliveResponse', function ($event, data, status) {
+                    OSOAuth.log.debug("keepaliveStatus: ", status);
+                    OSOAuth.log.debug("keepalive response: ", data);
+                    if (status === 401) {
+                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+                    }
+                });
+                Keepalive.start();
+            }
         }]);
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'OSOAuth',
@@ -647,11 +668,19 @@ var OSOAuth;
                 };
                 var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
                 uri.path('/oapi/v1/users/~');
+                keepaliveUri = uri.toString();
                 OSOAuth.authenticatedHttpRequest({
                     type: 'GET',
-                    url: uri.toString(),
+                    url: keepaliveUri,
                 }, tmp).done(function (response) {
                     OSOAuth.userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
+                    if (OSOAuth.userProfile.expiry) {
+                        keepaliveInterval = Math.round(OSOAuth.userProfile.expiry / 4);
+                    }
+                    else {
+                        keepaliveInterval = 600;
+                    }
+                    OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
                     setTimeout(function () {
                         $.ajaxSetup({
                             beforeSend: function (xhr) {

@@ -28,7 +28,31 @@ module OSOAuth {
     }
   }]);
 
-  _module.run(['userDetails', (userDetails) => {
+  var keepaliveUri:string = undefined;
+  var keepaliveInterval:number = undefined;
+
+  _module.config(['KeepaliveProvider', (KeepaliveProvider) => {
+    log.debug("keepalive URI: ", keepaliveUri);
+    log.debug("keepalive interval: ", keepaliveInterval);
+    if (keepaliveUri && keepaliveInterval) {
+      KeepaliveProvider.http(keepaliveUri);
+      KeepaliveProvider.interval(keepaliveInterval);
+    }
+  }]);
+
+
+  _module.run(['userDetails', 'Keepalive', '$rootScope', (userDetails, Keepalive, $rootScope) => {
+    if (userProfile && userProfile.token) {
+      log.debug("Starting keepalive");
+      $rootScope.$on('KeepaliveResponse', ($event, data, status) => {
+        log.debug("keepaliveStatus: ", status);
+        log.debug("keepalive response: ", data);
+        if (status === 401) {
+          doLogout(OSOAuthConfig, userProfile);
+        }
+      });
+      Keepalive.start();
+    }
 
   }]);
 
@@ -58,11 +82,18 @@ module OSOAuth {
         }
         var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
         uri.path('/oapi/v1/users/~');
+        keepaliveUri = uri.toString();
         authenticatedHttpRequest({
           type: 'GET',
-          url: uri.toString(),
+          url: keepaliveUri,
         }, tmp).done((response) => {
           userProfile = _.merge(tmp, response, { provider: pluginName });
+          if (userProfile.expiry) {
+            keepaliveInterval = Math.round(userProfile.expiry / 4);
+          } else {
+            keepaliveInterval = 600;
+          }
+          log.debug("userProfile: ", userProfile);
           setTimeout(() => {
             $.ajaxSetup({
               beforeSend: (xhr) => {
