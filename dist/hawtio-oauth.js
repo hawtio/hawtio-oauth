@@ -497,6 +497,10 @@ var OSOAuth;
 var OSOAuth;
 (function (OSOAuth) {
     var OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
+    function currentTimeSeconds() {
+        return Math.floor(new Date().getTime() / 1000);
+    }
+    OSOAuth.currentTimeSeconds = currentTimeSeconds;
     function authenticatedHttpRequest(options, userDetails) {
         return $.ajax(_.extend(options, {
             beforeSend: function (request) {
@@ -550,7 +554,8 @@ var OSOAuth;
             var creds = {
                 token_type: fragmentParams.token_type,
                 access_token: fragmentParams.access_token,
-                expires_in: fragmentParams.expires_in
+                expires_in: fragmentParams.expires_in,
+                obtainedAt: currentTimeSeconds()
             };
             localStorage['osAuthCreds'] = angular.toJson(creds);
             delete fragmentParams.token_type;
@@ -664,7 +669,8 @@ var OSOAuth;
                 var tmp = {
                     token: fragmentParams.access_token,
                     expiry: fragmentParams.expires_in,
-                    type: fragmentParams.token_type
+                    type: fragmentParams.token_type,
+                    obtainedAt: fragmentParams.obtainedAt || 0
                 };
                 var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
                 uri.path('/oapi/v1/users/~');
@@ -674,13 +680,17 @@ var OSOAuth;
                     url: keepaliveUri,
                 }, tmp).done(function (response) {
                     OSOAuth.userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
-                    if (OSOAuth.userProfile.expiry) {
-                        keepaliveInterval = Math.round(OSOAuth.userProfile.expiry / 4);
+                    var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
+                    var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
+                    if (obtainedAt) {
+                        var remainingTime = (obtainedAt + expiry) - OSOAuth.currentTimeSeconds();
+                        if (remainingTime > 0) {
+                            keepaliveInterval = Math.round(remainingTime / 4);
+                        }
                     }
-                    else {
+                    if (!keepaliveInterval) {
                         keepaliveInterval = 600;
                     }
-                    OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
                     setTimeout(function () {
                         $.ajaxSetup({
                             beforeSend: function (xhr) {

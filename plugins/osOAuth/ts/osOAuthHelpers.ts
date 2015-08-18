@@ -3,6 +3,10 @@ module OSOAuth {
 
   var OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
 
+  export function currentTimeSeconds() {
+    return Math.floor(new Date().getTime() / 1000);
+  }
+
   export function authenticatedHttpRequest(options, userDetails) {
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
@@ -54,8 +58,9 @@ module OSOAuth {
 			var creds = {
 				token_type: fragmentParams.token_type,
 				access_token: fragmentParams.access_token,
-				expires_in: fragmentParams.expires_in
-			}
+				expires_in: fragmentParams.expires_in,
+        obtainedAt: currentTimeSeconds()
+      };
       localStorage['osAuthCreds'] = angular.toJson(creds);
 			delete fragmentParams.token_type;
 			delete fragmentParams.access_token;

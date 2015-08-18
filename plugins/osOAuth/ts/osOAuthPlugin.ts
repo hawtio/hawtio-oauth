@@ -78,7 +78,8 @@ module OSOAuth {
         var tmp = {
           token: fragmentParams.access_token,
           expiry: fragmentParams.expires_in,
-          type: fragmentParams.token_type
+          type: fragmentParams.token_type,
+          obtainedAt: fragmentParams.obtainedAt || 0
         }
         var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
         uri.path('/oapi/v1/users/~');
@@ -88,12 +89,17 @@ module OSOAuth {
           url: keepaliveUri,
         }, tmp).done((response) => {
           userProfile = _.merge(tmp, response, { provider: pluginName });
-          if (userProfile.expiry) {
-            keepaliveInterval = Math.round(userProfile.expiry / 4);
-          } else {
+          var obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
+          var expiry = Core.parseIntValue(userProfile.expiry) || 0;
+          if (obtainedAt) {
+            var remainingTime = (obtainedAt + expiry) - currentTimeSeconds();
+            if (remainingTime > 0) {
+              keepaliveInterval = Math.round(remainingTime / 4);
+            }
+          }
+          if (!keepaliveInterval) {
             keepaliveInterval = 600;
           }
-          log.debug("userProfile: ", userProfile);
           setTimeout(() => {
             $.ajaxSetup({
               beforeSend: (xhr) => {
