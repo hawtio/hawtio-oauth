@@ -15,4 +15,5 @@ declare module GoogleOAuth {
     function setTokenStorage(userDetails: any): void;
     function checkToken(query: any): any;
     function checkAuthorizationCode(uri: any): any;
+    function fetchUserInfo(http: any, successCallback: any, failureCallback: any): void;
 }
