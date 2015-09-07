@@ -52,7 +52,7 @@ module OSOAuth {
     log.debug("Query: ", query);
     var fragmentParams:any = new URI("?" + uri.fragment()).query(true);
     log.debug("FragmentParams: ", fragmentParams);
-    if (fragmentParams.access_token && fragmentParams.token_type === "bearer") {
+    if (fragmentParams.access_token && (fragmentParams.token_type === "bearer") || fragmentParams.token_type === "Bearer") {
       log.debug("Got token");
       var localStorage = Core.getLocalStorage();
 			var creds = {
