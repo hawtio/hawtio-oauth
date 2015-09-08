@@ -4,12 +4,15 @@ var HawtioOAuth;
     var pluginName = 'HawtioOAuth';
     var log = Logger.get(pluginName);
     var _module = angular.module(pluginName, []);
-    _module.run(['HawtioExtension', '$compile', function (ext, $compile) {
-        ext.add('hawtio-user', function ($scope) {
-            $scope.doLogout = doLogout;
-            return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-        });
-    }]);
+    _module.run(['$compile', function ($compile) {
+            var ext = HawtioCore.injector.get('HawtioExtension');
+            if (ext) {
+                ext.add('hawtio-user', function ($scope) {
+                    $scope.doLogout = doLogout;
+                    return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+                });
+            }
+        }]);
     hawtioPluginLoader.addModule(pluginName);
     HawtioOAuth.oauthPlugins = [];
     function getTasks() {
@@ -75,6 +78,283 @@ hawtioPluginLoader.registerPreBootstrapTask({
 });
 
 /// <reference path="../../includes.ts"/>
+var GoogleOAuth;
+(function (GoogleOAuth) {
+    GoogleOAuth.pluginName = 'hawtio-google-oauth';
+    GoogleOAuth.log = Logger.get(GoogleOAuth.pluginName);
+    // Keep this unset unless we have a token
+    GoogleOAuth.userProfile = null;
+})(GoogleOAuth || (GoogleOAuth = {}));
+
+/// <reference path="googleOAuthGlobals.ts"/>
+var GoogleOAuth;
+(function (GoogleOAuth) {
+    var GOOGLE_TOKEN_STORAGE_KEY = 'googleAuthCreds';
+    function authenticatedHttpRequest(options, userDetails) {
+        return $.ajax(_.extend(options, {
+            beforeSend: function (request) {
+                if (userDetails.token) {
+                    request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
+                }
+            }
+        }));
+    }
+    GoogleOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    function setupJQueryAjax(userDetails) {
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                var token = userDetails.token;
+                if (token) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
+            }
+        });
+    }
+    GoogleOAuth.setupJQueryAjax = setupJQueryAjax;
+    function doLogout(config, userDetails) {
+        if (config === void 0) { config = window['GoogleOAuthConfig']; }
+        if (userDetails === void 0) { userDetails = GoogleOAuth.userProfile; }
+        console.debug("Logging out!");
+        var token = getTokenStorage() || userDetails.token;
+        var uri = new URI(window.location.href).removeQuery("code");
+        var target = uri.toString();
+        GoogleOAuth.log.debug("Now logging in with URI: " + target);
+        clearTokenStorage();
+        doLogin(GoogleOAuthConfig, {
+            uri: target
+        });
+    }
+    GoogleOAuth.doLogout = doLogout;
+    function doLogin(config, options) {
+        var clientId = config.clientId;
+        var redirectURI = config.redirectURI;
+        var scope = config.scope;
+        var targetURI = config.authenticationURI;
+        var uri = new URI(targetURI);
+        uri.query({
+            response_type: 'code',
+            client_id: clientId,
+            redirect_uri: redirectURI,
+            scope: scope,
+            approval_prompt: 'force'
+        });
+        var target = uri.toString();
+        GoogleOAuth.log.debug("Redirecting to URI: ", target);
+        window.location.href = target;
+    }
+    GoogleOAuth.doLogin = doLogin;
+    function exchangeCodeForToken(config, code, options) {
+        var clientId = config.clientId;
+        var clientSecret = config.clientSecret;
+        var redirectURI = config.redirectURI;
+        var uri = new URI(config.tokenURI || 'https://www.googleapis.com/oauth2/v3/token');
+        uri.query({
+            code: code,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectURI,
+            grant_type: 'authorization_code'
+        });
+        var target = uri.toString();
+        GoogleOAuth.log.debug("Redirecting to URI: ", target);
+        return $.ajax({
+            type: 'POST',
+            url: target
+        });
+    }
+    GoogleOAuth.exchangeCodeForToken = exchangeCodeForToken;
+    function extractToken(query) {
+        GoogleOAuth.log.debug("query: ", query);
+        if (query.access_token && query.token_type === "Bearer") {
+            GoogleOAuth.log.debug("Got token");
+            var localStorage = Core.getLocalStorage();
+            var creds = {
+                type: query.token_type.toLowerCase(),
+                token: query.access_token,
+                expiry: query.expires_in
+            };
+            localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(creds);
+            delete query.token_type;
+            delete query.access_token;
+            delete query.expires_in;
+            // SHOULD THIS BE CALLED?
+            //var target = query.toString();
+            //log.debug("redirecting to: ", target);
+            //window.location.href = target;
+            return creds;
+        }
+        else {
+            GoogleOAuth.log.info("No token in URI");
+            return undefined;
+        }
+    }
+    GoogleOAuth.extractToken = extractToken;
+    function clearTokenStorage() {
+        var localStorage = Core.getLocalStorage();
+        delete localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+    }
+    GoogleOAuth.clearTokenStorage = clearTokenStorage;
+    function getTokenStorage() {
+        var localStorage = Core.getLocalStorage();
+        var value = localStorage[GOOGLE_TOKEN_STORAGE_KEY];
+        if (value) {
+            try {
+                return angular.fromJson(value);
+            }
+            catch (e) {
+                GoogleOAuth.log.warn("Failed to parse token json: " + value + ". " + e);
+            }
+        }
+        return null;
+    }
+    GoogleOAuth.getTokenStorage = getTokenStorage;
+    function setTokenStorage(userDetails) {
+        var localStorage = Core.getLocalStorage();
+        localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(userDetails);
+    }
+    GoogleOAuth.setTokenStorage = setTokenStorage;
+    function checkToken(query) {
+        var localStorage = Core.getLocalStorage();
+        var answer = undefined;
+        if (GOOGLE_TOKEN_STORAGE_KEY in localStorage) {
+            try {
+                answer = angular.fromJson(localStorage[GOOGLE_TOKEN_STORAGE_KEY]);
+            }
+            catch (e) {
+                clearTokenStorage();
+                // must be broken...
+                GoogleOAuth.log.error("Error extracting googleAuthCreds value: ", e);
+            }
+        }
+        if (!answer) {
+            answer = extractToken(query);
+        }
+        GoogleOAuth.log.debug("Using creds: ", answer);
+        return answer;
+    }
+    GoogleOAuth.checkToken = checkToken;
+    function checkAuthorizationCode(uri) {
+        return uri.query(true).code;
+    }
+    GoogleOAuth.checkAuthorizationCode = checkAuthorizationCode;
+    function fetchUserInfo(http, successCallback, failureCallback) {
+        http.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + HawtioOAuth.getUserProfile().access_token).
+            success(successCallback).error(failureCallback);
+    }
+    GoogleOAuth.fetchUserInfo = fetchUserInfo;
+})(GoogleOAuth || (GoogleOAuth = {}));
+
+/// <reference path="googleOAuthHelpers.ts"/>
+var GoogleOAuth;
+(function (GoogleOAuth) {
+    HawtioOAuth.oauthPlugins.push('GoogleOAuth');
+    GoogleOAuth._module = angular.module(GoogleOAuth.pluginName, []);
+    hawtioPluginLoader.addModule(GoogleOAuth.pluginName);
+    GoogleOAuth._module.config(['$provide', function ($provide) {
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (GoogleOAuth.userProfile) {
+                        return _.merge($delegate, GoogleOAuth.userProfile, {
+                            username: GoogleOAuth.userProfile.fullName,
+                            logout: function () {
+                                GoogleOAuth.doLogout(GoogleOAuthConfig, GoogleOAuth.userProfile);
+                            }
+                        });
+                    }
+                    return $delegate;
+                }]);
+        }]);
+    GoogleOAuth._module.config(['$httpProvider', function ($httpProvider) {
+            if (GoogleOAuth.userProfile && GoogleOAuth.userProfile.token) {
+                $httpProvider.defaults.headers.common = {
+                    'Authorization': 'Bearer ' + GoogleOAuth.userProfile.token
+                };
+            }
+        }]);
+    GoogleOAuth._module.run(['userDetails', function (userDetails) {
+        }]);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GoogleOAuth',
+        task: function (next) {
+            if (!window['GoogleOAuthConfig']) {
+                GoogleOAuth.log.debug("oauth disabled");
+                next();
+                return;
+            }
+            if (!GoogleOAuthConfig.clientId ||
+                !GoogleOAuthConfig.redirectURI ||
+                !GoogleOAuthConfig.scope ||
+                !GoogleOAuthConfig.authenticationURI) {
+                GoogleOAuth.log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
+                next();
+                return;
+            }
+            GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
+            var currentURI = new URI(window.location.href);
+            try {
+                var userDetails = GoogleOAuth.getTokenStorage();
+                if (userDetails && userDetails.token) {
+                    GoogleOAuth.userProfile = userDetails;
+                    GoogleOAuth.setupJQueryAjax(userDetails);
+                    next();
+                    return;
+                }
+                else {
+                    // old format, let's force an update by re-authenticating
+                    GoogleOAuth.clearTokenStorage();
+                }
+            }
+            catch (err) {
+                // must be a bad stored token
+                GoogleOAuth.clearTokenStorage();
+            }
+            var authorizationCode = GoogleOAuth.checkAuthorizationCode(currentURI);
+            if (authorizationCode) {
+                GoogleOAuth.log.info("found an authorization code so need to go back to google and get a token");
+                GoogleOAuth.exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
+                    uri: currentURI.toString(),
+                }).done(function (response) {
+                    if (response && response.access_token) {
+                        var tmp = {
+                            token: response.access_token,
+                            expiry: response.expires_in,
+                            type: response.token_type
+                        };
+                        GoogleOAuth.userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
+                        GoogleOAuth.setTokenStorage(GoogleOAuth.userProfile);
+                        GoogleOAuth.setupJQueryAjax(GoogleOAuth.userProfile);
+                        GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
+                        // lets remove the auth code
+                        var uri = new URI(window.location.href).removeQuery("code");
+                        var target = uri.toString();
+                        GoogleOAuth.log.info("Now redirecting to: " + target);
+                        window.location.href = target;
+                    }
+                    else {
+                        GoogleOAuth.log.debug("No access token received!");
+                        GoogleOAuth.clearTokenStorage();
+                        GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                            uri: currentURI.toString()
+                        });
+                    }
+                }).fail(function (jqHXR, textStatus, errorThrown) {
+                    GoogleOAuth.log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
+                    GoogleOAuth.clearTokenStorage();
+                    GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                        uri: currentURI.toString()
+                    });
+                });
+            }
+            else {
+                GoogleOAuth.clearTokenStorage();
+                GoogleOAuth.doLogin(GoogleOAuthConfig, {
+                    uri: currentURI.toString()
+                });
+            }
+        }
+    });
+})(GoogleOAuth || (GoogleOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     HawtioKeycloak.pluginName = 'hawtio-keycloak';
@@ -104,46 +384,46 @@ var HawtioKeycloak;
     HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
     hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
     HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-        $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (HawtioKeycloak.userProfile) {
-                return _.merge($delegate, HawtioKeycloak.userProfile, {
-                    logout: function () {
-                        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-                            HawtioKeycloak.keycloak.logout();
-                        }
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (HawtioKeycloak.userProfile) {
+                        return _.merge($delegate, HawtioKeycloak.userProfile, {
+                            logout: function () {
+                                if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+                                    HawtioKeycloak.keycloak.logout();
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        return $delegate;
+                    }
+                }]);
+            // only add the itnerceptor if we have keycloak otherwise
+            // we'll get an undefined exception in the interceptor
+            if (HawtioKeycloak.keycloak) {
+                $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+            }
+        }]);
+    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
+            if (HawtioKeycloak.keycloak) {
+                HawtioKeycloak.log.debug("Enabling idle timeout");
+                Idle.watch();
+                $rootScope.$on('IdleTimeout', function () {
+                    HawtioKeycloak.log.debug("Idle timeout triggered");
+                    // let the end application handle this event
+                    // userDetails.logout();
+                });
+                $rootScope.$on('Keepalive', function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    if (keycloak) {
+                        keycloak.updateToken(30);
                     }
                 });
             }
             else {
-                return $delegate;
+                HawtioKeycloak.log.debug("Not enabling idle timeout");
             }
         }]);
-        // only add the itnerceptor if we have keycloak otherwise
-        // we'll get an undefined exception in the interceptor
-        if (HawtioKeycloak.keycloak) {
-            $httpProvider.interceptors.push(AuthInterceptorService.Factory);
-        }
-    }]);
-    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
-        if (HawtioKeycloak.keycloak) {
-            HawtioKeycloak.log.debug("Enabling idle timeout");
-            Idle.watch();
-            $rootScope.$on('IdleTimeout', function () {
-                HawtioKeycloak.log.debug("Idle timeout triggered");
-                // let the end application handle this event
-                // userDetails.logout();
-            });
-            $rootScope.$on('Keepalive', function () {
-                var keycloak = HawtioKeycloak.keycloak;
-                if (keycloak) {
-                    keycloak.updateToken(30);
-                }
-            });
-        }
-        else {
-            HawtioKeycloak.log.debug("Not enabling idle timeout");
-        }
-    }]);
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'HawtioKeycloak',
         task: function (next) {
@@ -153,7 +433,8 @@ var HawtioKeycloak;
                 return;
             }
             var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-            keycloak.init().success(function (authenticated) {
+            keycloak.init()
+                .success(function (authenticated) {
                 HawtioKeycloak.log.debug("Authenticated: ", authenticated);
                 if (!authenticated) {
                     keycloak.login({
@@ -161,7 +442,8 @@ var HawtioKeycloak;
                     });
                 }
                 else {
-                    keycloak.loadUserProfile().success(function (profile) {
+                    keycloak.loadUserProfile()
+                        .success(function (profile) {
                         HawtioKeycloak.userProfile = profile;
                         HawtioKeycloak.userProfile.token = keycloak.token;
                         next();
@@ -170,7 +452,8 @@ var HawtioKeycloak;
                         next();
                     });
                 }
-            }).error(function () {
+            })
+                .error(function () {
                 HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
                 next();
             });
@@ -335,48 +618,48 @@ var OSOAuth;
     HawtioOAuth.oauthPlugins.push('OSOAuth');
     OSOAuth._module = angular.module(OSOAuth.pluginName, []);
     OSOAuth._module.config(['$provide', function ($provide) {
-        $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (OSOAuth.userProfile) {
-                return _.merge($delegate, OSOAuth.userProfile, {
-                    username: OSOAuth.userProfile.fullName,
-                    logout: function () {
-                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (OSOAuth.userProfile) {
+                        return _.merge($delegate, OSOAuth.userProfile, {
+                            username: OSOAuth.userProfile.fullName,
+                            logout: function () {
+                                OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+                            }
+                        });
                     }
-                });
-            }
-            return $delegate;
+                    return $delegate;
+                }]);
         }]);
-    }]);
     OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
-            $httpProvider.defaults.headers.common = {
-                'Authorization': 'Bearer ' + OSOAuth.userProfile.token
-            };
-        }
-    }]);
+            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
+                $httpProvider.defaults.headers.common = {
+                    'Authorization': 'Bearer ' + OSOAuth.userProfile.token
+                };
+            }
+        }]);
     var keepaliveUri = undefined;
     var keepaliveInterval = undefined;
     OSOAuth._module.config(['KeepaliveProvider', function (KeepaliveProvider) {
-        OSOAuth.log.debug("keepalive URI: ", keepaliveUri);
-        OSOAuth.log.debug("keepalive interval: ", keepaliveInterval);
-        if (keepaliveUri && keepaliveInterval) {
-            KeepaliveProvider.http(keepaliveUri);
-            KeepaliveProvider.interval(keepaliveInterval);
-        }
-    }]);
+            OSOAuth.log.debug("keepalive URI: ", keepaliveUri);
+            OSOAuth.log.debug("keepalive interval: ", keepaliveInterval);
+            if (keepaliveUri && keepaliveInterval) {
+                KeepaliveProvider.http(keepaliveUri);
+                KeepaliveProvider.interval(keepaliveInterval);
+            }
+        }]);
     OSOAuth._module.run(['userDetails', 'Keepalive', '$rootScope', function (userDetails, Keepalive, $rootScope) {
-        if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
-            OSOAuth.log.debug("Starting keepalive");
-            $rootScope.$on('KeepaliveResponse', function ($event, data, status) {
-                OSOAuth.log.debug("keepaliveStatus: ", status);
-                OSOAuth.log.debug("keepalive response: ", data);
-                if (status === 401) {
-                    OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
-                }
-            });
-            Keepalive.start();
-        }
-    }]);
+            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
+                OSOAuth.log.debug("Starting keepalive");
+                $rootScope.$on('KeepaliveResponse', function ($event, data, status) {
+                    OSOAuth.log.debug("keepaliveStatus: ", status);
+                    OSOAuth.log.debug("keepalive response: ", data);
+                    if (status === 401) {
+                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+                    }
+                });
+                Keepalive.start();
+            }
+        }]);
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'OSOAuth',
         task: function (next) {
@@ -385,7 +668,8 @@ var OSOAuth;
                 next();
                 return;
             }
-            if (!OSOAuthConfig.oauth_client_id || !OSOAuthConfig.oauth_authorize_uri) {
+            if (!OSOAuthConfig.oauth_client_id ||
+                !OSOAuthConfig.oauth_authorize_uri) {
                 OSOAuth.log.debug("Invalid oauth config, disabled oauth");
                 next();
                 return;
@@ -445,276 +729,3 @@ var OSOAuth;
     });
     hawtioPluginLoader.addModule(OSOAuth.pluginName);
 })(OSOAuth || (OSOAuth = {}));
-
-/// <reference path="../../includes.ts"/>
-var GoogleOAuth;
-(function (GoogleOAuth) {
-    GoogleOAuth.pluginName = 'hawtio-google-oauth';
-    GoogleOAuth.log = Logger.get(GoogleOAuth.pluginName);
-    // Keep this unset unless we have a token
-    GoogleOAuth.userProfile = null;
-})(GoogleOAuth || (GoogleOAuth = {}));
-
-/// <reference path="googleOAuthGlobals.ts"/>
-var GoogleOAuth;
-(function (GoogleOAuth) {
-    var GOOGLE_TOKEN_STORAGE_KEY = 'googleAuthCreds';
-    function authenticatedHttpRequest(options, userDetails) {
-        return $.ajax(_.extend(options, {
-            beforeSend: function (request) {
-                if (userDetails.token) {
-                    request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
-                }
-            }
-        }));
-    }
-    GoogleOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
-    function setupJQueryAjax(userDetails) {
-        $.ajaxSetup({
-            beforeSend: function (xhr) {
-                var token = userDetails.token;
-                if (token) {
-                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                }
-            }
-        });
-    }
-    GoogleOAuth.setupJQueryAjax = setupJQueryAjax;
-    function doLogout(config, userDetails) {
-        if (config === void 0) { config = window['GoogleOAuthConfig']; }
-        if (userDetails === void 0) { userDetails = GoogleOAuth.userProfile; }
-        console.debug("Logging out!");
-        var token = getTokenStorage() || userDetails.token;
-        var uri = new URI(window.location.href).removeQuery("code");
-        var target = uri.toString();
-        GoogleOAuth.log.debug("Now logging in with URI: " + target);
-        clearTokenStorage();
-        doLogin(GoogleOAuthConfig, {
-            uri: target
-        });
-    }
-    GoogleOAuth.doLogout = doLogout;
-    function doLogin(config, options) {
-        var clientId = config.clientId;
-        var redirectURI = config.redirectURI;
-        var scope = config.scope;
-        var targetURI = config.authenticationURI;
-        var uri = new URI(targetURI);
-        uri.query({
-            response_type: 'code',
-            client_id: clientId,
-            redirect_uri: redirectURI,
-            scope: scope,
-            approval_prompt: 'force'
-        });
-        var target = uri.toString();
-        GoogleOAuth.log.debug("Redirecting to URI: ", target);
-        window.location.href = target;
-    }
-    GoogleOAuth.doLogin = doLogin;
-    function exchangeCodeForToken(config, code, options) {
-        var clientId = config.clientId;
-        var clientSecret = config.clientSecret;
-        var redirectURI = config.redirectURI;
-        var uri = new URI(config.tokenURI || 'https://www.googleapis.com/oauth2/v3/token');
-        uri.query({
-            code: code,
-            client_id: clientId,
-            client_secret: clientSecret,
-            redirect_uri: redirectURI,
-            grant_type: 'authorization_code'
-        });
-        var target = uri.toString();
-        GoogleOAuth.log.debug("Redirecting to URI: ", target);
-        return $.ajax({
-            type: 'POST',
-            url: target
-        });
-    }
-    GoogleOAuth.exchangeCodeForToken = exchangeCodeForToken;
-    function extractToken(query) {
-        GoogleOAuth.log.debug("query: ", query);
-        if (query.access_token && query.token_type === "Bearer") {
-            GoogleOAuth.log.debug("Got token");
-            var localStorage = Core.getLocalStorage();
-            var creds = {
-                type: query.token_type.toLowerCase(),
-                token: query.access_token,
-                expiry: query.expires_in
-            };
-            localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(creds);
-            delete query.token_type;
-            delete query.access_token;
-            delete query.expires_in;
-            // SHOULD THIS BE CALLED?
-            //var target = query.toString();
-            //log.debug("redirecting to: ", target);
-            //window.location.href = target;
-            return creds;
-        }
-        else {
-            GoogleOAuth.log.info("No token in URI");
-            return undefined;
-        }
-    }
-    GoogleOAuth.extractToken = extractToken;
-    function clearTokenStorage() {
-        var localStorage = Core.getLocalStorage();
-        delete localStorage[GOOGLE_TOKEN_STORAGE_KEY];
-    }
-    GoogleOAuth.clearTokenStorage = clearTokenStorage;
-    function getTokenStorage() {
-        var localStorage = Core.getLocalStorage();
-        var value = localStorage[GOOGLE_TOKEN_STORAGE_KEY];
-        if (value) {
-            try {
-                return angular.fromJson(value);
-            }
-            catch (e) {
-                GoogleOAuth.log.warn("Failed to parse token json: " + value + ". " + e);
-            }
-        }
-        return null;
-    }
-    GoogleOAuth.getTokenStorage = getTokenStorage;
-    function setTokenStorage(userDetails) {
-        var localStorage = Core.getLocalStorage();
-        localStorage[GOOGLE_TOKEN_STORAGE_KEY] = angular.toJson(userDetails);
-    }
-    GoogleOAuth.setTokenStorage = setTokenStorage;
-    function checkToken(query) {
-        var localStorage = Core.getLocalStorage();
-        var answer = undefined;
-        if (GOOGLE_TOKEN_STORAGE_KEY in localStorage) {
-            try {
-                answer = angular.fromJson(localStorage[GOOGLE_TOKEN_STORAGE_KEY]);
-            }
-            catch (e) {
-                clearTokenStorage();
-                // must be broken...
-                GoogleOAuth.log.error("Error extracting googleAuthCreds value: ", e);
-            }
-        }
-        if (!answer) {
-            answer = extractToken(query);
-        }
-        GoogleOAuth.log.debug("Using creds: ", answer);
-        return answer;
-    }
-    GoogleOAuth.checkToken = checkToken;
-    function checkAuthorizationCode(uri) {
-        return uri.query(true).code;
-    }
-    GoogleOAuth.checkAuthorizationCode = checkAuthorizationCode;
-    function fetchUserInfo(http, successCallback, failureCallback) {
-        http.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + HawtioOAuth.getUserProfile().access_token).success(successCallback).error(failureCallback);
-    }
-    GoogleOAuth.fetchUserInfo = fetchUserInfo;
-})(GoogleOAuth || (GoogleOAuth = {}));
-
-/// <reference path="googleOAuthHelpers.ts"/>
-var GoogleOAuth;
-(function (GoogleOAuth) {
-    HawtioOAuth.oauthPlugins.push('GoogleOAuth');
-    GoogleOAuth._module = angular.module(GoogleOAuth.pluginName, []);
-    hawtioPluginLoader.addModule(GoogleOAuth.pluginName);
-    GoogleOAuth._module.config(['$provide', function ($provide) {
-        $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-            if (GoogleOAuth.userProfile) {
-                return _.merge($delegate, GoogleOAuth.userProfile, {
-                    username: GoogleOAuth.userProfile.fullName,
-                    logout: function () {
-                        GoogleOAuth.doLogout(GoogleOAuthConfig, GoogleOAuth.userProfile);
-                    }
-                });
-            }
-            return $delegate;
-        }]);
-    }]);
-    GoogleOAuth._module.config(['$httpProvider', function ($httpProvider) {
-        if (GoogleOAuth.userProfile && GoogleOAuth.userProfile.token) {
-            $httpProvider.defaults.headers.common = {
-                'Authorization': 'Bearer ' + GoogleOAuth.userProfile.token
-            };
-        }
-    }]);
-    GoogleOAuth._module.run(['userDetails', function (userDetails) {
-    }]);
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'GoogleOAuth',
-        task: function (next) {
-            if (!window['GoogleOAuthConfig']) {
-                GoogleOAuth.log.debug("oauth disabled");
-                next();
-                return;
-            }
-            if (!GoogleOAuthConfig.clientId || !GoogleOAuthConfig.redirectURI || !GoogleOAuthConfig.scope || !GoogleOAuthConfig.authenticationURI) {
-                GoogleOAuth.log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
-                next();
-                return;
-            }
-            GoogleOAuth.log.debug("config: ", GoogleOAuthConfig);
-            var currentURI = new URI(window.location.href);
-            try {
-                var userDetails = GoogleOAuth.getTokenStorage();
-                if (userDetails && userDetails.token) {
-                    GoogleOAuth.userProfile = userDetails;
-                    GoogleOAuth.setupJQueryAjax(userDetails);
-                    next();
-                    return;
-                }
-                else {
-                    // old format, let's force an update by re-authenticating
-                    GoogleOAuth.clearTokenStorage();
-                }
-            }
-            catch (err) {
-                // must be a bad stored token
-                GoogleOAuth.clearTokenStorage();
-            }
-            var authorizationCode = GoogleOAuth.checkAuthorizationCode(currentURI);
-            if (authorizationCode) {
-                GoogleOAuth.log.info("found an authorization code so need to go back to google and get a token");
-                GoogleOAuth.exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
-                    uri: currentURI.toString(),
-                }).done(function (response) {
-                    if (response && response.access_token) {
-                        var tmp = {
-                            token: response.access_token,
-                            expiry: response.expires_in,
-                            type: response.token_type
-                        };
-                        GoogleOAuth.userProfile = _.merge(tmp, response, { provider: GoogleOAuth.pluginName });
-                        GoogleOAuth.setTokenStorage(GoogleOAuth.userProfile);
-                        GoogleOAuth.setupJQueryAjax(GoogleOAuth.userProfile);
-                        GoogleOAuth.log.info("Logged in with URL: " + window.location.href);
-                        // lets remove the auth code
-                        var uri = new URI(window.location.href).removeQuery("code");
-                        var target = uri.toString();
-                        GoogleOAuth.log.info("Now redirecting to: " + target);
-                        window.location.href = target;
-                    }
-                    else {
-                        GoogleOAuth.log.debug("No access token received!");
-                        GoogleOAuth.clearTokenStorage();
-                        GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                            uri: currentURI.toString()
-                        });
-                    }
-                }).fail(function (jqHXR, textStatus, errorThrown) {
-                    GoogleOAuth.log.error("Failed to fetch auth code, status: ", textStatus, " error: ", errorThrown);
-                    GoogleOAuth.clearTokenStorage();
-                    GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                        uri: currentURI.toString()
-                    });
-                });
-            }
-            else {
-                GoogleOAuth.clearTokenStorage();
-                GoogleOAuth.doLogin(GoogleOAuthConfig, {
-                    uri: currentURI.toString()
-                });
-            }
-        }
-    });
-})(GoogleOAuth || (GoogleOAuth = {}));
