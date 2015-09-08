@@ -5,13 +5,16 @@ var HawtioOAuth;
     var log = Logger.get(pluginName);
     var _module = angular.module(pluginName, []);
     _module.run(['$compile', function ($compile) {
+            // TODO
+            /*
             var ext = HawtioCore.injector.get('HawtioExtension');
             if (ext) {
-                ext.add('hawtio-user', function ($scope) {
-                    $scope.doLogout = doLogout;
-                    return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-                });
+              ext.add('hawtio-user', ($scope) => {
+                $scope.doLogout = doLogout;
+                return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+              });
             }
+            */
         }]);
     hawtioPluginLoader.addModule(pluginName);
     HawtioOAuth.oauthPlugins = [];
