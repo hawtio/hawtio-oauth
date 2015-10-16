@@ -18,10 +18,6 @@ var HawtioOAuth;
         }]);
     hawtioPluginLoader.addModule(pluginName);
     HawtioOAuth.oauthPlugins = [];
-    function getTasks() {
-        return _.map(HawtioOAuth.oauthPlugins, function (entry) { return entry.task; });
-    }
-    HawtioOAuth.getTasks = getTasks;
     var userProfile = undefined;
     var activePlugin = undefined;
     function doLogout() {
@@ -34,7 +30,11 @@ var HawtioOAuth;
     HawtioOAuth.doLogout = doLogout;
     function getUserProfile() {
         if (!userProfile) {
-            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (module) { return Core.pathGet(window, [module, 'userProfile']); });
+            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (_module) {
+                var p = Core.pathGet(window, [_module, 'userProfile']);
+                log.debug("Module: ", _module, " userProfile: ", p);
+                return p !== null && p !== undefined;
+            });
             userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
             log.debug("Active OAuth plugin: ", activePlugin);
         }
@@ -60,25 +60,25 @@ var HawtioOAuth;
         }));
     }
     HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    // global pre-bootstrap task that plugins can use to wait
+    // until all oauth plugins have been processed
+    // 
+    // OAuth plugins can add to this list via:
+    //
+    // HawtioOAuth.oauthPlugins.push(<plugin name>);
+    //
+    // and then use a named task with the same name as <plugin name>
+    //
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'hawtio-oauth',
+        depends: HawtioOAuth.oauthPlugins,
+        task: function (next) {
+            getUserProfile();
+            Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+            next();
+        }
+    });
 })(HawtioOAuth || (HawtioOAuth = {}));
-// global pre-bootstrap task that plugins can use to wait
-// until all oauth plugins have been processed
-// 
-// OAuth plugins can add to this list via:
-//
-// HawtioOAuth.oauthPlugins.push(<plugin name>);
-//
-// and then use a named task with the same name as <plugin name>
-//
-console.log("Tasks: ", HawtioOAuth.getTasks());
-hawtioPluginLoader.registerPreBootstrapTask({
-    name: 'hawtio-oauth',
-    depends: HawtioOAuth.oauthPlugins,
-    task: function (next) {
-        Logger.get('hawtio-oauth').info("All oauth plugins have executed");
-        next();
-    }
-});
 
 /// <reference path="../../includes.ts"/>
 var GoogleOAuth;
@@ -690,36 +690,41 @@ var OSOAuth;
                 var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
                 uri.path('/oapi/v1/users/~');
                 keepaliveUri = uri.toString();
-                OSOAuth.authenticatedHttpRequest({
+                OSOAuth.userProfile = tmp;
+                $.ajax({
                     type: 'GET',
                     url: keepaliveUri,
-                }, tmp).done(function (response) {
-                    OSOAuth.userProfile = _.merge(tmp, response, { provider: OSOAuth.pluginName });
-                    var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
-                    var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
-                    if (obtainedAt) {
-                        var remainingTime = (obtainedAt + expiry) - OSOAuth.currentTimeSeconds();
-                        if (remainingTime > 0) {
-                            keepaliveInterval = Math.round(remainingTime / 4);
+                    success: function (response) {
+                        _.merge(OSOAuth.userProfile, tmp, response, { provider: OSOAuth.pluginName });
+                        var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
+                        var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
+                        if (obtainedAt) {
+                            var remainingTime = (obtainedAt + expiry) - OSOAuth.currentTimeSeconds();
+                            if (remainingTime > 0) {
+                                keepaliveInterval = Math.round(remainingTime / 4);
+                            }
                         }
-                    }
-                    if (!keepaliveInterval) {
-                        keepaliveInterval = 600;
-                    }
-                    setTimeout(function () {
+                        if (!keepaliveInterval) {
+                            keepaliveInterval = 600;
+                        }
+                        OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
                         $.ajaxSetup({
                             beforeSend: function (xhr) {
-                                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
                             }
                         });
                         next();
-                    }, 10);
-                }).fail(function (jqXHR, textStatus, errorThrown) {
-                    OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
-                    OSOAuth.clearTokenStorage();
-                    OSOAuth.doLogin(OSOAuthConfig, {
-                        uri: currentURI.toString()
-                    });
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+                        OSOAuth.clearTokenStorage();
+                        OSOAuth.doLogin(OSOAuthConfig, {
+                            uri: currentURI.toString()
+                        });
+                    },
+                    beforeSend: function (request) {
+                        request.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
+                    }
                 });
             }
             else {

@@ -30,10 +30,6 @@ module HawtioOAuth {
 
   export var oauthPlugins = [];
 
-  export function getTasks() {
-    return _.map(HawtioOAuth.oauthPlugins, (entry) => entry.task);
-  }
-
   var userProfile:any = undefined;
   var activePlugin:string = undefined;
 
@@ -47,7 +43,11 @@ module HawtioOAuth {
 
   export function getUserProfile() {
     if (!userProfile) {
-      activePlugin = _.find(oauthPlugins, (module) => Core.pathGet(window, [module, 'userProfile']));
+      activePlugin = _.find(oauthPlugins, (_module) => {
+        var p = Core.pathGet(window, [_module, 'userProfile']);
+        log.debug("Module: ", _module, " userProfile: ", p);
+        return p !== null && p !== undefined;
+      });
       userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
       log.debug("Active OAuth plugin: ", activePlugin);
     }
@@ -73,25 +73,24 @@ module HawtioOAuth {
     }));
   }
 
+  // global pre-bootstrap task that plugins can use to wait
+  // until all oauth plugins have been processed
+  // 
+  // OAuth plugins can add to this list via:
+  //
+  // HawtioOAuth.oauthPlugins.push(<plugin name>);
+  //
+  // and then use a named task with the same name as <plugin name>
+  //
+  hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'hawtio-oauth',
+    depends: HawtioOAuth.oauthPlugins,
+    task: (next) => {
+      getUserProfile();
+      Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+      next();
+    }
+  });
 }
-
-// global pre-bootstrap task that plugins can use to wait
-// until all oauth plugins have been processed
-// 
-// OAuth plugins can add to this list via:
-//
-// HawtioOAuth.oauthPlugins.push(<plugin name>);
-//
-// and then use a named task with the same name as <plugin name>
-//
-console.log("Tasks: ", HawtioOAuth.getTasks());
-hawtioPluginLoader.registerPreBootstrapTask({
-  name: 'hawtio-oauth',
-  depends: HawtioOAuth.oauthPlugins,
-  task: (next) => {
-    Logger.get('hawtio-oauth').info("All oauth plugins have executed");
-    next();
-  }
-});
 
 

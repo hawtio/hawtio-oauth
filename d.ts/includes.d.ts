@@ -5,7 +5,6 @@ declare var OSOAuthConfig: any;
 declare var GoogleOAuthConfig: any;
 declare module HawtioOAuth {
     var oauthPlugins: any[];
-    function getTasks(): any[];
     function doLogout(): void;
     function getUserProfile(): any;
     function getOAuthToken(): any;

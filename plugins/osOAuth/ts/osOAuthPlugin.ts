@@ -84,36 +84,41 @@ module OSOAuth {
         var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
         uri.path('/oapi/v1/users/~');
         keepaliveUri = uri.toString();
-        authenticatedHttpRequest({
+        userProfile = tmp;
+        $.ajax({
           type: 'GET',
           url: keepaliveUri,
-        }, tmp).done((response) => {
-          userProfile = _.merge(tmp, response, { provider: pluginName });
-          var obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
-          var expiry = Core.parseIntValue(userProfile.expiry) || 0;
-          if (obtainedAt) {
-            var remainingTime = (obtainedAt + expiry) - currentTimeSeconds();
-            if (remainingTime > 0) {
-              keepaliveInterval = Math.round(remainingTime / 4);
+          success: (response) => {
+            _.merge(userProfile, tmp, response, { provider: pluginName });
+            var obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
+            var expiry = Core.parseIntValue(userProfile.expiry) || 0;
+            if (obtainedAt) {
+              var remainingTime = (obtainedAt + expiry) - currentTimeSeconds();
+              if (remainingTime > 0) {
+                keepaliveInterval = Math.round(remainingTime / 4);
+              }
             }
-          }
-          if (!keepaliveInterval) {
-            keepaliveInterval = 600;
-          }
-          setTimeout(() => {
+            if (!keepaliveInterval) {
+              keepaliveInterval = 600;
+            }
+            log.debug("userProfile: ", userProfile);
             $.ajaxSetup({
               beforeSend: (xhr) => {
-                xhr.setRequestHeader('Authorization', 'Bearer ' + tmp.token);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + userProfile.token);
               }
             });
             next();
-          }, 10);
-        }).fail((jqXHR, textStatus, errorThrown) => {
-          log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
-          clearTokenStorage();
-          doLogin(OSOAuthConfig, {
-            uri: currentURI.toString()
-          });
+          },
+          error: (jqXHR, textStatus, errorThrown) => {
+            log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+            clearTokenStorage();
+            doLogin(OSOAuthConfig, {
+              uri: currentURI.toString()
+            });
+          },
+          beforeSend: (request) => {
+            request.setRequestHeader('Authorization', 'Bearer ' +  userProfile.token);
+          }
         });
       } else {
         clearTokenStorage();
