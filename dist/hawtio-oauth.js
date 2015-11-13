@@ -297,7 +297,7 @@ var GoogleOAuth;
                 var userDetails = GoogleOAuth.getTokenStorage();
                 if (userDetails && userDetails.token) {
                     GoogleOAuth.userProfile = userDetails;
-                    GoogleOAuth.setupJQueryAjax(userDetails);
+                    // setupJQueryAjax(userDetails);
                     next();
                     return;
                 }

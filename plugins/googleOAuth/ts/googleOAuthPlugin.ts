@@ -56,7 +56,7 @@ module GoogleOAuth {
         var userDetails = getTokenStorage();
         if (userDetails && userDetails.token) {
           userProfile = userDetails;
-          setupJQueryAjax(userDetails);
+          // setupJQueryAjax(userDetails);
           next();
           return;
         } else {
