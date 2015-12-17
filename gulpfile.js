@@ -39,7 +39,9 @@ var config = {
 
 gulp.task('bower', function() {
   return gulp.src('index.html')
-    .pipe(wiredep({}))
+    .pipe(wiredep({
+      devDependencies: true
+    }))
     .pipe(gulp.dest('.'));
 });
 
@@ -227,6 +229,3 @@ gulp.task('build', ['bower', 'path-adjust', 'tsc', 'template', 'concat', 'clean'
 gulp.task('build-example', ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 
 gulp.task('default', ['connect']);
-
-
-
