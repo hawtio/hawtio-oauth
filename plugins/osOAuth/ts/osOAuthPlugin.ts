@@ -93,13 +93,13 @@ module OSOAuth {
             var obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
             var expiry = Core.parseIntValue(userProfile.expiry) || 0;
             if (obtainedAt) {
-              var remainingTime = (obtainedAt + expiry) - currentTimeSeconds();
+              var remainingTime = obtainedAt + expiry - currentTimeSeconds();
               if (remainingTime > 0) {
                 keepaliveInterval = Math.round(remainingTime / 4);
               }
             }
             if (!keepaliveInterval) {
-              keepaliveInterval = 600;
+              keepaliveInterval = 10;
             }
             log.debug("userProfile: ", userProfile);
             $.ajaxSetup({

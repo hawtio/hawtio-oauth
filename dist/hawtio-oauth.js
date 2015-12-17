@@ -699,13 +699,13 @@ var OSOAuth;
                         var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
                         var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
                         if (obtainedAt) {
-                            var remainingTime = (obtainedAt + expiry) - OSOAuth.currentTimeSeconds();
+                            var remainingTime = obtainedAt + expiry - OSOAuth.currentTimeSeconds();
                             if (remainingTime > 0) {
                                 keepaliveInterval = Math.round(remainingTime / 4);
                             }
                         }
                         if (!keepaliveInterval) {
-                            keepaliveInterval = 600;
+                            keepaliveInterval = 10;
                         }
                         OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
                         $.ajaxSetup({
