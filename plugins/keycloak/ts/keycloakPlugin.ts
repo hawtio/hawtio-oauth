@@ -21,7 +21,7 @@ module HawtioKeycloak {
       }
     }]);
 
-    // only add the itnerceptor if we have keycloak otherwise
+    // only add the interceptor if we have keycloak otherwise
     // we'll get an undefined exception in the interceptor
     if (HawtioKeycloak.keycloak) {
       $httpProvider.interceptors.push(AuthInterceptorService.Factory);
@@ -33,16 +33,18 @@ module HawtioKeycloak {
       log.debug("Enabling idle timeout");
       Idle.watch();
 
-      $rootScope.$on('IdleTimeout', function() {
+      $rootScope.$on('IdleTimeout', () => {
         log.debug("Idle timeout triggered");
         // let the end application handle this event
         // userDetails.logout();
       });
 
-      $rootScope.$on('Keepalive', function() {
+      $rootScope.$on('Keepalive', () => {
         var keycloak = HawtioKeycloak.keycloak;
         if (keycloak) {
-          keycloak.updateToken(30);
+          keycloak.updateToken(5).success(() => {
+            userDetails.token = keycloak.token;
+          });
         }
       });
     } else {
@@ -86,13 +88,13 @@ module HawtioKeycloak {
   });
 
   class AuthInterceptorService {
-    public static $inject = ['$q'];
+    public static $inject = ['$q', 'userDetails'];
 
-    public static Factory($q:ng.IQService) {
-      return new AuthInterceptorService($q);
+    public static Factory($q:ng.IQService, userDetails) {
+      return new AuthInterceptorService($q, userDetails);
     }
 
-    constructor(private $q:ng.IQService) {
+    constructor(private $q:ng.IQService, private userDetails) {
     }
 
     request = (request) => {
@@ -101,6 +103,7 @@ module HawtioKeycloak {
         var keycloak = HawtioKeycloak.keycloak;
         return keycloak.updateToken(5).success(() => {
           var token = HawtioKeycloak.keycloak.token;
+          this.userDetails.token = token;
           request.headers.Authorization = 'Bearer ' + token;
           deferred.notify();
           return deferred.resolve(request);
