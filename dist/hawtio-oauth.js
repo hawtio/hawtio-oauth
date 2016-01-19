@@ -401,7 +401,7 @@ var HawtioKeycloak;
                         return $delegate;
                     }
                 }]);
-            // only add the itnerceptor if we have keycloak otherwise
+            // only add the interceptor if we have keycloak otherwise
             // we'll get an undefined exception in the interceptor
             if (HawtioKeycloak.keycloak) {
                 $httpProvider.interceptors.push(AuthInterceptorService.Factory);
@@ -419,7 +419,9 @@ var HawtioKeycloak;
                 $rootScope.$on('Keepalive', function () {
                     var keycloak = HawtioKeycloak.keycloak;
                     if (keycloak) {
-                        keycloak.updateToken(30);
+                        keycloak.updateToken(5).success(function () {
+                            userDetails.token = keycloak.token;
+                        });
                     }
                 });
             }
@@ -463,15 +465,17 @@ var HawtioKeycloak;
         }
     });
     var AuthInterceptorService = (function () {
-        function AuthInterceptorService($q) {
+        function AuthInterceptorService($q, userDetails) {
             var _this = this;
             this.$q = $q;
+            this.userDetails = userDetails;
             this.request = function (request) {
                 var addBearer, deferred;
                 addBearer = function () {
                     var keycloak = HawtioKeycloak.keycloak;
                     return keycloak.updateToken(5).success(function () {
                         var token = HawtioKeycloak.keycloak.token;
+                        _this.userDetails.token = token;
                         request.headers.Authorization = 'Bearer ' + token;
                         deferred.notify();
                         return deferred.resolve(request);
@@ -490,10 +494,10 @@ var HawtioKeycloak;
                 return _this.$q.reject(rejection);
             };
         }
-        AuthInterceptorService.Factory = function ($q) {
-            return new AuthInterceptorService($q);
+        AuthInterceptorService.Factory = function ($q, userDetails) {
+            return new AuthInterceptorService($q, userDetails);
         };
-        AuthInterceptorService.$inject = ['$q'];
+        AuthInterceptorService.$inject = ['$q', 'userDetails'];
         return AuthInterceptorService;
     })();
     HawtioKeycloak._module.requires.push("ngIdle");
