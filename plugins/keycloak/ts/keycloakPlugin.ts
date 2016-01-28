@@ -98,6 +98,10 @@ module HawtioKeycloak {
     }
 
     request = (request) => {
+      // bypass for local templates
+      if (request.url.indexOf('http') !== 0) {
+        return request;
+      }
       var addBearer, deferred;
       addBearer = () => {
         var keycloak = HawtioKeycloak.keycloak;
