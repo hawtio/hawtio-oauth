@@ -470,6 +470,10 @@ var HawtioKeycloak;
             this.$q = $q;
             this.userDetails = userDetails;
             this.request = function (request) {
+                // bypass for local templates
+                if (request.url.indexOf('http') !== 0) {
+                    return request;
+                }
                 var addBearer, deferred;
                 addBearer = function () {
                     var keycloak = HawtioKeycloak.keycloak;
