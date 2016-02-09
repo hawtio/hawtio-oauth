@@ -4,17 +4,19 @@ var HawtioOAuth;
     var pluginName = 'HawtioOAuth';
     var log = Logger.get(pluginName);
     var _module = angular.module(pluginName, []);
-    _module.run(['$compile', function ($compile) {
-            // TODO
-            /*
-            var ext = HawtioCore.injector.get('HawtioExtension');
-            if (ext) {
-              ext.add('hawtio-user', ($scope) => {
-                $scope.doLogout = doLogout;
-                return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-              });
-            }
-            */
+    _module.directive('hawtioUserDropdown', ['$compile', '$timeout', function ($compile, $timeout) {
+            return {
+                restrict: 'C',
+                scope: {},
+                link: function ($scope, $element, $attr) {
+                    $scope.doLogout = doLogout;
+                    $scope.userDetails = userProfile;
+                    var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+                    $timeout(function () {
+                        $element.append(el);
+                    }, 250);
+                }
+            };
         }]);
     hawtioPluginLoader.addModule(pluginName);
     HawtioOAuth.oauthPlugins = [];

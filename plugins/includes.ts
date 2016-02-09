@@ -13,17 +13,19 @@ module HawtioOAuth {
   var log:Logging.Logger = Logger.get(pluginName);
   var _module = angular.module(pluginName, []);
 
-  _module.run(['$compile', ($compile) => {
-    // TODO
-    /*
-    var ext = HawtioCore.injector.get('HawtioExtension');
-    if (ext) {
-      ext.add('hawtio-user', ($scope) => {
+  _module.directive('hawtioUserDropdown', ['$compile', '$timeout', ($compile, $timeout) => {
+    return {
+      restrict: 'C',
+      scope: {},
+      link: ($scope, $element, $attr) => {
         $scope.doLogout = doLogout;
-        return $compile('<li><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-      });
+        $scope.userDetails = userProfile;
+        var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+        $timeout(() => {
+          $element.append(el);
+        }, 250);
+      }
     }
-    */
   }]);
 
   hawtioPluginLoader.addModule(pluginName);
