@@ -2,11 +2,13 @@ var gulp = require('gulp'),
     wiredep = require('wiredep').stream,
     eventStream = require('event-stream'),
     gulpLoadPlugins = require('gulp-load-plugins'),
+    urljoin = require('url-join'),
     del = require('del'),
     fs = require('fs'),
     path = require('path'),
     uri = require('urijs'),
     s = require('underscore.string'),
+    argv = require('yargs').argv,
     hawtio = require('hawtio-node-backend');
 
 var plugins = gulpLoadPlugins({});
@@ -20,7 +22,7 @@ var config = {
   testTemplates: ['test-plugins/**/*.html'],
   templateModule: pkg.name + '-templates',
   testTemplateModule: pkg.name + '-test-templates',
-  dist: './dist/',
+  dist: argv.out || './dist/',
   js: pkg.name + '.js',
   testJs: pkg.name + '-test.js',
   tsProject: plugins.typescript.createProject({
@@ -138,7 +140,7 @@ gulp.task('clean', ['concat'], function() {
 });
 
 gulp.task('watch', ['build', 'build-example'], function() {
-  plugins.watch(['libs/**/*.js', 'libs/**/*.css', 'index.html', config.dist + '/*'], function() {
+  plugins.watch(['libs/**/*.js', 'libs/**/*.css', 'index.html', urljoin(config.dist, '*')], function() {
     gulp.start('reload');
   });
   plugins.watch(['libs/**/*.d.ts', config.ts, config.templates], function() {

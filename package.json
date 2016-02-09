@@ -19,7 +19,9 @@
     "through2": "^0.6.3",
     "underscore.string": "^2.4.0",
     "urijs": "^1.17.0",
+    "url-join": "0.0.1",
     "which": "^1.0.8",
-    "wiredep": "^2.2.2"
+    "wiredep": "^2.2.2",
+    "yargs": "^3.32.0"
   }
 }
