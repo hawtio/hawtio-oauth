@@ -19,6 +19,7 @@ var HawtioOAuth;
             };
         }]);
     hawtioPluginLoader.addModule(pluginName);
+    hawtioPluginLoader.addModule('ngIdle');
     HawtioOAuth.oauthPlugins = [];
     var userProfile = undefined;
     var activePlugin = undefined;
@@ -62,6 +63,13 @@ var HawtioOAuth;
         }));
     }
     HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    // fetch oauth config
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'HawtioOAuthConfig',
+        task: function (next) {
+            $.getScript('oauth/config.js').always(next);
+        }
+    });
     // global pre-bootstrap task that plugins can use to wait
     // until all oauth plugins have been processed
     // 
@@ -81,6 +89,128 @@ var HawtioOAuth;
         }
     });
 })(HawtioOAuth || (HawtioOAuth = {}));
+
+// <reference path="../../includes.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth.pluginName = 'github-oauth';
+    GithubOAuth.log = Logger.get(GithubOAuth.pluginName);
+    GithubOAuth.templatePath = 'plugins/github/html';
+    var LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
+    function loadSettings() {
+        var answer = {};
+        if (LOCAL_STORAGE_KEY in localStorage) {
+            var settings = localStorage[LOCAL_STORAGE_KEY];
+            try {
+                settings = angular.fromJson(settings);
+                answer = settings;
+            }
+            catch (err) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+        }
+        return answer;
+    }
+    GithubOAuth.loadSettings = loadSettings;
+    function storeSettings(settings) {
+        var toStore = {
+            username: settings.username,
+            accessToken: settings.accessToken
+        };
+        localStorage[LOCAL_STORAGE_KEY] = angular.toJson(toStore);
+    }
+    GithubOAuth.storeSettings = storeSettings;
+})(GithubOAuth || (GithubOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
+/// <reference path="githubHelpers.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth._module = angular.module(GithubOAuth.pluginName, []);
+    var settings = {
+        enabled: false,
+        username: undefined,
+        clientId: undefined,
+        clientSecret: undefined,
+        accessToken: undefined,
+        authURL: 'https://github.com/login/oauth/authorize',
+        tokenURL: 'https://github.com/login/oauth/access_token',
+        loginURL: 'https://api.github.com/user'
+    };
+    GithubOAuth._module.constant('githubOAuthSettings', settings);
+    GithubOAuth._module.run(['preferencesRegistry', function (preferencesRegistry) {
+            preferencesRegistry.addTab("Github", UrlHelpers.join(GithubOAuth.templatePath, "githubPreferences.html"));
+            GithubOAuth.log.debug("loaded");
+        }]);
+    GithubOAuth._module.service("GithubOAuth", ['githubOAuthSettings', function (settings) {
+            var self = {
+                getLoginURL: function (returnTo) {
+                    if (!returnTo) {
+                        returnTo = new URI().toString();
+                    }
+                    returnTo = URI.encode(returnTo);
+                    var target = new URI(settings.authURL);
+                    target.search({
+                        client_id: settings.clientId,
+                        redirect_uri: returnTo
+                    });
+                    return target.toString();
+                }
+            };
+            return self;
+        }]);
+    hawtioPluginLoader.addModule(GithubOAuth.pluginName);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GithubOAuthConfig',
+        depends: ['HawtioOAuthConfig'],
+        task: function (next) {
+            var clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+            var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+            if (clientId && clientSecret) {
+                GithubOAuth.log.debug("enabled");
+                settings.enabled = true;
+            }
+            next();
+        }
+    });
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GithubOAuthSettings',
+        depends: ['GithubOAuthConfig'],
+        task: function (next) {
+            if (settings.enabled) {
+                _.assign(settings, GithubOAuth.loadSettings());
+            }
+            next();
+        }
+    });
+})(GithubOAuth || (GithubOAuth = {}));
+
+/// <reference path="githubPlugin.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth._module.component('githubPreferences', {
+        template: "\n    <p class=\"alert alert-success\" ng-if=\"entity.accessToken && !entity.trying\">\n      Github access is already enabled, <a href=\"\" ng-click=\"clearToken()\">disable access</a>\n    </p>\n    <p ng-show=\"entity.trying\">\n      Please wait, trying...\n    </p>\n    <form ng-if=\"!entity.accessToken\" class=\"form-horizontal\">\n      <p>Log into Github here to enable access to your Github organizations and repositories</p>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"username\">User Name</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"username\" type=\"text\" ng-model=\"entity.username\">\n        </div>\n      </div>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"password\">Password</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"password\" type=\"password\" ng-model=\"entity.password\">\n        </div>\n      </div>\n      <button class=\"btn btn-success pull-right\" ng-disabled=\"!entity.username && !entity.password\" ng-click=\"login()\">Log In</button>\n    </form>\n    ",
+        controllerAs: 'github',
+        controller: ['$scope', 'githubOAuthSettings', function GithubPreferenceController($scope, githubOAuthSettings) {
+                var entity = $scope.entity = {
+                    trying: false,
+                    username: githubOAuthSettings.username,
+                    password: undefined,
+                    accessToken: githubOAuthSettings.authToken
+                };
+                var settings = $scope.settings = githubOAuthSettings;
+                $scope.login = function () {
+                    console.log("Using: ", entity);
+                    $.ajax(settings.loginURL, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': Core.getBasicAuthHeader(entity.username, entity.password)
+                        }
+                    });
+                };
+            }]
+    });
+})(GithubOAuth || (GithubOAuth = {}));
 
 /// <reference path="../../includes.ts"/>
 var GoogleOAuth;
@@ -360,6 +490,245 @@ var GoogleOAuth;
 })(GoogleOAuth || (GoogleOAuth = {}));
 
 /// <reference path="../../includes.ts"/>
+var OSOAuth;
+(function (OSOAuth) {
+    OSOAuth.pluginName = 'hawtio-os-oauth';
+    OSOAuth.log = Logger.get(OSOAuth.pluginName);
+    // Keep this unset unless we have a token
+    OSOAuth.userProfile = null;
+})(OSOAuth || (OSOAuth = {}));
+
+/// <reference path="osOAuthGlobals.ts"/>
+var OSOAuth;
+(function (OSOAuth) {
+    var OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
+    function currentTimeSeconds() {
+        return Math.floor(new Date().getTime() / 1000);
+    }
+    OSOAuth.currentTimeSeconds = currentTimeSeconds;
+    function authenticatedHttpRequest(options, userDetails) {
+        return $.ajax(_.extend(options, {
+            beforeSend: function (request) {
+                if (userDetails.token) {
+                    request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
+                }
+            }
+        }));
+    }
+    OSOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    function doLogout(config, userDetails) {
+        if (config === void 0) { config = window['OSOAuthConfig']; }
+        if (userDetails === void 0) { userDetails = OSOAuth.userProfile; }
+        var currentURI = new URI(window.location.href);
+        var uri = new URI(config.oauth_authorize_uri);
+        uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);
+        authenticatedHttpRequest({
+            type: 'DELETE',
+            url: uri.toString()
+        }, userDetails).always(function () {
+            clearTokenStorage();
+            doLogin(OSOAuthConfig, {
+                uri: currentURI.toString()
+            });
+        });
+    }
+    OSOAuth.doLogout = doLogout;
+    function doLogin(config, options) {
+        var clientId = config.oauth_client_id;
+        var targetURI = config.oauth_authorize_uri;
+        var uri = new URI(targetURI);
+        uri.query({
+            client_id: clientId,
+            response_type: 'token',
+            state: options.uri,
+            redirect_uri: options.uri
+        });
+        var target = uri.toString();
+        OSOAuth.log.debug("Redirecting to URI: ", target);
+        window.location.href = target;
+    }
+    OSOAuth.doLogin = doLogin;
+    function extractToken(uri) {
+        var query = uri.query(true);
+        OSOAuth.log.debug("Query: ", query);
+        var fragmentParams = new URI("?" + uri.fragment()).query(true);
+        OSOAuth.log.debug("FragmentParams: ", fragmentParams);
+        if (fragmentParams.access_token && (fragmentParams.token_type === "bearer") || fragmentParams.token_type === "Bearer") {
+            OSOAuth.log.debug("Got token");
+            var localStorage = Core.getLocalStorage();
+            var creds = {
+                token_type: fragmentParams.token_type,
+                access_token: fragmentParams.access_token,
+                expires_in: fragmentParams.expires_in,
+                obtainedAt: currentTimeSeconds()
+            };
+            localStorage['osAuthCreds'] = angular.toJson(creds);
+            delete fragmentParams.token_type;
+            delete fragmentParams.access_token;
+            delete fragmentParams.expires_in;
+            uri.fragment("").query(fragmentParams);
+            var target = uri.toString();
+            OSOAuth.log.debug("redirecting to: ", target);
+            window.location.href = target;
+            return creds;
+        }
+        else {
+            OSOAuth.log.debug("No token in URI");
+            return undefined;
+        }
+    }
+    OSOAuth.extractToken = extractToken;
+    function clearTokenStorage() {
+        var localStorage = Core.getLocalStorage();
+        delete localStorage[OS_TOKEN_STORAGE_KEY];
+    }
+    OSOAuth.clearTokenStorage = clearTokenStorage;
+    function checkToken(uri) {
+        var localStorage = Core.getLocalStorage();
+        var answer = undefined;
+        if (OS_TOKEN_STORAGE_KEY in localStorage) {
+            try {
+                answer = angular.fromJson(localStorage[OS_TOKEN_STORAGE_KEY]);
+            }
+            catch (e) {
+                clearTokenStorage();
+                // must be broken...
+                OSOAuth.log.debug("Error extracting osAuthCreds value: ", e);
+            }
+        }
+        if (!answer) {
+            answer = extractToken(uri);
+        }
+        OSOAuth.log.debug("Using creds: ", answer);
+        return answer;
+    }
+    OSOAuth.checkToken = checkToken;
+})(OSOAuth || (OSOAuth = {}));
+
+/// <reference path="osOAuthHelpers.ts"/>
+var OSOAuth;
+(function (OSOAuth) {
+    HawtioOAuth.oauthPlugins.push('OSOAuth');
+    OSOAuth._module = angular.module(OSOAuth.pluginName, ['ngIdle']);
+    OSOAuth._module.config(['$provide', function ($provide) {
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (OSOAuth.userProfile) {
+                        return _.merge($delegate, OSOAuth.userProfile, {
+                            username: OSOAuth.userProfile.fullName,
+                            logout: function () {
+                                OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+                            }
+                        });
+                    }
+                    return $delegate;
+                }]);
+        }]);
+    OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
+            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
+                $httpProvider.defaults.headers.common = {
+                    'Authorization': 'Bearer ' + OSOAuth.userProfile.token
+                };
+            }
+        }]);
+    var keepaliveUri = undefined;
+    var keepaliveInterval = undefined;
+    OSOAuth._module.config(['KeepaliveProvider', function (KeepaliveProvider) {
+            OSOAuth.log.debug("keepalive URI: ", keepaliveUri);
+            OSOAuth.log.debug("keepalive interval: ", keepaliveInterval);
+            if (keepaliveUri && keepaliveInterval) {
+                KeepaliveProvider.http(keepaliveUri);
+                KeepaliveProvider.interval(keepaliveInterval);
+            }
+        }]);
+    OSOAuth._module.run(['userDetails', 'Keepalive', '$rootScope', function (userDetails, Keepalive, $rootScope) {
+            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
+                OSOAuth.log.debug("Starting keepalive");
+                $rootScope.$on('KeepaliveResponse', function ($event, data, status) {
+                    OSOAuth.log.debug("keepaliveStatus: ", status);
+                    OSOAuth.log.debug("keepalive response: ", data);
+                    if (status === 401) {
+                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
+                    }
+                });
+                Keepalive.start();
+            }
+        }]);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'OSOAuth',
+        task: function (next) {
+            if (!window['OSOAuthConfig']) {
+                OSOAuth.log.debug("oauth disabled");
+                next();
+                return;
+            }
+            if (!OSOAuthConfig.oauth_client_id ||
+                !OSOAuthConfig.oauth_authorize_uri) {
+                OSOAuth.log.debug("Invalid oauth config, disabled oauth");
+                next();
+                return;
+            }
+            OSOAuth.log.debug("config: ", OSOAuthConfig);
+            var currentURI = new URI(window.location.href);
+            var fragmentParams = OSOAuth.checkToken(currentURI);
+            if (fragmentParams) {
+                var tmp = {
+                    token: fragmentParams.access_token,
+                    expiry: fragmentParams.expires_in,
+                    type: fragmentParams.token_type,
+                    obtainedAt: fragmentParams.obtainedAt || 0
+                };
+                var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+                uri.path('/oapi/v1/users/~');
+                keepaliveUri = uri.toString();
+                OSOAuth.userProfile = tmp;
+                $.ajax({
+                    type: 'GET',
+                    url: keepaliveUri,
+                    success: function (response) {
+                        _.merge(OSOAuth.userProfile, tmp, response, { provider: OSOAuth.pluginName });
+                        var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
+                        var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
+                        if (obtainedAt) {
+                            var remainingTime = obtainedAt + expiry - OSOAuth.currentTimeSeconds();
+                            if (remainingTime > 0) {
+                                keepaliveInterval = Math.round(remainingTime / 4);
+                            }
+                        }
+                        if (!keepaliveInterval) {
+                            keepaliveInterval = 10;
+                        }
+                        OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
+                        $.ajaxSetup({
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
+                            }
+                        });
+                        next();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+                        OSOAuth.clearTokenStorage();
+                        OSOAuth.doLogin(OSOAuthConfig, {
+                            uri: currentURI.toString()
+                        });
+                    },
+                    beforeSend: function (request) {
+                        request.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
+                    }
+                });
+            }
+            else {
+                OSOAuth.clearTokenStorage();
+                OSOAuth.doLogin(OSOAuthConfig, {
+                    uri: currentURI.toString()
+                });
+            }
+        }
+    });
+    hawtioPluginLoader.addModule(OSOAuth.pluginName);
+})(OSOAuth || (OSOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     HawtioKeycloak.pluginName = 'hawtio-keycloak';
@@ -505,245 +874,8 @@ var HawtioKeycloak;
         };
         AuthInterceptorService.$inject = ['$q', 'userDetails'];
         return AuthInterceptorService;
-    })();
+    }());
     HawtioKeycloak._module.requires.push("ngIdle");
 })(HawtioKeycloak || (HawtioKeycloak = {}));
 
-/// <reference path="../../includes.ts"/>
-var OSOAuth;
-(function (OSOAuth) {
-    OSOAuth.pluginName = 'hawtio-os-oauth';
-    OSOAuth.log = Logger.get(OSOAuth.pluginName);
-    // Keep this unset unless we have a token
-    OSOAuth.userProfile = null;
-})(OSOAuth || (OSOAuth = {}));
-
-/// <reference path="osOAuthGlobals.ts"/>
-var OSOAuth;
-(function (OSOAuth) {
-    var OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
-    function currentTimeSeconds() {
-        return Math.floor(new Date().getTime() / 1000);
-    }
-    OSOAuth.currentTimeSeconds = currentTimeSeconds;
-    function authenticatedHttpRequest(options, userDetails) {
-        return $.ajax(_.extend(options, {
-            beforeSend: function (request) {
-                if (userDetails.token) {
-                    request.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
-                }
-            }
-        }));
-    }
-    OSOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
-    function doLogout(config, userDetails) {
-        if (config === void 0) { config = window['OSOAuthConfig']; }
-        if (userDetails === void 0) { userDetails = OSOAuth.userProfile; }
-        var currentURI = new URI(window.location.href);
-        var uri = new URI(config.oauth_authorize_uri);
-        uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);
-        authenticatedHttpRequest({
-            type: 'DELETE',
-            url: uri.toString()
-        }, userDetails).always(function () {
-            clearTokenStorage();
-            doLogin(OSOAuthConfig, {
-                uri: currentURI.toString()
-            });
-        });
-    }
-    OSOAuth.doLogout = doLogout;
-    function doLogin(config, options) {
-        var clientId = config.oauth_client_id;
-        var targetURI = config.oauth_authorize_uri;
-        var uri = new URI(targetURI);
-        uri.query({
-            client_id: clientId,
-            response_type: 'token',
-            state: options.uri,
-            redirect_uri: options.uri
-        });
-        var target = uri.toString();
-        OSOAuth.log.debug("Redirecting to URI: ", target);
-        window.location.href = target;
-    }
-    OSOAuth.doLogin = doLogin;
-    function extractToken(uri) {
-        var query = uri.query(true);
-        OSOAuth.log.debug("Query: ", query);
-        var fragmentParams = new URI("?" + uri.fragment()).query(true);
-        OSOAuth.log.debug("FragmentParams: ", fragmentParams);
-        if (fragmentParams.access_token && (fragmentParams.token_type === "bearer") || fragmentParams.token_type === "Bearer") {
-            OSOAuth.log.debug("Got token");
-            var localStorage = Core.getLocalStorage();
-            var creds = {
-                token_type: fragmentParams.token_type,
-                access_token: fragmentParams.access_token,
-                expires_in: fragmentParams.expires_in,
-                obtainedAt: currentTimeSeconds()
-            };
-            localStorage['osAuthCreds'] = angular.toJson(creds);
-            delete fragmentParams.token_type;
-            delete fragmentParams.access_token;
-            delete fragmentParams.expires_in;
-            uri.fragment("").query(fragmentParams);
-            var target = uri.toString();
-            OSOAuth.log.debug("redirecting to: ", target);
-            window.location.href = target;
-            return creds;
-        }
-        else {
-            OSOAuth.log.debug("No token in URI");
-            return undefined;
-        }
-    }
-    OSOAuth.extractToken = extractToken;
-    function clearTokenStorage() {
-        var localStorage = Core.getLocalStorage();
-        delete localStorage[OS_TOKEN_STORAGE_KEY];
-    }
-    OSOAuth.clearTokenStorage = clearTokenStorage;
-    function checkToken(uri) {
-        var localStorage = Core.getLocalStorage();
-        var answer = undefined;
-        if (OS_TOKEN_STORAGE_KEY in localStorage) {
-            try {
-                answer = angular.fromJson(localStorage[OS_TOKEN_STORAGE_KEY]);
-            }
-            catch (e) {
-                clearTokenStorage();
-                // must be broken...
-                OSOAuth.log.debug("Error extracting osAuthCreds value: ", e);
-            }
-        }
-        if (!answer) {
-            answer = extractToken(uri);
-        }
-        OSOAuth.log.debug("Using creds: ", answer);
-        return answer;
-    }
-    OSOAuth.checkToken = checkToken;
-})(OSOAuth || (OSOAuth = {}));
-
-/// <reference path="osOAuthHelpers.ts"/>
-var OSOAuth;
-(function (OSOAuth) {
-    HawtioOAuth.oauthPlugins.push('OSOAuth');
-    OSOAuth._module = angular.module(OSOAuth.pluginName, []);
-    OSOAuth._module.config(['$provide', function ($provide) {
-            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-                    if (OSOAuth.userProfile) {
-                        return _.merge($delegate, OSOAuth.userProfile, {
-                            username: OSOAuth.userProfile.fullName,
-                            logout: function () {
-                                OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
-                            }
-                        });
-                    }
-                    return $delegate;
-                }]);
-        }]);
-    OSOAuth._module.config(['$httpProvider', function ($httpProvider) {
-            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
-                $httpProvider.defaults.headers.common = {
-                    'Authorization': 'Bearer ' + OSOAuth.userProfile.token
-                };
-            }
-        }]);
-    var keepaliveUri = undefined;
-    var keepaliveInterval = undefined;
-    OSOAuth._module.config(['KeepaliveProvider', function (KeepaliveProvider) {
-            OSOAuth.log.debug("keepalive URI: ", keepaliveUri);
-            OSOAuth.log.debug("keepalive interval: ", keepaliveInterval);
-            if (keepaliveUri && keepaliveInterval) {
-                KeepaliveProvider.http(keepaliveUri);
-                KeepaliveProvider.interval(keepaliveInterval);
-            }
-        }]);
-    OSOAuth._module.run(['userDetails', 'Keepalive', '$rootScope', function (userDetails, Keepalive, $rootScope) {
-            if (OSOAuth.userProfile && OSOAuth.userProfile.token) {
-                OSOAuth.log.debug("Starting keepalive");
-                $rootScope.$on('KeepaliveResponse', function ($event, data, status) {
-                    OSOAuth.log.debug("keepaliveStatus: ", status);
-                    OSOAuth.log.debug("keepalive response: ", data);
-                    if (status === 401) {
-                        OSOAuth.doLogout(OSOAuthConfig, OSOAuth.userProfile);
-                    }
-                });
-                Keepalive.start();
-            }
-        }]);
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'OSOAuth',
-        task: function (next) {
-            if (!window['OSOAuthConfig']) {
-                OSOAuth.log.debug("oauth disabled");
-                next();
-                return;
-            }
-            if (!OSOAuthConfig.oauth_client_id ||
-                !OSOAuthConfig.oauth_authorize_uri) {
-                OSOAuth.log.debug("Invalid oauth config, disabled oauth");
-                next();
-                return;
-            }
-            OSOAuth.log.debug("config: ", OSOAuthConfig);
-            var currentURI = new URI(window.location.href);
-            var fragmentParams = OSOAuth.checkToken(currentURI);
-            if (fragmentParams) {
-                var tmp = {
-                    token: fragmentParams.access_token,
-                    expiry: fragmentParams.expires_in,
-                    type: fragmentParams.token_type,
-                    obtainedAt: fragmentParams.obtainedAt || 0
-                };
-                var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-                uri.path('/oapi/v1/users/~');
-                keepaliveUri = uri.toString();
-                OSOAuth.userProfile = tmp;
-                $.ajax({
-                    type: 'GET',
-                    url: keepaliveUri,
-                    success: function (response) {
-                        _.merge(OSOAuth.userProfile, tmp, response, { provider: OSOAuth.pluginName });
-                        var obtainedAt = Core.parseIntValue(OSOAuth.userProfile.obtainedAt) || 0;
-                        var expiry = Core.parseIntValue(OSOAuth.userProfile.expiry) || 0;
-                        if (obtainedAt) {
-                            var remainingTime = obtainedAt + expiry - OSOAuth.currentTimeSeconds();
-                            if (remainingTime > 0) {
-                                keepaliveInterval = Math.round(remainingTime / 4);
-                            }
-                        }
-                        if (!keepaliveInterval) {
-                            keepaliveInterval = 10;
-                        }
-                        OSOAuth.log.debug("userProfile: ", OSOAuth.userProfile);
-                        $.ajaxSetup({
-                            beforeSend: function (xhr) {
-                                xhr.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
-                            }
-                        });
-                        next();
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        OSOAuth.log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
-                        OSOAuth.clearTokenStorage();
-                        OSOAuth.doLogin(OSOAuthConfig, {
-                            uri: currentURI.toString()
-                        });
-                    },
-                    beforeSend: function (request) {
-                        request.setRequestHeader('Authorization', 'Bearer ' + OSOAuth.userProfile.token);
-                    }
-                });
-            }
-            else {
-                OSOAuth.clearTokenStorage();
-                OSOAuth.doLogin(OSOAuthConfig, {
-                    uri: currentURI.toString()
-                });
-            }
-        }
-    });
-    hawtioPluginLoader.addModule(OSOAuth.pluginName);
-})(OSOAuth || (OSOAuth = {}));
+angular.module("hawtio-oauth-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("plugins/github/html/githubPreferences.html","<github-preferences></github-preferences>\n");}]); hawtioPluginLoader.addModule("hawtio-oauth-templates");

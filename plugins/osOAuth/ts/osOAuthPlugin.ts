@@ -4,7 +4,7 @@ module OSOAuth {
 
   HawtioOAuth.oauthPlugins.push('OSOAuth');
 
-  export var _module = angular.module(pluginName, []);
+  export var _module = angular.module(pluginName, ['ngIdle']);
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {

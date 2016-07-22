@@ -33,6 +33,7 @@
     "hawtio-forms": "~2.0.27"
   },
   "resolutions": {
-    "lodash": "~3.2.0"
+    "lodash": "~3.2.0",
+    "angular": ">= 1.1.0 <= 1.6.0"
   }
 }

@@ -4,21 +4,23 @@ module Example {
 
   export var _module = angular.module(Example.pluginName, []);
 
-  var tab = undefined;
+  _module.constant('example-tabs', []);
 
-  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', ($locationProvider, $routeProvider:ng.route.IRouteProvider, builder:HawtioMainNav.BuilderFactory) => {
-    tab = builder.create()
+  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', ($locationProvider, $routeProvider:ng.route.IRouteProvider, builder:HawtioMainNav.BuilderFactory, tabs) => {
+    var tab = builder.create()
       .id(Example.pluginName)
       .title(() => "Example")
       .href(() => "/example")
       .subPath("Page 1", "page1", builder.join(Example.templatePath, 'page1.html'))
+      .subPath("Page 2", "page2", builder.join(Example.templatePath, 'page2.html'))
       .build();
     builder.configureRouting($routeProvider, tab);
     $locationProvider.html5Mode(true);
+    tabs.push(tab);
   }]);
 
-  _module.run(['HawtioNav', (HawtioNav:HawtioMainNav.Registry) => {
-    HawtioNav.add(tab);
+  _module.run(['HawtioNav', 'example-tabs', (HawtioNav:HawtioMainNav.Registry, tabs) => {
+    _.forEach(tabs, tab => HawtioNav.add(tab));
     log.debug("loaded");
   }]);
 
@@ -47,6 +49,7 @@ module Example {
   // }, true);
 
   // openshift
+  /*
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     OSOAuthConfig = {
       oauth_authorize_uri: "https://172.28.128.4:8443/oauth/authorize",
@@ -74,6 +77,7 @@ module Example {
       });
     }
   });
+  */
 
 
   hawtioPluginLoader.addModule(Example.pluginName);

@@ -9,6 +9,7 @@ var gulp = require('gulp'),
     uri = require('urijs'),
     s = require('underscore.string'),
     argv = require('yargs').argv,
+    stringifyObject = require('stringify-object'),
     hawtio = require('hawtio-node-backend');
 
 var plugins = gulpLoadPlugins({});
@@ -196,6 +197,32 @@ gulp.task('connect', ['watch'], function() {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
+  });
+
+  hawtio.use('/oauth/config.js', function(req, res, next) {
+    var kubeBase = process.env.KUBERNETES_MASTER || 'http://localhost:9000';
+    var config = {
+      openshift: {
+        oauth_authorize_uri: urljoin(kubeBase, '/oauth/authorize'),
+        oauth_client_id: 'fabric8'
+      },
+      google: {
+        clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET
+      },
+      github: {
+        clientId: process.env.GITHUB_OAUTH_CLIENT_ID,
+        clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET
+      }
+    };
+    // TODO for now 'disable oauth' means turn off the openshift oauth flow
+    if (process.env.DISABLE_OAUTH === "true") {
+      delete config.openshift;
+    }
+    var answer = "window.OPENSHIFT_CONFIG = window.HAWTIO_OAUTH_CONFIG = " + stringifyObject(config);
+    res.set('Content-Type', 'application/javascript');
+    res.send(answer);
+
   });
 
   /*

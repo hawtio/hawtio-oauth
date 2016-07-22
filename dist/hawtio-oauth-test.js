@@ -13,19 +13,21 @@ var Example;
 var Example;
 (function (Example) {
     Example._module = angular.module(Example.pluginName, []);
-    var tab = undefined;
-    Example._module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', function ($locationProvider, $routeProvider, builder) {
-            tab = builder.create()
+    Example._module.constant('example-tabs', []);
+    Example._module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', function ($locationProvider, $routeProvider, builder, tabs) {
+            var tab = builder.create()
                 .id(Example.pluginName)
                 .title(function () { return "Example"; })
                 .href(function () { return "/example"; })
                 .subPath("Page 1", "page1", builder.join(Example.templatePath, 'page1.html'))
+                .subPath("Page 2", "page2", builder.join(Example.templatePath, 'page2.html'))
                 .build();
             builder.configureRouting($routeProvider, tab);
             $locationProvider.html5Mode(true);
+            tabs.push(tab);
         }]);
-    Example._module.run(['HawtioNav', function (HawtioNav) {
-            HawtioNav.add(tab);
+    Example._module.run(['HawtioNav', 'example-tabs', function (HawtioNav, tabs) {
+            _.forEach(tabs, function (tab) { return HawtioNav.add(tab); });
             Example.log.debug("loaded");
         }]);
     // Google
@@ -51,32 +53,35 @@ var Example;
     //   next();
     // }, true);
     // openshift
-    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
-        OSOAuthConfig = {
-            oauth_authorize_uri: "https://172.28.128.4:8443/oauth/authorize",
-            oauth_client_id: "fabric8",
-            logout_uri: ""
-        };
-        next();
+    /*
+    hawtioPluginLoader.registerPreBootstrapTask((next) => {
+      OSOAuthConfig = {
+        oauth_authorize_uri: "https://172.28.128.4:8443/oauth/authorize",
+        oauth_client_id: "fabric8",
+        logout_uri: ""
+      };
+      next();
     }, true);
+  
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'test-init',
-        depends: ['hawtio-oauth'],
-        task: function (next) {
-            var uri = new URI('https://172.28.128.4:8443/api/v1');
-            uri.path('/api/v1/namespaces');
-            var url = uri.toString();
-            HawtioOAuth.authenticatedHttpRequest({
-                url: uri.toString()
-            }).done(function (data) {
-                Example.log.debug("Got data: ", data);
-                next();
-            }).fail(function (xHr, textStatus, errorThrown) {
-                Example.log.warn(textStatus, errorThrown);
-                HawtioOAuth.doLogout();
-            });
-        }
+      name: 'test-init',
+      depends: ['hawtio-oauth'],
+      task: (next) => {
+        var uri = new URI('https://172.28.128.4:8443/api/v1');
+        uri.path('/api/v1/namespaces');
+        var url = uri.toString();
+        HawtioOAuth.authenticatedHttpRequest({
+          url: uri.toString()
+        }).done((data) => {
+          log.debug("Got data: ", data);
+          next();
+        }).fail((xHr, textStatus, errorThrown) => {
+          log.warn(textStatus, errorThrown);
+          HawtioOAuth.doLogout();
+        });
+      }
     });
+    */
     hawtioPluginLoader.addModule(Example.pluginName);
 })(Example || (Example = {}));
 
@@ -89,6 +94,9 @@ var Example;
             $scope.userDetailsStr = angular.toJson(userDetails, true);
             $scope.target = "World!";
         }]);
+    Example.Page2Controller = Example._module.controller("Example.Page2Controller", ['$scope', function ($scope) {
+        }]);
 })(Example || (Example = {}));
 
-angular.module("hawtio-oauth-test-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("test-plugins/example/html/page1.html","<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page1Controller\">\n    <h1>User Details</h1>\n    <button class=\"btn btn-primary\" ng-click=\"userDetails.logout()\">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n");}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");
+angular.module("hawtio-oauth-test-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("test-plugins/example/html/page1.html","<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page1Controller\">\n    <h1>User Details</h1>\n    <button class=\"btn btn-primary\" ng-click=\"userDetails.logout()\">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n");
+$templateCache.put("test-plugins/example/html/page2.html","\n<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page2Controller\">\n    <h1>User Details</h1>\n    <button class=\"btn btn-primary\" ng-click=\"userDetails.logout()\">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n");}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");

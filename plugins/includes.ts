@@ -8,6 +8,9 @@ declare var Keycloak;
 declare var OSOAuthConfig;
 declare var GoogleOAuthConfig;
 
+// variable set by server script that contains oauth settings
+declare var HAWTIO_OAUTH_CONFIG;
+
 module HawtioOAuth {
   var pluginName = 'HawtioOAuth';
   var log:Logging.Logger = Logger.get(pluginName);
@@ -29,6 +32,7 @@ module HawtioOAuth {
   }]);
 
   hawtioPluginLoader.addModule(pluginName);
+  hawtioPluginLoader.addModule('ngIdle');
 
   export var oauthPlugins = [];
 
@@ -74,6 +78,14 @@ module HawtioOAuth {
       }
     }));
   }
+
+  // fetch oauth config
+  hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'HawtioOAuthConfig',
+    task: (next) => {
+      $.getScript('oauth/config.js').always(next);
+    }
+  });
 
   // global pre-bootstrap task that plugins can use to wait
   // until all oauth plugins have been processed
