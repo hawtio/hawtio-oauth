@@ -12,6 +12,7 @@ module GithubOAuth {
     accessToken: undefined,
     avatarURL: undefined,
     name: undefined,
+    scopes: ['user', 'repo', 'read:org'],
     authURL: 'https://github.com/login/oauth/authorize',
     tokenURL: 'https://api.github.com/authorizations',
     loginURL: 'https://api.github.com/user'
@@ -19,27 +20,28 @@ module GithubOAuth {
 
   _module.constant('githubOAuthSettings', settings);
 
-  _module.run(['preferencesRegistry', (preferencesRegistry) => {
-    preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"));
-    log.debug("loaded");
-  }]);
-
-  _module.service("GithubOAuth", ['githubOAuthSettings', (settings) => {
+  _module.service('GithubOAuth', ['githubOAuthSettings', (settings) => {
     var self = {
-      getLoginURL: (returnTo?:string) => {
-        if (!returnTo) {
-          returnTo = new URI().toString();
-        }
-        returnTo = URI.encode(returnTo);
-        var target = new URI(settings.authURL);
-        target.search({
-          client_id: settings.clientId,
-          redirect_uri: returnTo
-        });
-        return target.toString();
+      settings: settings,
+      hasToken: () => {
+        return !Core.isBlank(self.settings.accessToken);
+      },
+      getToken: () => {
+        return self.settings.accessToken;
+      },
+      getHeader: () => {
+        return getAuthHeader(self.settings);
+      },
+      getPreferencesLink: () => {
+        
       }
     }
     return self;
+  }]);
+
+  _module.run(['preferencesRegistry', (preferencesRegistry) => {
+    preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"));
+    log.debug("loaded");
   }]);
 
   hawtioPluginLoader.addModule(pluginName);

@@ -9,10 +9,10 @@ module Example {
   _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', ($locationProvider, $routeProvider:ng.route.IRouteProvider, builder:HawtioMainNav.BuilderFactory, tabs) => {
     var tab = builder.create()
       .id(Example.pluginName)
-      .title(() => "Example")
+      .title(() => "Examples")
       .href(() => "/example")
-      .subPath("Page 1", "page1", builder.join(Example.templatePath, 'page1.html'))
-      .subPath("Page 2", "page2", builder.join(Example.templatePath, 'page2.html'))
+      .subPath("Github", "page2", builder.join(Example.templatePath, 'github.html'))
+      .subPath("Openshift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
       .build();
     builder.configureRouting($routeProvider, tab);
     $locationProvider.html5Mode(true);

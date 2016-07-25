@@ -124,7 +124,8 @@ module GithubOAuth {
               data: angular.toJson({
                 client_id: githubOAuthSettings.clientId,
                 client_secret: githubOAuthSettings.clientSecret,
-                node: 'hawtio console access token'
+                note: 'hawtio console access token',
+                scopes: githubOAuthSettings.scopes
               }),
               headers: headers,
               success: (data) => {

@@ -63,7 +63,7 @@ gulp.task('example-tsc', ['tsc'], function() {
   var tsResult = gulp.src(config.testTs)
     .pipe(plugins.typescript(config.testTsProject))
     .on('error', plugins.notify.onError({
-      message: '#{ error.message }',
+      message: '<%= error.message %>',
       title: 'Typescript compilation error - test'
     }));
 
@@ -99,7 +99,7 @@ gulp.task('tsc', ['clean-defs'], function() {
   var tsResult = gulp.src(config.ts)
     .pipe(plugins.typescript(config.tsProject))
     .on('error', plugins.notify.onError({
-      message: '#{ error.message }',
+      message: '<%= error.message %>',
       title: 'Typescript compilation error - main'
     }));
 

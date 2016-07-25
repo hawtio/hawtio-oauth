@@ -8,8 +8,4 @@ module Example {
     $scope.target = "World!";
   }]);
 
-  export var Page2Controller = _module.controller("Example.Page2Controller", ['$scope', ($scope) => {
-
-  }]);
-
 }

@@ -20,7 +20,7 @@ module GithubOAuth {
     if (!token) {
       return '';
     }
-    return '';
+    return 'token ' + oauthSettings.accessToken;
   }
 
   export function loadSettings() {

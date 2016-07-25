@@ -1,0 +1,14 @@
+<div  ng-controller="Example.Page2Controller">
+  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">
+    <div class="col-md-12">
+      <div class="alert alert-warning">
+        No Github credentials available, <a href="" ng-click="prefs.goto('Github')">configure your github account</a>
+      </div>
+    </div>
+  </div>
+  <div class="row" ng-if="oauth.hasToken()">
+    <div class="col-md-12">
+      <pre>{{data | json}}</pre>
+    </div>
+  </div>
+</div>
