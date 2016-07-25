@@ -20,7 +20,7 @@ module Example {
   }]);
 
   _module.run(['HawtioNav', 'example-tabs', (HawtioNav:HawtioMainNav.Registry, tabs) => {
-    _.forEach(tabs, tab => HawtioNav.add(tab));
+    _.forEach(tabs, (tab:any) => { HawtioNav.add(tab); });
     log.debug("loaded");
   }]);
 

@@ -10,8 +10,10 @@ module GithubOAuth {
     clientId: undefined,
     clientSecret: undefined,
     accessToken: undefined,
+    avatarURL: undefined,
+    name: undefined,
     authURL: 'https://github.com/login/oauth/authorize',
-    tokenURL: 'https://github.com/login/oauth/access_token',
+    tokenURL: 'https://api.github.com/authorizations',
     loginURL: 'https://api.github.com/user'
   };
 

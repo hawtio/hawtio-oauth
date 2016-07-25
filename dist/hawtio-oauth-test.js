@@ -27,7 +27,7 @@ var Example;
             tabs.push(tab);
         }]);
     Example._module.run(['HawtioNav', 'example-tabs', function (HawtioNav, tabs) {
-            _.forEach(tabs, function (tab) { return HawtioNav.add(tab); });
+            _.forEach(tabs, function (tab) { HawtioNav.add(tab); });
             Example.log.debug("loaded");
         }]);
     // Google
