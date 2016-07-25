@@ -40,7 +40,7 @@ module GithubOAuth {
   }]);
 
   _module.run(['preferencesRegistry', (preferencesRegistry) => {
-    preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"));
+    preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"), () => { return settings.enabled; });
     log.debug("loaded");
   }]);
 
