@@ -46,7 +46,6 @@ module GithubOAuth {
         data: undefined
       };
       var settings = $scope.settings = githubOAuthSettings;
-      console.log("Settings: ", settings);
 
       $scope.disabled = () => {
         return Core.isBlank(model.username) || Core.isBlank(model.password);
@@ -104,7 +103,6 @@ module GithubOAuth {
       };
 
       $scope.login = () => {
-        console.log("Using: ", model);
         model.error = false;
         model.trying = true;
         var headers = {

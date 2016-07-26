@@ -15,7 +15,6 @@ module GithubOAuth {
   }
 
   export function getTokenCheckAuthHeader(oauthSettings) {
-    console.log("Settings: ", oauthSettings);
     return Core.getBasicAuthHeader(oauthSettings.clientId, oauthSettings.clientSecret);
   }
 
