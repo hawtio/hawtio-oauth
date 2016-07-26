@@ -75,7 +75,8 @@ module GithubOAuth {
             storeSettings(model, githubOAuthSettings);
             Core.$apply($scope);
           },
-          error: error
+          error: error,
+          beforeSend: emptyBeforeSend
         });
       };
 
@@ -97,7 +98,8 @@ module GithubOAuth {
             model.avatarURL = undefined;
             storeSettings(model, githubOAuthSettings);
             error(data);
-          }
+          },
+          beforeSend: emptyBeforeSend
         });
       };
 
@@ -135,10 +137,12 @@ module GithubOAuth {
                 storeSettings(model, githubOAuthSettings);
                 Core.$apply($scope);
               },
-              error: error
+              error: error,
+              beforeSend: emptyBeforeSend
             });
           },
-          error: error
+          error: error,
+          beforeSend: emptyBeforeSend
         });
       } 
     }]

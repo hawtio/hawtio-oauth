@@ -6,6 +6,10 @@ module GithubOAuth {
 
   var LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
 
+  export function emptyBeforeSend() {
+    return true;
+  }
+
   export function getTokenCheckAuthURL(oauthSettings) {
     return UrlHelpers.join('https://api.github.com/applications', oauthSettings.clientId, 'tokens', oauthSettings.accessToken);
   }

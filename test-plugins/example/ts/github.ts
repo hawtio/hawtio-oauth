@@ -19,7 +19,8 @@ module Example {
         },
         complete: () => {
           Core.$apply($scope);
-        }
+        },
+        beforeSend: GithubOAuth.emptyBeforeSend
       });
     }
   }]);
