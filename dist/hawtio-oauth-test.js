@@ -105,7 +105,8 @@ var Example;
                     },
                     complete: function () {
                         Core.$apply($scope);
-                    }
+                    },
+                    beforeSend: GithubOAuth.emptyBeforeSend
                 });
             }
         }]);

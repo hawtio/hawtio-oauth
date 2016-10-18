@@ -65,15 +65,17 @@ module OSOAuth {
         return;
       }
       if (!OSOAuthConfig.oauth_client_id ||
-          !OSOAuthConfig.oauth_authorize_uri)
-      {
+          !OSOAuthConfig.oauth_authorize_uri) {
         log.debug("Invalid oauth config, disabled oauth");
-        var token = OSOAuthConfig.token;
-        if (token) {
-          log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
-          OSOAuth.userProfile = {
-            token: token
-          };
+        var openshiftConfig = window['OPENSHIFT_CONFIG']
+        if (openshiftConfig) {
+          var token = openshiftConfig.token;
+          if (token) {
+            log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
+            OSOAuth.userProfile = {
+              token: token
+            };
+          }
         }
         next();
         return;

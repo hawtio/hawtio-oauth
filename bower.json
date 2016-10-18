@@ -34,6 +34,7 @@
     "hawtio-forms": "~2.0.27"
   },
   "resolutions": {
-    "angular": "~1.5.0"
+    "angular": "~1.5.0",
+    "codemirror": "^5.0"
   }
 }
