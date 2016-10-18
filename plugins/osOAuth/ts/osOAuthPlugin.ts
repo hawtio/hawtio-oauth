@@ -68,6 +68,13 @@ module OSOAuth {
           !OSOAuthConfig.oauth_authorize_uri)
       {
         log.debug("Invalid oauth config, disabled oauth");
+        var token = OSOAuthConfig.token;
+        if (token) {
+          log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
+          OSOAuth.userProfile = {
+            token: token
+          };
+        }
         next();
         return;
       }
