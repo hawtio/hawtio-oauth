@@ -367,6 +367,156 @@ var GoogleOAuth;
     });
 })(GoogleOAuth || (GoogleOAuth = {}));
 
+/// <reference path="../../includes.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioKeycloak.pluginName = 'hawtio-keycloak';
+    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
+    HawtioKeycloak.keycloak = undefined;
+    // used by HawtioOAuth, must have a 'token' field when set, otherwise
+    // leave undefined
+    HawtioKeycloak.userProfile = undefined;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
+/// <reference path="keycloakGlobals.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    function doLogout() {
+        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+            HawtioKeycloak.keycloak.logout();
+        }
+    }
+    HawtioKeycloak.doLogout = doLogout;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
+/// <reference path="keycloakGlobals.ts"/>
+/// <reference path="keycloakHelpers.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
+    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
+    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
+    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (HawtioKeycloak.userProfile) {
+                        return _.merge($delegate, HawtioKeycloak.userProfile, {
+                            logout: function () {
+                                if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+                                    HawtioKeycloak.keycloak.logout();
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        return $delegate;
+                    }
+                }]);
+            // only add the interceptor if we have keycloak otherwise
+            // we'll get an undefined exception in the interceptor
+            if (HawtioKeycloak.keycloak) {
+                $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+            }
+        }]);
+    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
+            if (HawtioKeycloak.keycloak) {
+                HawtioKeycloak.log.debug("Enabling idle timeout");
+                Idle.watch();
+                $rootScope.$on('IdleTimeout', function () {
+                    HawtioKeycloak.log.debug("Idle timeout triggered");
+                    // let the end application handle this event
+                    // userDetails.logout();
+                });
+                $rootScope.$on('Keepalive', function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    if (keycloak) {
+                        keycloak.updateToken(5).success(function () {
+                            userDetails.token = keycloak.token;
+                        });
+                    }
+                });
+            }
+            else {
+                HawtioKeycloak.log.debug("Not enabling idle timeout");
+            }
+        }]);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'HawtioKeycloak',
+        task: function (next) {
+            if (!window['KeycloakConfig']) {
+                HawtioKeycloak.log.debug("Keycloak disabled");
+                next();
+                return;
+            }
+            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+            keycloak.init()
+                .success(function (authenticated) {
+                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
+                if (!authenticated) {
+                    keycloak.login({
+                        redirectUri: window.location.href,
+                    });
+                }
+                else {
+                    keycloak.loadUserProfile()
+                        .success(function (profile) {
+                        HawtioKeycloak.userProfile = profile;
+                        HawtioKeycloak.userProfile.token = keycloak.token;
+                        next();
+                    }).error(function () {
+                        HawtioKeycloak.log.debug("Failed to load user profile");
+                        next();
+                    });
+                }
+            })
+                .error(function () {
+                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
+                next();
+            });
+        }
+    });
+    var AuthInterceptorService = (function () {
+        function AuthInterceptorService($q, userDetails) {
+            var _this = this;
+            this.$q = $q;
+            this.userDetails = userDetails;
+            this.request = function (request) {
+                // bypass for local templates
+                if (request.url.indexOf('http') !== 0) {
+                    return request;
+                }
+                var addBearer, deferred;
+                addBearer = function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    return keycloak.updateToken(5).success(function () {
+                        var token = HawtioKeycloak.keycloak.token;
+                        _this.userDetails.token = token;
+                        request.headers.Authorization = 'Bearer ' + token;
+                        deferred.notify();
+                        return deferred.resolve(request);
+                    }).error(function () {
+                        console.log("Couldn't update token");
+                    });
+                };
+                deferred = _this.$q.defer();
+                addBearer();
+                return _this.$q.when(deferred.promise);
+            };
+            this.responseError = function (rejection) {
+                if (rejection.status === 401) {
+                    HawtioKeycloak.keycloak.logout();
+                }
+                return _this.$q.reject(rejection);
+            };
+        }
+        AuthInterceptorService.Factory = function ($q, userDetails) {
+            return new AuthInterceptorService($q, userDetails);
+        };
+        AuthInterceptorService.$inject = ['$q', 'userDetails'];
+        return AuthInterceptorService;
+    }());
+    HawtioKeycloak._module.requires.push("ngIdle");
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
 // <reference path="../../includes.ts"/>
 var GithubOAuth;
 (function (GithubOAuth) {
@@ -610,156 +760,6 @@ var GithubOAuth;
 })(GithubOAuth || (GithubOAuth = {}));
 
 /// <reference path="../../includes.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioKeycloak.pluginName = 'hawtio-keycloak';
-    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
-    HawtioKeycloak.keycloak = undefined;
-    // used by HawtioOAuth, must have a 'token' field when set, otherwise
-    // leave undefined
-    HawtioKeycloak.userProfile = undefined;
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="keycloakGlobals.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    function doLogout() {
-        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-            HawtioKeycloak.keycloak.logout();
-        }
-    }
-    HawtioKeycloak.doLogout = doLogout;
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="keycloakGlobals.ts"/>
-/// <reference path="keycloakHelpers.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
-    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
-    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-                    if (HawtioKeycloak.userProfile) {
-                        return _.merge($delegate, HawtioKeycloak.userProfile, {
-                            logout: function () {
-                                if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-                                    HawtioKeycloak.keycloak.logout();
-                                }
-                            }
-                        });
-                    }
-                    else {
-                        return $delegate;
-                    }
-                }]);
-            // only add the interceptor if we have keycloak otherwise
-            // we'll get an undefined exception in the interceptor
-            if (HawtioKeycloak.keycloak) {
-                $httpProvider.interceptors.push(AuthInterceptorService.Factory);
-            }
-        }]);
-    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
-            if (HawtioKeycloak.keycloak) {
-                HawtioKeycloak.log.debug("Enabling idle timeout");
-                Idle.watch();
-                $rootScope.$on('IdleTimeout', function () {
-                    HawtioKeycloak.log.debug("Idle timeout triggered");
-                    // let the end application handle this event
-                    // userDetails.logout();
-                });
-                $rootScope.$on('Keepalive', function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    if (keycloak) {
-                        keycloak.updateToken(5).success(function () {
-                            userDetails.token = keycloak.token;
-                        });
-                    }
-                });
-            }
-            else {
-                HawtioKeycloak.log.debug("Not enabling idle timeout");
-            }
-        }]);
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'HawtioKeycloak',
-        task: function (next) {
-            if (!window['KeycloakConfig']) {
-                HawtioKeycloak.log.debug("Keycloak disabled");
-                next();
-                return;
-            }
-            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-            keycloak.init()
-                .success(function (authenticated) {
-                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
-                if (!authenticated) {
-                    keycloak.login({
-                        redirectUri: window.location.href,
-                    });
-                }
-                else {
-                    keycloak.loadUserProfile()
-                        .success(function (profile) {
-                        HawtioKeycloak.userProfile = profile;
-                        HawtioKeycloak.userProfile.token = keycloak.token;
-                        next();
-                    }).error(function () {
-                        HawtioKeycloak.log.debug("Failed to load user profile");
-                        next();
-                    });
-                }
-            })
-                .error(function () {
-                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
-                next();
-            });
-        }
-    });
-    var AuthInterceptorService = (function () {
-        function AuthInterceptorService($q, userDetails) {
-            var _this = this;
-            this.$q = $q;
-            this.userDetails = userDetails;
-            this.request = function (request) {
-                // bypass for local templates
-                if (request.url.indexOf('http') !== 0) {
-                    return request;
-                }
-                var addBearer, deferred;
-                addBearer = function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    return keycloak.updateToken(5).success(function () {
-                        var token = HawtioKeycloak.keycloak.token;
-                        _this.userDetails.token = token;
-                        request.headers.Authorization = 'Bearer ' + token;
-                        deferred.notify();
-                        return deferred.resolve(request);
-                    }).error(function () {
-                        console.log("Couldn't update token");
-                    });
-                };
-                deferred = _this.$q.defer();
-                addBearer();
-                return _this.$q.when(deferred.promise);
-            };
-            this.responseError = function (rejection) {
-                if (rejection.status === 401) {
-                    HawtioKeycloak.keycloak.logout();
-                }
-                return _this.$q.reject(rejection);
-            };
-        }
-        AuthInterceptorService.Factory = function ($q, userDetails) {
-            return new AuthInterceptorService($q, userDetails);
-        };
-        AuthInterceptorService.$inject = ['$q', 'userDetails'];
-        return AuthInterceptorService;
-    }());
-    HawtioKeycloak._module.requires.push("ngIdle");
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="../../includes.ts"/>
 var OSOAuth;
 (function (OSOAuth) {
     OSOAuth.pluginName = 'hawtio-os-oauth';
@@ -934,12 +934,15 @@ var OSOAuth;
             if (!OSOAuthConfig.oauth_client_id ||
                 !OSOAuthConfig.oauth_authorize_uri) {
                 OSOAuth.log.debug("Invalid oauth config, disabled oauth");
-                var token = OSOAuthConfig.token;
-                if (token) {
-                    OSOAuth.log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
-                    OSOAuth.userProfile = {
-                        token: token
-                    };
+                var openshiftConfig = window['OPENSHIFT_CONFIG'];
+                if (openshiftConfig) {
+                    var token = openshiftConfig.token;
+                    if (token) {
+                        OSOAuth.log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
+                        OSOAuth.userProfile = {
+                            token: token
+                        };
+                    }
                 }
                 next();
                 return;
