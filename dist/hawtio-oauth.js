@@ -90,6 +90,398 @@ var HawtioOAuth;
     });
 })(HawtioOAuth || (HawtioOAuth = {}));
 
+// <reference path="../../includes.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth.pluginName = 'github-oauth';
+    GithubOAuth.log = Logger.get(GithubOAuth.pluginName);
+    GithubOAuth.templatePath = 'plugins/github/html';
+    var LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
+    function emptyBeforeSend() {
+        return true;
+    }
+    GithubOAuth.emptyBeforeSend = emptyBeforeSend;
+    function getTokenCheckAuthURL(oauthSettings) {
+        return UrlHelpers.join('https://api.github.com/applications', oauthSettings.clientId, 'tokens', oauthSettings.accessToken);
+    }
+    GithubOAuth.getTokenCheckAuthURL = getTokenCheckAuthURL;
+    function getTokenCheckAuthHeader(oauthSettings) {
+        return Core.getBasicAuthHeader(oauthSettings.clientId, oauthSettings.clientSecret);
+    }
+    GithubOAuth.getTokenCheckAuthHeader = getTokenCheckAuthHeader;
+    function getAuthHeader(oauthSettings) {
+        var token = oauthSettings.accessToken;
+        if (!token) {
+            return '';
+        }
+        return 'token ' + oauthSettings.accessToken;
+    }
+    GithubOAuth.getAuthHeader = getAuthHeader;
+    function loadSettings() {
+        var answer = {};
+        if (LOCAL_STORAGE_KEY in localStorage) {
+            var settings = localStorage[LOCAL_STORAGE_KEY];
+            try {
+                settings = angular.fromJson(settings);
+                answer = settings;
+            }
+            catch (err) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+        }
+        return answer;
+    }
+    GithubOAuth.loadSettings = loadSettings;
+    function storeSettings(settings, oauthSettings) {
+        if (oauthSettings === void 0) { oauthSettings = undefined; }
+        var toStore = {
+            username: settings.username,
+            avatarURL: settings.avatarURL,
+            accessToken: settings.accessToken,
+            name: settings.name
+        };
+        if (oauthSettings) {
+            oauthSettings.username = toStore.username;
+            oauthSettings.avatarURL = toStore.avatarURL;
+            oauthSettings.accessToken = toStore.accessToken;
+            oauthSettings.name = toStore.name;
+        }
+        ;
+        localStorage[LOCAL_STORAGE_KEY] = angular.toJson(toStore);
+    }
+    GithubOAuth.storeSettings = storeSettings;
+})(GithubOAuth || (GithubOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
+/// <reference path="githubHelpers.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth._module = angular.module(GithubOAuth.pluginName, []);
+    var settings = {
+        enabled: false,
+        username: undefined,
+        clientId: undefined,
+        clientSecret: undefined,
+        accessToken: undefined,
+        avatarURL: undefined,
+        name: undefined,
+        scopes: ['user', 'repo', 'read:org'],
+        authURL: 'https://github.com/login/oauth/authorize',
+        tokenURL: 'https://api.github.com/authorizations',
+        loginURL: 'https://api.github.com/user'
+    };
+    GithubOAuth._module.constant('githubOAuthSettings', settings);
+    GithubOAuth._module.service('GithubOAuth', ['githubOAuthSettings', function (settings) {
+            var self = {
+                settings: settings,
+                hasToken: function () {
+                    return !Core.isBlank(self.settings.accessToken);
+                },
+                getToken: function () {
+                    return self.settings.accessToken;
+                },
+                getHeader: function () {
+                    return GithubOAuth.getAuthHeader(self.settings);
+                },
+                getPreferencesLink: function () {
+                }
+            };
+            return self;
+        }]);
+    GithubOAuth._module.run(['preferencesRegistry', function (preferencesRegistry) {
+            preferencesRegistry.addTab("Github", UrlHelpers.join(GithubOAuth.templatePath, "githubPreferences.html"), function () { return settings.enabled; });
+            GithubOAuth.log.debug("loaded");
+        }]);
+    hawtioPluginLoader.addModule(GithubOAuth.pluginName);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GithubOAuthConfig',
+        depends: ['HawtioOAuthConfig'],
+        task: function (next) {
+            var clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+            var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+            if (clientId && clientSecret) {
+                GithubOAuth.log.debug("enabled");
+                settings.enabled = true;
+            }
+            next();
+        }
+    });
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'GithubOAuthSettings',
+        depends: ['GithubOAuthConfig'],
+        task: function (next) {
+            if (settings.enabled) {
+                _.assign(settings, GithubOAuth.loadSettings());
+            }
+            next();
+        }
+    });
+})(GithubOAuth || (GithubOAuth = {}));
+
+/// <reference path="githubPlugin.ts"/>
+var GithubOAuth;
+(function (GithubOAuth) {
+    GithubOAuth._module.component('githubPreferences', {
+        template: "\n    <div class=\"alert alert-success\" role=\"alert\" ng-if=\"model.accessToken && !model.trying\">\n      <p><img style=\"width: 64px; height: 64px;\" ng-src=\"{{model.avatarURL}}\">&nbsp;Logged in as <strong>{{model.name}}</strong>, <a href=\"\" ng-click=\"check()\">Check access</a><strong ng-if=\"model.data.app.name\">&nbsp;<i class=\"fa fa-check green\"></i></strong></p>\n      <p>Github access is enabled, <a href=\"\" ng-click=\"clearToken()\">disable access</a></p>\n    </div>\n    <div class=\"alert alert-warning\" role=\"alert\" ng-if=\"model.error\">\n      <button type=\"button\" class=\"close\" ng-click=\"model.error = false\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n      Error logging in: {{model.data.statusText}} - {{model.data.responseJSON.message}}\n    </div>\n    <div class=\"alert alert-info\" ng-show=\"model.trying\">\n      <div class=\"align-center\">\n        <div class=\"spinner spinner-lg\"></div>\n      </div>\n    </div>\n    <form ng-if=\"!model.accessToken\" class=\"form-horizontal\">\n      <p>Log into Github here to enable access to your Github organizations and repositories</p>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"username\">User Name</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"username\" type=\"text\" ng-model=\"model.username\">\n        </div>\n      </div>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"password\">Password</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"password\" type=\"password\" ng-model=\"model.password\">\n        </div>\n      </div>\n      <button class=\"btn btn-success pull-right\" ng-disabled=\"disabled()\" ng-click=\"login()\">Log In</button>\n    </form>\n    <!-- <pre>{{model | json}}</pre> -->\n    ",
+        controllerAs: 'github',
+        controller: ['$scope', 'githubOAuthSettings', function GithubPreferenceController($scope, githubOAuthSettings) {
+                var model = $scope.model = {
+                    trying: false,
+                    error: false,
+                    username: githubOAuthSettings.username,
+                    avatarURL: githubOAuthSettings.avatarURL,
+                    name: githubOAuthSettings.name,
+                    password: undefined,
+                    accessToken: githubOAuthSettings.accessToken,
+                    data: undefined
+                };
+                var settings = $scope.settings = githubOAuthSettings;
+                $scope.disabled = function () {
+                    return Core.isBlank(model.username) || Core.isBlank(model.password);
+                };
+                var error = function (data) {
+                    model.trying = false;
+                    model.error = true;
+                    model.data = data;
+                    Core.$apply($scope);
+                };
+                $scope.clearToken = function () {
+                    model.trying = true;
+                    $.ajax(GithubOAuth.getTokenCheckAuthURL(githubOAuthSettings), {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': GithubOAuth.getTokenCheckAuthHeader(githubOAuthSettings)
+                        },
+                        success: function (data) {
+                            model.trying = false;
+                            model.data = data;
+                            model.accessToken = undefined;
+                            model.name = undefined;
+                            model.avatarURL = undefined;
+                            GithubOAuth.storeSettings(model, githubOAuthSettings);
+                            Core.$apply($scope);
+                        },
+                        error: error,
+                        beforeSend: GithubOAuth.emptyBeforeSend
+                    });
+                };
+                $scope.check = function () {
+                    model.trying = true;
+                    $.ajax(GithubOAuth.getTokenCheckAuthURL(githubOAuthSettings), {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': GithubOAuth.getTokenCheckAuthHeader(githubOAuthSettings)
+                        },
+                        success: function (data) {
+                            model.trying = false;
+                            model.data = data;
+                            Core.$apply($scope);
+                        },
+                        error: function (data) {
+                            model.accessToken = undefined;
+                            model.name = undefined;
+                            model.avatarURL = undefined;
+                            GithubOAuth.storeSettings(model, githubOAuthSettings);
+                            error(data);
+                        },
+                        beforeSend: GithubOAuth.emptyBeforeSend
+                    });
+                };
+                $scope.login = function () {
+                    model.error = false;
+                    model.trying = true;
+                    var headers = {
+                        'Authorization': Core.getBasicAuthHeader(model.username, model.password)
+                    };
+                    GithubOAuth.storeSettings(model, githubOAuthSettings);
+                    $.ajax(settings.loginURL, {
+                        method: 'GET',
+                        headers: headers,
+                        success: function (data) {
+                            model.name = data.name;
+                            model.avatarURL = data.avatar_url;
+                            $.ajax(settings.tokenURL, {
+                                method: 'POST',
+                                contentType: 'application/json; charset=UTF-8',
+                                mimeType: 'application/json',
+                                dataType: 'json',
+                                processData: false,
+                                data: angular.toJson({
+                                    client_id: githubOAuthSettings.clientId,
+                                    client_secret: githubOAuthSettings.clientSecret,
+                                    note: 'hawtio console access token',
+                                    scopes: githubOAuthSettings.scopes
+                                }),
+                                headers: headers,
+                                success: function (data) {
+                                    model.trying = false;
+                                    model.accessToken = data.token;
+                                    delete model.password;
+                                    GithubOAuth.storeSettings(model, githubOAuthSettings);
+                                    Core.$apply($scope);
+                                },
+                                error: error,
+                                beforeSend: GithubOAuth.emptyBeforeSend
+                            });
+                        },
+                        error: error,
+                        beforeSend: GithubOAuth.emptyBeforeSend
+                    });
+                };
+            }]
+    });
+})(GithubOAuth || (GithubOAuth = {}));
+
+/// <reference path="../../includes.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioKeycloak.pluginName = 'hawtio-keycloak';
+    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
+    HawtioKeycloak.keycloak = undefined;
+    // used by HawtioOAuth, must have a 'token' field when set, otherwise
+    // leave undefined
+    HawtioKeycloak.userProfile = undefined;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
+/// <reference path="keycloakGlobals.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    function doLogout() {
+        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+            HawtioKeycloak.keycloak.logout();
+        }
+    }
+    HawtioKeycloak.doLogout = doLogout;
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
+/// <reference path="keycloakGlobals.ts"/>
+/// <reference path="keycloakHelpers.ts"/>
+var HawtioKeycloak;
+(function (HawtioKeycloak) {
+    HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
+    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
+    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
+    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
+            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
+                    if (HawtioKeycloak.userProfile) {
+                        return _.merge($delegate, HawtioKeycloak.userProfile, {
+                            logout: function () {
+                                if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+                                    HawtioKeycloak.keycloak.logout();
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        return $delegate;
+                    }
+                }]);
+            // only add the interceptor if we have keycloak otherwise
+            // we'll get an undefined exception in the interceptor
+            if (HawtioKeycloak.keycloak) {
+                $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+            }
+        }]);
+    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
+            if (HawtioKeycloak.keycloak) {
+                HawtioKeycloak.log.debug("Enabling idle timeout");
+                Idle.watch();
+                $rootScope.$on('IdleTimeout', function () {
+                    HawtioKeycloak.log.debug("Idle timeout triggered");
+                    // let the end application handle this event
+                    // userDetails.logout();
+                });
+                $rootScope.$on('Keepalive', function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    if (keycloak) {
+                        keycloak.updateToken(5).success(function () {
+                            userDetails.token = keycloak.token;
+                        });
+                    }
+                });
+            }
+            else {
+                HawtioKeycloak.log.debug("Not enabling idle timeout");
+            }
+        }]);
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'HawtioKeycloak',
+        task: function (next) {
+            if (!window['KeycloakConfig']) {
+                HawtioKeycloak.log.debug("Keycloak disabled");
+                next();
+                return;
+            }
+            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+            keycloak.init()
+                .success(function (authenticated) {
+                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
+                if (!authenticated) {
+                    keycloak.login({
+                        redirectUri: window.location.href,
+                    });
+                }
+                else {
+                    keycloak.loadUserProfile()
+                        .success(function (profile) {
+                        HawtioKeycloak.userProfile = profile;
+                        HawtioKeycloak.userProfile.token = keycloak.token;
+                        next();
+                    }).error(function () {
+                        HawtioKeycloak.log.debug("Failed to load user profile");
+                        next();
+                    });
+                }
+            })
+                .error(function () {
+                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
+                next();
+            });
+        }
+    });
+    var AuthInterceptorService = (function () {
+        function AuthInterceptorService($q, userDetails) {
+            var _this = this;
+            this.$q = $q;
+            this.userDetails = userDetails;
+            this.request = function (request) {
+                // bypass for local templates
+                if (request.url.indexOf('http') !== 0) {
+                    return request;
+                }
+                var addBearer, deferred;
+                addBearer = function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    return keycloak.updateToken(5).success(function () {
+                        var token = HawtioKeycloak.keycloak.token;
+                        _this.userDetails.token = token;
+                        request.headers.Authorization = 'Bearer ' + token;
+                        deferred.notify();
+                        return deferred.resolve(request);
+                    }).error(function () {
+                        console.log("Couldn't update token");
+                    });
+                };
+                deferred = _this.$q.defer();
+                addBearer();
+                return _this.$q.when(deferred.promise);
+            };
+            this.responseError = function (rejection) {
+                if (rejection.status === 401) {
+                    HawtioKeycloak.keycloak.logout();
+                }
+                return _this.$q.reject(rejection);
+            };
+        }
+        AuthInterceptorService.Factory = function ($q, userDetails) {
+            return new AuthInterceptorService($q, userDetails);
+        };
+        AuthInterceptorService.$inject = ['$q', 'userDetails'];
+        return AuthInterceptorService;
+    }());
+    HawtioKeycloak._module.requires.push("ngIdle");
+})(HawtioKeycloak || (HawtioKeycloak = {}));
+
 /// <reference path="../../includes.ts"/>
 var GoogleOAuth;
 (function (GoogleOAuth) {
@@ -366,398 +758,6 @@ var GoogleOAuth;
         }
     });
 })(GoogleOAuth || (GoogleOAuth = {}));
-
-/// <reference path="../../includes.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioKeycloak.pluginName = 'hawtio-keycloak';
-    HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
-    HawtioKeycloak.keycloak = undefined;
-    // used by HawtioOAuth, must have a 'token' field when set, otherwise
-    // leave undefined
-    HawtioKeycloak.userProfile = undefined;
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="keycloakGlobals.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    function doLogout() {
-        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-            HawtioKeycloak.keycloak.logout();
-        }
-    }
-    HawtioKeycloak.doLogout = doLogout;
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-/// <reference path="keycloakGlobals.ts"/>
-/// <reference path="keycloakHelpers.ts"/>
-var HawtioKeycloak;
-(function (HawtioKeycloak) {
-    HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
-    HawtioKeycloak._module = angular.module(HawtioKeycloak.pluginName, []);
-    hawtioPluginLoader.addModule(HawtioKeycloak.pluginName);
-    HawtioKeycloak._module.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
-            $provide.decorator('userDetails', ['$delegate', function ($delegate) {
-                    if (HawtioKeycloak.userProfile) {
-                        return _.merge($delegate, HawtioKeycloak.userProfile, {
-                            logout: function () {
-                                if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-                                    HawtioKeycloak.keycloak.logout();
-                                }
-                            }
-                        });
-                    }
-                    else {
-                        return $delegate;
-                    }
-                }]);
-            // only add the interceptor if we have keycloak otherwise
-            // we'll get an undefined exception in the interceptor
-            if (HawtioKeycloak.keycloak) {
-                $httpProvider.interceptors.push(AuthInterceptorService.Factory);
-            }
-        }]);
-    HawtioKeycloak._module.run(['userDetails', 'Idle', '$rootScope', function (userDetails, Idle, $rootScope) {
-            if (HawtioKeycloak.keycloak) {
-                HawtioKeycloak.log.debug("Enabling idle timeout");
-                Idle.watch();
-                $rootScope.$on('IdleTimeout', function () {
-                    HawtioKeycloak.log.debug("Idle timeout triggered");
-                    // let the end application handle this event
-                    // userDetails.logout();
-                });
-                $rootScope.$on('Keepalive', function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    if (keycloak) {
-                        keycloak.updateToken(5).success(function () {
-                            userDetails.token = keycloak.token;
-                        });
-                    }
-                });
-            }
-            else {
-                HawtioKeycloak.log.debug("Not enabling idle timeout");
-            }
-        }]);
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'HawtioKeycloak',
-        task: function (next) {
-            if (!window['KeycloakConfig']) {
-                HawtioKeycloak.log.debug("Keycloak disabled");
-                next();
-                return;
-            }
-            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-            keycloak.init()
-                .success(function (authenticated) {
-                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
-                if (!authenticated) {
-                    keycloak.login({
-                        redirectUri: window.location.href,
-                    });
-                }
-                else {
-                    keycloak.loadUserProfile()
-                        .success(function (profile) {
-                        HawtioKeycloak.userProfile = profile;
-                        HawtioKeycloak.userProfile.token = keycloak.token;
-                        next();
-                    }).error(function () {
-                        HawtioKeycloak.log.debug("Failed to load user profile");
-                        next();
-                    });
-                }
-            })
-                .error(function () {
-                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
-                next();
-            });
-        }
-    });
-    var AuthInterceptorService = (function () {
-        function AuthInterceptorService($q, userDetails) {
-            var _this = this;
-            this.$q = $q;
-            this.userDetails = userDetails;
-            this.request = function (request) {
-                // bypass for local templates
-                if (request.url.indexOf('http') !== 0) {
-                    return request;
-                }
-                var addBearer, deferred;
-                addBearer = function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    return keycloak.updateToken(5).success(function () {
-                        var token = HawtioKeycloak.keycloak.token;
-                        _this.userDetails.token = token;
-                        request.headers.Authorization = 'Bearer ' + token;
-                        deferred.notify();
-                        return deferred.resolve(request);
-                    }).error(function () {
-                        console.log("Couldn't update token");
-                    });
-                };
-                deferred = _this.$q.defer();
-                addBearer();
-                return _this.$q.when(deferred.promise);
-            };
-            this.responseError = function (rejection) {
-                if (rejection.status === 401) {
-                    HawtioKeycloak.keycloak.logout();
-                }
-                return _this.$q.reject(rejection);
-            };
-        }
-        AuthInterceptorService.Factory = function ($q, userDetails) {
-            return new AuthInterceptorService($q, userDetails);
-        };
-        AuthInterceptorService.$inject = ['$q', 'userDetails'];
-        return AuthInterceptorService;
-    }());
-    HawtioKeycloak._module.requires.push("ngIdle");
-})(HawtioKeycloak || (HawtioKeycloak = {}));
-
-// <reference path="../../includes.ts"/>
-var GithubOAuth;
-(function (GithubOAuth) {
-    GithubOAuth.pluginName = 'github-oauth';
-    GithubOAuth.log = Logger.get(GithubOAuth.pluginName);
-    GithubOAuth.templatePath = 'plugins/github/html';
-    var LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
-    function emptyBeforeSend() {
-        return true;
-    }
-    GithubOAuth.emptyBeforeSend = emptyBeforeSend;
-    function getTokenCheckAuthURL(oauthSettings) {
-        return UrlHelpers.join('https://api.github.com/applications', oauthSettings.clientId, 'tokens', oauthSettings.accessToken);
-    }
-    GithubOAuth.getTokenCheckAuthURL = getTokenCheckAuthURL;
-    function getTokenCheckAuthHeader(oauthSettings) {
-        return Core.getBasicAuthHeader(oauthSettings.clientId, oauthSettings.clientSecret);
-    }
-    GithubOAuth.getTokenCheckAuthHeader = getTokenCheckAuthHeader;
-    function getAuthHeader(oauthSettings) {
-        var token = oauthSettings.accessToken;
-        if (!token) {
-            return '';
-        }
-        return 'token ' + oauthSettings.accessToken;
-    }
-    GithubOAuth.getAuthHeader = getAuthHeader;
-    function loadSettings() {
-        var answer = {};
-        if (LOCAL_STORAGE_KEY in localStorage) {
-            var settings = localStorage[LOCAL_STORAGE_KEY];
-            try {
-                settings = angular.fromJson(settings);
-                answer = settings;
-            }
-            catch (err) {
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
-            }
-        }
-        return answer;
-    }
-    GithubOAuth.loadSettings = loadSettings;
-    function storeSettings(settings, oauthSettings) {
-        if (oauthSettings === void 0) { oauthSettings = undefined; }
-        var toStore = {
-            username: settings.username,
-            avatarURL: settings.avatarURL,
-            accessToken: settings.accessToken,
-            name: settings.name
-        };
-        if (oauthSettings) {
-            oauthSettings.username = toStore.username;
-            oauthSettings.avatarURL = toStore.avatarURL;
-            oauthSettings.accessToken = toStore.accessToken;
-            oauthSettings.name = toStore.name;
-        }
-        ;
-        localStorage[LOCAL_STORAGE_KEY] = angular.toJson(toStore);
-    }
-    GithubOAuth.storeSettings = storeSettings;
-})(GithubOAuth || (GithubOAuth = {}));
-
-/// <reference path="../../includes.ts"/>
-/// <reference path="githubHelpers.ts"/>
-var GithubOAuth;
-(function (GithubOAuth) {
-    GithubOAuth._module = angular.module(GithubOAuth.pluginName, []);
-    var settings = {
-        enabled: false,
-        username: undefined,
-        clientId: undefined,
-        clientSecret: undefined,
-        accessToken: undefined,
-        avatarURL: undefined,
-        name: undefined,
-        scopes: ['user', 'repo', 'read:org'],
-        authURL: 'https://github.com/login/oauth/authorize',
-        tokenURL: 'https://api.github.com/authorizations',
-        loginURL: 'https://api.github.com/user'
-    };
-    GithubOAuth._module.constant('githubOAuthSettings', settings);
-    GithubOAuth._module.service('GithubOAuth', ['githubOAuthSettings', function (settings) {
-            var self = {
-                settings: settings,
-                hasToken: function () {
-                    return !Core.isBlank(self.settings.accessToken);
-                },
-                getToken: function () {
-                    return self.settings.accessToken;
-                },
-                getHeader: function () {
-                    return GithubOAuth.getAuthHeader(self.settings);
-                },
-                getPreferencesLink: function () {
-                }
-            };
-            return self;
-        }]);
-    GithubOAuth._module.run(['preferencesRegistry', function (preferencesRegistry) {
-            preferencesRegistry.addTab("Github", UrlHelpers.join(GithubOAuth.templatePath, "githubPreferences.html"), function () { return settings.enabled; });
-            GithubOAuth.log.debug("loaded");
-        }]);
-    hawtioPluginLoader.addModule(GithubOAuth.pluginName);
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'GithubOAuthConfig',
-        depends: ['HawtioOAuthConfig'],
-        task: function (next) {
-            var clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
-            var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
-            if (clientId && clientSecret) {
-                GithubOAuth.log.debug("enabled");
-                settings.enabled = true;
-            }
-            next();
-        }
-    });
-    hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'GithubOAuthSettings',
-        depends: ['GithubOAuthConfig'],
-        task: function (next) {
-            if (settings.enabled) {
-                _.assign(settings, GithubOAuth.loadSettings());
-            }
-            next();
-        }
-    });
-})(GithubOAuth || (GithubOAuth = {}));
-
-/// <reference path="githubPlugin.ts"/>
-var GithubOAuth;
-(function (GithubOAuth) {
-    GithubOAuth._module.component('githubPreferences', {
-        template: "\n    <div class=\"alert alert-success\" role=\"alert\" ng-if=\"model.accessToken && !model.trying\">\n      <p><img style=\"width: 64px; height: 64px;\" ng-src=\"{{model.avatarURL}}\">&nbsp;Logged in as <strong>{{model.name}}</strong>, <a href=\"\" ng-click=\"check()\">Check access</a><strong ng-if=\"model.data.app.name\">&nbsp;<i class=\"fa fa-check green\"></i></strong></p>\n      <p>Github access is enabled, <a href=\"\" ng-click=\"clearToken()\">disable access</a></p>\n    </div>\n    <div class=\"alert alert-warning\" role=\"alert\" ng-if=\"model.error\">\n      <button type=\"button\" class=\"close\" ng-click=\"model.error = false\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n      Error logging in: {{model.data.statusText}} - {{model.data.responseJSON.message}}\n    </div>\n    <div class=\"alert alert-info\" ng-show=\"model.trying\">\n      <div class=\"align-center\">\n        <div class=\"spinner spinner-lg\"></div>\n      </div>\n    </div>\n    <form ng-if=\"!model.accessToken\" class=\"form-horizontal\">\n      <p>Log into Github here to enable access to your Github organizations and repositories</p>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"username\">User Name</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"username\" type=\"text\" ng-model=\"model.username\">\n        </div>\n      </div>\n      <div class=\"form-group\">\n        <label class=\"col-sm-2 control-label\" for=\"password\">Password</label>\n        <div class=\"col-sm-10\">\n          <input class=\"form-control\" id=\"password\" type=\"password\" ng-model=\"model.password\">\n        </div>\n      </div>\n      <button class=\"btn btn-success pull-right\" ng-disabled=\"disabled()\" ng-click=\"login()\">Log In</button>\n    </form>\n    <!-- <pre>{{model | json}}</pre> -->\n    ",
-        controllerAs: 'github',
-        controller: ['$scope', 'githubOAuthSettings', function GithubPreferenceController($scope, githubOAuthSettings) {
-                var model = $scope.model = {
-                    trying: false,
-                    error: false,
-                    username: githubOAuthSettings.username,
-                    avatarURL: githubOAuthSettings.avatarURL,
-                    name: githubOAuthSettings.name,
-                    password: undefined,
-                    accessToken: githubOAuthSettings.accessToken,
-                    data: undefined
-                };
-                var settings = $scope.settings = githubOAuthSettings;
-                $scope.disabled = function () {
-                    return Core.isBlank(model.username) || Core.isBlank(model.password);
-                };
-                var error = function (data) {
-                    model.trying = false;
-                    model.error = true;
-                    model.data = data;
-                    Core.$apply($scope);
-                };
-                $scope.clearToken = function () {
-                    model.trying = true;
-                    $.ajax(GithubOAuth.getTokenCheckAuthURL(githubOAuthSettings), {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': GithubOAuth.getTokenCheckAuthHeader(githubOAuthSettings)
-                        },
-                        success: function (data) {
-                            model.trying = false;
-                            model.data = data;
-                            model.accessToken = undefined;
-                            model.name = undefined;
-                            model.avatarURL = undefined;
-                            GithubOAuth.storeSettings(model, githubOAuthSettings);
-                            Core.$apply($scope);
-                        },
-                        error: error,
-                        beforeSend: GithubOAuth.emptyBeforeSend
-                    });
-                };
-                $scope.check = function () {
-                    model.trying = true;
-                    $.ajax(GithubOAuth.getTokenCheckAuthURL(githubOAuthSettings), {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': GithubOAuth.getTokenCheckAuthHeader(githubOAuthSettings)
-                        },
-                        success: function (data) {
-                            model.trying = false;
-                            model.data = data;
-                            Core.$apply($scope);
-                        },
-                        error: function (data) {
-                            model.accessToken = undefined;
-                            model.name = undefined;
-                            model.avatarURL = undefined;
-                            GithubOAuth.storeSettings(model, githubOAuthSettings);
-                            error(data);
-                        },
-                        beforeSend: GithubOAuth.emptyBeforeSend
-                    });
-                };
-                $scope.login = function () {
-                    model.error = false;
-                    model.trying = true;
-                    var headers = {
-                        'Authorization': Core.getBasicAuthHeader(model.username, model.password)
-                    };
-                    GithubOAuth.storeSettings(model, githubOAuthSettings);
-                    $.ajax(settings.loginURL, {
-                        method: 'GET',
-                        headers: headers,
-                        success: function (data) {
-                            model.name = data.name;
-                            model.avatarURL = data.avatar_url;
-                            $.ajax(settings.tokenURL, {
-                                method: 'POST',
-                                contentType: 'application/json; charset=UTF-8',
-                                mimeType: 'application/json',
-                                dataType: 'json',
-                                processData: false,
-                                data: angular.toJson({
-                                    client_id: githubOAuthSettings.clientId,
-                                    client_secret: githubOAuthSettings.clientSecret,
-                                    note: 'hawtio console access token',
-                                    scopes: githubOAuthSettings.scopes
-                                }),
-                                headers: headers,
-                                success: function (data) {
-                                    model.trying = false;
-                                    model.accessToken = data.token;
-                                    delete model.password;
-                                    GithubOAuth.storeSettings(model, githubOAuthSettings);
-                                    Core.$apply($scope);
-                                },
-                                error: error,
-                                beforeSend: GithubOAuth.emptyBeforeSend
-                            });
-                        },
-                        error: error,
-                        beforeSend: GithubOAuth.emptyBeforeSend
-                    });
-                };
-            }]
-    });
-})(GithubOAuth || (GithubOAuth = {}));
 
 /// <reference path="../../includes.ts"/>
 var OSOAuth;
