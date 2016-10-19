@@ -59,6 +59,28 @@ module OSOAuth {
   hawtioPluginLoader.registerPreBootstrapTask({
     name: 'OSOAuth',
     task: (next) => {
+      var openshiftConfig = null;
+      try {
+        openshiftConfig = window['OPENSHIFT_CONFIG'];
+      } catch (e) {
+        // ignore
+      }
+      if (openshiftConfig) {
+        var token = openshiftConfig.token;
+        if (token) {
+          log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
+          OSOAuth.userProfile = {
+            token: token
+          };
+          $.ajaxSetup({
+            beforeSend: (xhr) => {
+              xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            }
+          });
+          next();
+          return;
+        }
+      }
       if (!window['OSOAuthConfig']) {
         log.debug("oauth disabled");
         next();
@@ -67,16 +89,6 @@ module OSOAuth {
       if (!OSOAuthConfig.oauth_client_id ||
           !OSOAuthConfig.oauth_authorize_uri) {
         log.debug("Invalid oauth config, disabled oauth");
-        var openshiftConfig = window['OPENSHIFT_CONFIG']
-        if (openshiftConfig) {
-          var token = openshiftConfig.token;
-          if (token) {
-            log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
-            OSOAuth.userProfile = {
-              token: token
-            };
-          }
-        }
         next();
         return;
       }
