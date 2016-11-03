@@ -59,31 +59,40 @@ module HawtioKeycloak {
         log.debug("Keycloak disabled");
         next();
         return;
-      }
-      var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-      keycloak.init()
-        .success((authenticated) => {
-          log.debug("Authenticated: ", authenticated);
-          if (!authenticated) {
-            keycloak.login({
-              redirectUri: window.location.href,
-            });
-          } else {
-            keycloak.loadUserProfile()
-              .success((profile) => {
-                userProfile = profile;
-                userProfile.token = keycloak.token;
-                next();
-              }).error(() => {
-                log.debug("Failed to load user profile");
-                next();
-              });
-          }
-        })
-      .error(() => {
-        log.debug("Failed to initialize Keycloak, token unavailable");
-        next();
-      });
+			}
+			let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
+			$.getScript(keycloakJsUri).done((script, textStatus) => {
+				var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+				keycloak.init({ 
+					onLoad: 'login-required'
+				}).success((authenticated) => {
+					log.debug("Authenticated: ", authenticated);
+					if (!authenticated) {
+						keycloak.login({
+							redirectUri: window.location.href,
+						});
+					} else {
+						keycloak.loadUserProfile()
+						.success((profile) => {
+							userProfile = profile;
+							userProfile.token = keycloak.token;
+							next();
+						}).error(() => {
+							log.debug("Failed to load user profile");
+							next();
+						});
+					}
+				}).error(() => {
+					log.debug("Failed to initialize Keycloak, token unavailable");
+					next();
+				});
+				// end keycloak.init
+			})
+			.fail((response) => {
+				log.debug("Error fetching keycloak adapter: ", response);
+				next();
+			});
+			// end $.getScript
     }
   });
 

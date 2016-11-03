@@ -689,31 +689,40 @@ var HawtioKeycloak;
                 next();
                 return;
             }
-            var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-            keycloak.init()
-                .success(function (authenticated) {
-                HawtioKeycloak.log.debug("Authenticated: ", authenticated);
-                if (!authenticated) {
-                    keycloak.login({
-                        redirectUri: window.location.href,
-                    });
-                }
-                else {
-                    keycloak.loadUserProfile()
-                        .success(function (profile) {
-                        HawtioKeycloak.userProfile = profile;
-                        HawtioKeycloak.userProfile.token = keycloak.token;
-                        next();
-                    }).error(function () {
-                        HawtioKeycloak.log.debug("Failed to load user profile");
-                        next();
-                    });
-                }
+            var keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
+            $.getScript(keycloakJsUri).done(function (script, textStatus) {
+                var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+                keycloak.init({
+                    onLoad: 'login-required'
+                }).success(function (authenticated) {
+                    HawtioKeycloak.log.debug("Authenticated: ", authenticated);
+                    if (!authenticated) {
+                        keycloak.login({
+                            redirectUri: window.location.href,
+                        });
+                    }
+                    else {
+                        keycloak.loadUserProfile()
+                            .success(function (profile) {
+                            HawtioKeycloak.userProfile = profile;
+                            HawtioKeycloak.userProfile.token = keycloak.token;
+                            next();
+                        }).error(function () {
+                            HawtioKeycloak.log.debug("Failed to load user profile");
+                            next();
+                        });
+                    }
+                }).error(function () {
+                    HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
+                    next();
+                });
+                // end keycloak.init
             })
-                .error(function () {
-                HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
+                .fail(function (response) {
+                HawtioKeycloak.log.debug("Error fetching keycloak adapter: ", response);
                 next();
             });
+            // end $.getScript
         }
     });
     var AuthInterceptorService = (function () {
