@@ -20,13 +20,6 @@ Simply create a KeycloakConfig at bootstrap:
       next();
     }, true);
 
-You can also set ``KeycloakConfig`` to a string that is the URL to fetch a Keycloak JSON configuration file:
-
-    hawtioPluginLoader.registerPreBootstrapTask((next) => {
-      KeycloakConfig = "/keycloak.json";
-      next();
-    }, true);
-
 The ``KeycloakConfig`` accepts all the parameters that the official Keycloak JavaScript adapter supports.
 
 ## Openshift
