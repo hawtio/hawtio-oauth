@@ -821,7 +821,7 @@ var OSOAuth;
             response_type: 'token',
             state: options.uri,
             redirect_uri: options.uri,
-            scope: options.scope
+            scope: config.scope
         });
         var target = uri.toString();
         OSOAuth.log.debug("Redirecting to URI: ", target);
