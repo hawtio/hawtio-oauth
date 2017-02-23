@@ -40,7 +40,8 @@ module OSOAuth {
       client_id: clientId,
       response_type: 'token',
       state: options.uri,
-      redirect_uri: options.uri
+      redirect_uri: options.uri,
+      scope: options.scope
     });
     var target = uri.toString();
     log.debug("Redirecting to URI: ", target);

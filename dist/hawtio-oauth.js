@@ -820,7 +820,8 @@ var OSOAuth;
             client_id: clientId,
             response_type: 'token',
             state: options.uri,
-            redirect_uri: options.uri
+            redirect_uri: options.uri,
+            scope: options.scope
         });
         var target = uri.toString();
         OSOAuth.log.debug("Redirecting to URI: ", target);
