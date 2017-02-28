@@ -131,11 +131,17 @@ module OSOAuth {
             next();
           },
           error: (jqXHR, textStatus, errorThrown) => {
-            log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
-            clearTokenStorage();
-            doLogin(OSOAuthConfig, {
-              uri: currentURI.toString()
-            });
+            // The request may have been cancelled as the browser refresh request in
+            // extractToken may be triggered before getting the AJAX response.
+            //  In that case, let's just skip the error and go through another refresh cycle.
+            // See http://stackoverflow.com/questions/2000609/jquery-ajax-status-code-0 for more details.
+            if (jqXHR.status > 0) {
+              log.error("Failed to fetch user info, status: ", textStatus, " error: ", errorThrown);
+              clearTokenStorage();
+              doLogin(OSOAuthConfig, {
+                uri: currentURI.toString()
+              });
+            }
           },
           beforeSend: (request) => {
             request.setRequestHeader('Authorization', 'Bearer ' +  userProfile.token);
