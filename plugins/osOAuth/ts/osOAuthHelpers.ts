@@ -62,7 +62,7 @@ module OSOAuth {
         expires_in  : fragmentParams.expires_in,
         obtainedAt  : currentTimeSeconds()
       };
-      localStorage['osAuthCreds'] = angular.toJson(creds);
+      localStorage[OS_TOKEN_STORAGE_KEY] = angular.toJson(creds);
       delete fragmentParams.token_type;
       delete fragmentParams.access_token;
       delete fragmentParams.expires_in;
