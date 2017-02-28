@@ -66,6 +66,7 @@ module OSOAuth {
       delete fragmentParams.token_type;
       delete fragmentParams.access_token;
       delete fragmentParams.expires_in;
+      delete fragmentParams.scope;
       uri.fragment("").query(fragmentParams);
       const target = uri.toString();
       log.debug("redirecting to: ", target);
