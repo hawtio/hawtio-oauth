@@ -83,7 +83,7 @@ module OSOAuth {
     delete localStorage[OS_TOKEN_STORAGE_KEY];
   }
 
-  export function checkToken(uri) {
+  export function checkToken(uri):any {
     const localStorage = Core.getLocalStorage();
     let answer         = undefined;
     if (OS_TOKEN_STORAGE_KEY in localStorage) {
