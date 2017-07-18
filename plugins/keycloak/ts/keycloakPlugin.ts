@@ -136,6 +136,7 @@ module HawtioKeycloak {
       return this.$q.reject(rejection);
     };
   }
+  AuthInterceptorService.Factory.$inject = AuthInterceptorService.$inject;
 
   _module.requires.push("ngIdle");
 }
