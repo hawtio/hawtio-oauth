@@ -1,14 +1,9 @@
-/// <reference path="../defs.d.ts"/>
-
-/// <reference path="../../includes.ts"/>
 var Example;
 (function (Example) {
     Example.pluginName = "hawtio-google-test";
     Example.log = Logger.get(Example.pluginName);
     Example.templatePath = "test-plugins/example/html";
 })(Example || (Example = {}));
-
-/// <reference path="../../includes.ts"/>
 /// <reference path="exampleGlobals.ts"/>
 var Example;
 (function (Example) {
@@ -84,7 +79,6 @@ var Example;
     */
     hawtioPluginLoader.addModule(Example.pluginName);
 })(Example || (Example = {}));
-
 /// <reference path="examplePlugin.ts"/>
 var Example;
 (function (Example) {
@@ -111,7 +105,6 @@ var Example;
             }
         }]);
 })(Example || (Example = {}));
-
 /// <reference path="examplePlugin.ts"/>
 var Example;
 (function (Example) {
@@ -123,5 +116,5 @@ var Example;
         }]);
 })(Example || (Example = {}));
 
-angular.module("hawtio-oauth-test-templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("test-plugins/example/html/github.html","<div  ng-controller=\"Example.Page2Controller\">\n  <div class=\"row\" ng-if=\"!oauth.hasToken() || data.status === 403\">\n    <div class=\"col-md-12\">\n      <div class=\"alert alert-warning\">\n        No Github credentials available, <a href=\"\" ng-click=\"prefs.goto(\'Github\')\">configure your github account</a>\n      </div>\n    </div>\n  </div>\n  <div class=\"row\" ng-if=\"oauth.hasToken()\">\n    <div class=\"col-md-12\">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n");
-$templateCache.put("test-plugins/example/html/page1.html","<div class=\"row\">\n  <div class=\"col-md-12\" ng-controller=\"Example.Page1Controller\">\n    <h1>User Details</h1>\n    <button class=\"btn btn-primary\" ng-click=\"userDetails.logout()\">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n");}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");
+angular.module('hawtio-oauth-test-templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('test-plugins/example/html/github.html','<div  ng-controller="Example.Page2Controller">\n  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">\n    <div class="col-md-12">\n      <div class="alert alert-warning">\n        No Github credentials available, <a href="" ng-click="prefs.goto(\'Github\')">configure your github account</a>\n      </div>\n    </div>\n  </div>\n  <div class="row" ng-if="oauth.hasToken()">\n    <div class="col-md-12">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n');
+$templateCache.put('test-plugins/example/html/page1.html','<div class="row">\n  <div class="col-md-12" ng-controller="Example.Page1Controller">\n    <h1>User Details</h1>\n    <button class="btn btn-primary" ng-click="userDetails.logout()">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n');}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");

@@ -1,5 +1,5 @@
 /// <reference path="googleOAuthGlobals.ts"/>
-module GoogleOAuth {
+namespace GoogleOAuth {
 
   var GOOGLE_TOKEN_STORAGE_KEY = 'googleAuthCreds';
 

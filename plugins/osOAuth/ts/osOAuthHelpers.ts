@@ -1,5 +1,5 @@
 /// <reference path="osOAuthGlobals.ts"/>
-module OSOAuth {
+namespace OSOAuth {
 
   const OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
 

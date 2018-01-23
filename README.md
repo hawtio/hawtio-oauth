@@ -3,7 +3,7 @@
 This module contains a couple different OAuth clients that can be configured by other plugins:
 
 1. keycloak - a plugin that integrates with Keycloak
-1. osoauth - a plugin that integrates with the OAuth backend used in OpenShift origin
+2. osoauth - a plugin that integrates with the OAuth backend used in OpenShift origin
 
 In either case these plugins need to be configured at application bootstrap.
 
@@ -22,7 +22,7 @@ Simply create a KeycloakConfig at bootstrap:
 
 The ``KeycloakConfig`` accepts all the parameters that the official Keycloak JavaScript adapter supports.
 
-## Openshift
+## OpenShift
 
 Very similar to Keycloak, except you initialize the OSOAuthConfig object with the location of the OpenShift API:
 

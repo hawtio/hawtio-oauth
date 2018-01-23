@@ -1,6 +1,6 @@
 /// <reference path="googleOAuthHelpers.ts"/>
 
-module GoogleOAuth {
+namespace GoogleOAuth {
   HawtioOAuth.oauthPlugins.push('GoogleOAuth');
   export var _module = angular.module(pluginName, []);
 

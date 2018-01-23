@@ -1,6 +1,6 @@
 /// <reference path="../../includes.ts"/>
 /// <reference path="githubHelpers.ts"/>
-module GithubOAuth {
+namespace GithubOAuth {
 
   export var _module = angular.module(pluginName, []);
 

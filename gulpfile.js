@@ -1,71 +1,43 @@
 var gulp = require('gulp'),
-    wiredep = require('wiredep').stream,
     eventStream = require('event-stream'),
     gulpLoadPlugins = require('gulp-load-plugins'),
-    urljoin = require('url-join'),
-    del = require('del'),
     fs = require('fs'),
+    del = require('del'),
     path = require('path'),
     uri = require('urijs'),
     s = require('underscore.string'),
     argv = require('yargs').argv,
     stringifyObject = require('stringify-object'),
-    hawtio = require('hawtio-node-backend');
+    logger = require('js-logger'),
+    hawtio = require('@hawtio/node-backend');
 
 var plugins = gulpLoadPlugins({});
-var pkg = require('./package.json');
 
 var config = {
-  main: '.',
+  proxyPort: argv.port || 8181,
+  targetPath: argv.path || '/jolokia',
+  logLevel: argv.debug ? logger.DEBUG : logger.INFO,
   ts: ['plugins/**/*.ts'],
   testTs: ['test-plugins/**/*.ts'],
-  templates: ['plugins/**/*.html'],
+  templates: ['plugins/**/*.html', 'plugins/**/*.md'],
   testTemplates: ['test-plugins/**/*.html'],
-  templateModule: pkg.name + '-templates',
-  testTemplateModule: pkg.name + '-test-templates',
+  templateModule: 'hawtio-oauth-templates',
+  testTemplateModule: 'hawtio-oauth-test-templates',
   dist: argv.out || './dist/',
-  js: pkg.name + '.js',
-  testJs: pkg.name + '-test.js',
-  tsProject: plugins.typescript.createProject({
-    target: 'ES5',
-    module: 'commonjs',
-    declarationFiles: true,
-    noExternalResolve: false
-  }),
-  testTsProject: plugins.typescript.createProject({
-    target: 'ES5',
-    module: 'commonjs',
-    declarationFiles: false,
-    noExternalResolve: false
-  })
+  js: 'hawtio-oauth.js',
+  dts: 'hawtio-oauth.d.ts',
+  testJs: 'hawtio-oauth-test.js',
+  tsProject: plugins.typescript.createProject('tsconfig.json'),
+  testTsProject: plugins.typescript.createProject('tsconfig.json')
 };
 
-gulp.task('bower', function() {
-  return gulp.src('index.html')
-    .pipe(wiredep({
-      devDependencies: true
-    }))
-    .pipe(gulp.dest('.'));
-});
-
-/** Adjust the reference path of any typescript-built plugin this project depends on */
-gulp.task('path-adjust', function() {
-  return gulp.src('libs/**/includes.d.ts')
-    .pipe(plugins.replace(/"\.\.\/libs/gm, '"../../../libs'))
-    .pipe(gulp.dest('libs'));
-});
-
 gulp.task('clean-defs', function() {
-  return del('defs.d.ts');
+  return del(config.dist + '*.d.ts');
 });
 
 gulp.task('example-tsc', ['tsc'], function() {
   var tsResult = gulp.src(config.testTs)
-    .pipe(plugins.typescript(config.testTsProject))
-    .on('error', plugins.notify.onError({
-      message: '<%= error.message %>',
-      title: 'Typescript compilation error - test'
-    }));
+    .pipe(config.testTsProject());
 
     return tsResult.js
         .pipe(plugins.concat('test-compiled.js'))
@@ -90,32 +62,21 @@ gulp.task('example-concat', ['example-template'], function() {
     .pipe(gulp.dest(config.dist));
 });
 
-gulp.task('example-clean', ['example-concat'], function() {
+gulp.task('example-clean', ['example-concat', 'clean'], function() {
   return del(['test-templates.js', 'test-compiled.js']);
 });
 
 gulp.task('tsc', ['clean-defs'], function() {
-  var cwd = process.cwd();
   var tsResult = gulp.src(config.ts)
-    .pipe(plugins.typescript(config.tsProject))
-    .on('error', plugins.notify.onError({
-      message: '<%= error.message %>',
-      title: 'Typescript compilation error - main'
-    }));
+    .pipe(config.tsProject());
 
-    return eventStream.merge(
-      tsResult.js
-        .pipe(plugins.concat('compiled.js'))
-        .pipe(gulp.dest('.')),
-      tsResult.dts
-        .pipe(gulp.dest('d.ts')))
-        .pipe(plugins.filter('**/*.d.ts'))
-        .pipe(plugins.concatFilenames('defs.d.ts', {
-          root: cwd,
-          prepend: '/// <reference path="',
-          append: '"/>'
-        }))
-        .pipe(gulp.dest('.'));
+  return eventStream.merge(
+    tsResult.js
+      .pipe(plugins.ngAnnotate())
+      .pipe(gulp.dest('.')),
+    tsResult.dts
+      .pipe(plugins.rename(config.dts))
+      .pipe(gulp.dest(config.dist)));
 });
 
 gulp.task('template', ['tsc'], function() {
@@ -141,15 +102,9 @@ gulp.task('clean', ['concat'], function() {
 });
 
 gulp.task('watch', ['build', 'build-example'], function() {
-  plugins.watch(['libs/**/*.js', 'libs/**/*.css', 'index.html', urljoin(config.dist, '*')], function() {
-    gulp.start('reload');
-  });
-  plugins.watch(['libs/**/*.d.ts', config.ts, config.templates], function() {
-    gulp.start(['tsc', 'template', 'concat', 'clean']);
-  });
-  plugins.watch([config.testTs, config.testTemplates], function() {
-    gulp.start(['example-tsc', 'example-template', 'example-concat', 'example-clean']);
-  });
+  gulp.watch(['index.html', config.dist + '/*'], ['reload']);
+  gulp.watch([config.ts, config.templates], ['tsc', 'template', 'concat', 'clean']);
+  gulp.watch([config.testTs, config.testTemplates], ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 });
 
 
@@ -161,7 +116,9 @@ gulp.task('connect', ['watch'], function() {
   */
 
   hawtio.setConfig({
+    logLevel: config.logLevel,
     port: 9000,
+    proxy: '/hawtio/proxy',
     staticProxies: [
     /*
     // proxy to a service, in this case kubernetes
@@ -183,7 +140,7 @@ gulp.task('connect', ['watch'], function() {
     */
     ],
     staticAssets: [{
-      path: '/',
+      path: '/hawtio/',
       dir: '.'
 
     }],
@@ -203,7 +160,7 @@ gulp.task('connect', ['watch'], function() {
     var kubeBase = process.env.KUBERNETES_MASTER || 'http://localhost:9000';
     var config = {
       openshift: {
-        oauth_authorize_uri: urljoin(kubeBase, '/oauth/authorize'),
+        oauth_authorize_uri: kubeBase + '/oauth/authorize',
         oauth_client_id: 'fabric8'
       },
       google: {
@@ -230,8 +187,10 @@ gulp.task('connect', ['watch'], function() {
    * as they're already embedded in the js
   hawtio.use('/', function(req, res, next) {
           var path = req.originalUrl;
-          // avoid returning these files, they should get pulled from js
-          if (s.startsWith(path, '/plugins/') && s.endsWith(path, 'html')) {
+          if (path === '/') {
+            res.redirect('/hawtio');
+          } else if (s.startsWith(path, '/plugins/') && s.endsWith(path, 'html')) {
+            // avoid returning these files, they should get pulled from js
             console.log("returning 404 for: ", path);
             res.statusCode = 404;
             res.end();
@@ -253,7 +212,7 @@ gulp.task('reload', function() {
     .pipe(hawtio.reload());
 });
 
-gulp.task('build', ['bower', 'path-adjust', 'tsc', 'template', 'concat', 'clean']);
+gulp.task('build', ['tsc', 'template', 'concat', 'clean']);
 
 gulp.task('build-example', ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 

@@ -1,6 +1,6 @@
 /// <reference path="keycloakGlobals.ts"/>
 /// <reference path="keycloakHelpers.ts"/>
-module HawtioKeycloak {
+namespace HawtioKeycloak {
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
   export var _module = angular.module(pluginName, []);
 

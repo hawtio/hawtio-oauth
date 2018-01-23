@@ -1,5 +1,5 @@
 /// <reference path="keycloakGlobals.ts"/>
-module HawtioKeycloak {
+namespace HawtioKeycloak {
 
   export function doLogout() {
     if (userProfile && keycloak) {

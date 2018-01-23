@@ -1,5 +1,3 @@
-/// <reference path="../libs/hawtio-utilities/defs.d.ts"/>
-
 // Variables for keycloak config and the keycloak object
 declare var KeycloakConfig;
 declare var Keycloak;
@@ -11,16 +9,16 @@ declare var GoogleOAuthConfig;
 // variable set by server script that contains oauth settings
 declare var HAWTIO_OAUTH_CONFIG;
 
-module HawtioOAuth {
+namespace HawtioOAuth {
   var pluginName = 'HawtioOAuth';
-  var log:Logging.Logger = Logger.get(pluginName);
+  var log: Logging.Logger = Logger.get(pluginName);
   var _module = angular.module(pluginName, []);
 
   _module.directive('hawtioUserDropdown', ['$compile', '$timeout', ($compile, $timeout) => {
     return {
       restrict: 'C',
       scope: {},
-      link: ($scope, $element, $attr) => {
+      link: ($scope: any, $element, $attr) => {
         $scope.doLogout = doLogout;
         $scope.userDetails = userProfile;
         var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
@@ -36,8 +34,8 @@ module HawtioOAuth {
 
   export var oauthPlugins = [];
 
-  var userProfile:any = undefined;
-  var activePlugin:string = undefined;
+  var userProfile: any = undefined;
+  var activePlugin: string = undefined;
 
   export function doLogout() {
     if (!activePlugin) {

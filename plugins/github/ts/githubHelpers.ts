@@ -1,5 +1,5 @@
-// <reference path="../../includes.ts"/>
-module GithubOAuth {
+/// <reference path="../../includes.ts"/>
+namespace GithubOAuth {
   export var pluginName = 'github-oauth';
   export var log:Logging.Logger = Logger.get(pluginName);
   export var templatePath = 'plugins/github/html';

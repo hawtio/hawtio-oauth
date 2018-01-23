@@ -1,5 +1,5 @@
 /// <reference path="githubPlugin.ts"/>
-module GithubOAuth {
+namespace GithubOAuth {
   _module.component('githubPreferences', {
     template: `
     <div class="alert alert-success" role="alert" ng-if="model.accessToken && !model.trying">

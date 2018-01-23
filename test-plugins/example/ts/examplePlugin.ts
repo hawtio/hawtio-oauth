@@ -1,12 +1,11 @@
-/// <reference path="../../includes.ts"/>
 /// <reference path="exampleGlobals.ts"/>
-module Example {
+namespace Example {
 
   export var _module = angular.module(Example.pluginName, []);
 
   _module.constant('example-tabs', []);
 
-  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', ($locationProvider, $routeProvider:ng.route.IRouteProvider, builder:HawtioMainNav.BuilderFactory, tabs) => {
+  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', ($locationProvider, $routeProvider: ng.route.IRouteProvider, builder: HawtioMainNav.BuilderFactory, tabs) => {
     var tab = builder.create()
       .id(Example.pluginName)
       .title(() => "Examples")
@@ -19,8 +18,8 @@ module Example {
     tabs.push(tab);
   }]);
 
-  _module.run(['HawtioNav', 'example-tabs', (HawtioNav:HawtioMainNav.Registry, tabs) => {
-    _.forEach(tabs, (tab:any) => { HawtioNav.add(tab); });
+  _module.run(['HawtioNav', 'example-tabs', (HawtioNav: HawtioMainNav.Registry, tabs) => {
+    _.forEach(tabs, (tab: any) => { HawtioNav.add(tab); });
     log.debug("loaded");
   }]);
 

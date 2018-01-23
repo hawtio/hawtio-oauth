@@ -1,6 +1,6 @@
 /// <reference path="osOAuthHelpers.ts"/>
 
-module OSOAuth {
+namespace OSOAuth {
 
   HawtioOAuth.oauthPlugins.push('OSOAuth');
 
