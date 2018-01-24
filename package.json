@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "start": "gulp",
+    "start": "gulp connect",
     "build": "gulp build",
     "build-example": "gulp build-example"
   },
@@ -21,11 +21,10 @@
     "@hawtio/node-backend": "3.0.4",
     "del": "^3.0.0",
     "event-stream": "^3.1.7",
-    "gulp": "^3.8.10",
+    "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^2.0.0",
     "gulp-concat": "^2.4.2",
     "gulp-concat-filenames": "^1.0.0",
-    "gulp-debug": "^3.2.0",
     "gulp-filter": "^5.0.0",
     "gulp-load-plugins": "^1.0.0",
     "gulp-ng-annotate": "^2.1.0",
@@ -60,7 +59,7 @@
     "gulp-util": "3.0.8",
     "minimist": "1.2.0",
     "semver": "5.5.0",
-    "vinyl-fs": "2.4.4",
+    "vinyl-fs": "0.3.14",
     "ansi-styles": "2.2.1",
     "has-ansi": "2.0.0",
     "strip-ansi": "3.0.1",
