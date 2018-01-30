@@ -1,18 +1,18 @@
 // Variables for keycloak config and the keycloak object
-declare var KeycloakConfig;
-declare var Keycloak;
+declare let KeycloakConfig;
+declare let Keycloak;
 
 // variable for getting openshift oauth config from
-declare var OSOAuthConfig;
-declare var GoogleOAuthConfig;
+declare let OSOAuthConfig;
+declare let GoogleOAuthConfig;
 
 // variable set by server script that contains oauth settings
-declare var HAWTIO_OAUTH_CONFIG;
+declare let HAWTIO_OAUTH_CONFIG;
 
 namespace HawtioOAuth {
-  var pluginName = 'HawtioOAuth';
-  var log: Logging.Logger = Logger.get(pluginName);
-  var _module = angular.module(pluginName, []);
+  const pluginName = 'HawtioOAuth';
+  const log: Logging.Logger = Logger.get(pluginName);
+  const _module = angular.module(pluginName, []);
 
   _module.directive('hawtioUserDropdown', ['$compile', '$timeout', ($compile, $timeout) => {
     return {
@@ -21,7 +21,7 @@ namespace HawtioOAuth {
       link: ($scope: any, $element, $attr) => {
         $scope.doLogout = doLogout;
         $scope.userDetails = userProfile;
-        var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+        let el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
         $timeout(() => {
           $element.append(el);
         }, 250);
@@ -32,23 +32,23 @@ namespace HawtioOAuth {
   hawtioPluginLoader.addModule(pluginName);
   hawtioPluginLoader.addModule('ngIdle');
 
-  export var oauthPlugins = [];
+  export let oauthPlugins = [];
 
-  var userProfile: any = undefined;
-  var activePlugin: string = undefined;
+  let userProfile: any = undefined;
+  let activePlugin: string = undefined;
 
   export function doLogout() {
     if (!activePlugin) {
       return;
     }
-    var plugin = window[activePlugin];
+    let plugin = window[activePlugin];
     plugin.doLogout();
   }
 
   export function getUserProfile() {
     if (!userProfile) {
       activePlugin = _.find(oauthPlugins, (_module) => {
-        var p = Core.pathGet(window, [_module, 'userProfile']);
+        let p = Core.pathGet(window, [_module, 'userProfile']);
         log.debug("Module: ", _module, " userProfile: ", p);
         return p !== null && p !== undefined;
       });
@@ -59,7 +59,7 @@ namespace HawtioOAuth {
   }
 
   export function getOAuthToken() {
-    var userProfile = getUserProfile();
+    let userProfile = getUserProfile();
     if (!userProfile) {
       return null;
     }
@@ -69,7 +69,7 @@ namespace HawtioOAuth {
   export function authenticatedHttpRequest(options) {
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
-        var token = getOAuthToken();
+        let token = getOAuthToken();
         if (token) {
           request.setRequestHeader('Authorization', 'Bearer ' + token);
         }

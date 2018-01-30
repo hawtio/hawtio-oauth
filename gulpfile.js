@@ -153,10 +153,21 @@ gulp.task('connect', ['watch'], function() {
   hawtio.use('/', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
+    var path = req.originalUrl;
+    if (path === '/') {
+      res.redirect('/hawtio');
+    } else if (s.startsWith(path, '/plugins/') && s.endsWith(path, 'html')) {
+      // avoid returning these files, they should get pulled from js
+      console.log("returning 404 for: ", path);
+      res.statusCode = 404;
+      res.end();
+    } else {
+      // console.log("allowing: ", path);
+      next();
+    }
   });
 
-  hawtio.use('/oauth/config.js', function(req, res, next) {
+  hawtio.use('/hawtio/oauth/config.js', function(req, res, next) {
     var kubeBase = process.env.KUBERNETES_MASTER || 'http://localhost:9000';
     var config = {
       openshift: {
@@ -182,24 +193,6 @@ gulp.task('connect', ['watch'], function() {
 
   });
 
-  /*
-   * Example middleware that returns a 404 for templates
-   * as they're already embedded in the js
-  hawtio.use('/', function(req, res, next) {
-          var path = req.originalUrl;
-          if (path === '/') {
-            res.redirect('/hawtio');
-          } else if (s.startsWith(path, '/plugins/') && s.endsWith(path, 'html')) {
-            // avoid returning these files, they should get pulled from js
-            console.log("returning 404 for: ", path);
-            res.statusCode = 404;
-            res.end();
-          } else {
-            console.log("allowing: ", path);
-            next();
-          }
-        });
-        */
   hawtio.listen(function(server) {
     var host = server.address().address;
     var port = server.address().port;

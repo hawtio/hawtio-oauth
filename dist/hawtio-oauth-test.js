@@ -1,9 +1,101 @@
+var HawtioOAuth;
+(function (HawtioOAuth) {
+    var pluginName = 'HawtioOAuth';
+    var log = Logger.get(pluginName);
+    var _module = angular.module(pluginName, []);
+    _module.directive('hawtioUserDropdown', ['$compile', '$timeout', function ($compile, $timeout) {
+            return {
+                restrict: 'C',
+                scope: {},
+                link: function ($scope, $element, $attr) {
+                    $scope.doLogout = doLogout;
+                    $scope.userDetails = userProfile;
+                    var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
+                    $timeout(function () {
+                        $element.append(el);
+                    }, 250);
+                }
+            };
+        }]);
+    hawtioPluginLoader.addModule(pluginName);
+    hawtioPluginLoader.addModule('ngIdle');
+    HawtioOAuth.oauthPlugins = [];
+    var userProfile = undefined;
+    var activePlugin = undefined;
+    function doLogout() {
+        if (!activePlugin) {
+            return;
+        }
+        var plugin = window[activePlugin];
+        plugin.doLogout();
+    }
+    HawtioOAuth.doLogout = doLogout;
+    function getUserProfile() {
+        if (!userProfile) {
+            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (_module) {
+                var p = Core.pathGet(window, [_module, 'userProfile']);
+                log.debug("Module: ", _module, " userProfile: ", p);
+                return p !== null && p !== undefined;
+            });
+            userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
+            log.debug("Active OAuth plugin: ", activePlugin);
+        }
+        return userProfile;
+    }
+    HawtioOAuth.getUserProfile = getUserProfile;
+    function getOAuthToken() {
+        var userProfile = getUserProfile();
+        if (!userProfile) {
+            return null;
+        }
+        return userProfile.token;
+    }
+    HawtioOAuth.getOAuthToken = getOAuthToken;
+    function authenticatedHttpRequest(options) {
+        return $.ajax(_.extend(options, {
+            beforeSend: function (request) {
+                var token = getOAuthToken();
+                if (token) {
+                    request.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
+            }
+        }));
+    }
+    HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
+    // fetch oauth config
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'HawtioOAuthConfig',
+        task: function (next) {
+            $.getScript('oauth/config.js').always(next);
+        }
+    });
+    // global pre-bootstrap task that plugins can use to wait
+    // until all oauth plugins have been processed
+    // 
+    // OAuth plugins can add to this list via:
+    //
+    // HawtioOAuth.oauthPlugins.push(<plugin name>);
+    //
+    // and then use a named task with the same name as <plugin name>
+    //
+    hawtioPluginLoader.registerPreBootstrapTask({
+        name: 'hawtio-oauth',
+        depends: HawtioOAuth.oauthPlugins,
+        task: function (next) {
+            getUserProfile();
+            Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+            next();
+        }
+    });
+})(HawtioOAuth || (HawtioOAuth = {}));
+/// <reference path="../plugins/includes.ts"/>
 var Example;
 (function (Example) {
     Example.pluginName = "hawtio-google-test";
     Example.log = Logger.get(Example.pluginName);
     Example.templatePath = "test-plugins/example/html";
 })(Example || (Example = {}));
+/// <reference path="../../includes.ts"/>
 /// <reference path="exampleGlobals.ts"/>
 var Example;
 (function (Example) {
@@ -39,14 +131,14 @@ var Example;
     }, true);
     */
     // Standard Keycloak server
-    // hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    //   KeycloakConfig = {
-    //     clientId: 'hawtio-client',
-    //     url: 'http://localhost:8080/auth',
-    //     realm: 'hawtio-demo'
-    //   };
-    //   next();
-    // }, true);
+    hawtioPluginLoader.registerPreBootstrapTask(function (next) {
+        KeycloakConfig = {
+            clientId: 'hawtio-client',
+            url: 'http://localhost:8080/auth',
+            realm: 'hawtio-demo'
+        };
+        next();
+    }, true);
     // openshift
     /*
     hawtioPluginLoader.registerPreBootstrapTask((next) => {

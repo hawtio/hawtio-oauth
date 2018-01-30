@@ -1,3 +1,4 @@
+/// <reference path="../../includes.ts"/>
 /// <reference path="exampleGlobals.ts"/>
 namespace Example {
 
@@ -38,14 +39,14 @@ namespace Example {
   */
 
   // Standard Keycloak server
-  // hawtioPluginLoader.registerPreBootstrapTask((next) => {
-  //   KeycloakConfig = {
-  //     clientId: 'hawtio-client',
-  //     url: 'http://localhost:8080/auth',
-  //     realm: 'hawtio-demo'
-  //   };
-  //   next();
-  // }, true);
+  hawtioPluginLoader.registerPreBootstrapTask((next) => {
+    KeycloakConfig = {
+      clientId: 'hawtio-client',
+      url: 'http://localhost:8080/auth',
+      realm: 'hawtio-demo'
+    };
+    next();
+  }, true);
 
   // openshift
   /*

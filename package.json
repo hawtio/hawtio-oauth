@@ -15,7 +15,13 @@
     "@hawtio/core": "3.2.7",
     "@hawtio/forms": "3.0.12",
     "@hawtio/ui": "3.2.0",
-    "@hawtio/utilities": "3.2.0"
+    "@hawtio/utilities": "3.2.0",
+    "@types/jqueryui": "1.12.0",
+    "angular-patternfly": "4.14.0",
+    "angular-resizable": "1.2.0",
+    "keycloak-js": "^3.4.3",
+    "ng-idle": "^1.3.2",
+    "patternfly-bootstrap-treeview": "2.1.5"
   },
   "devDependencies": {
     "@hawtio/node-backend": "3.0.4",
@@ -113,7 +119,7 @@
     "strip-bom": "1.0.0",
     "ordered-read-streams": "0.3.0",
     "unique-stream": "2.2.1",
-    "lodash": "3.10.1",
+    "lodash": "4.17.4",
     "lru-cache": "4.1.1",
     "read-pkg-up": "2.0.0",
     "camelcase": "4.1.0",
@@ -165,6 +171,10 @@
     "@types/clipboard": "1.5.36",
     "codemirror": "5.33.0",
     "js-beautify": "1.7.5",
-    "stringify-object": "3.2.1"
+    "stringify-object": "3.2.1",
+    "angular": "1.6.8",
+    "angular-sanitize": "1.6.8",
+    "bootstrap-datepicker": "1.7.1",
+    "angular-ui-bootstrap": "2.5.6"
   }
 }

@@ -35,7 +35,7 @@ Very similar to Keycloak, except you initialize the OSOAuthConfig object with th
       next();
     }, true);
 
-Note in either case we need to pass 'true' to `hawtioPluginLoader.registerPreBootstrapTask` so that it's added to the start of the ootstrap queue.
+Note in either case we need to pass 'true' to `hawtioPluginLoader.registerPreBootstrapTask` so that it's added to the start of the bootstrap queue.
 
 In general for OAuth we want to establish the user's credentials at app bootstrap, as many services tend to need them to access backend services.
 
@@ -57,7 +57,7 @@ And then just execute:
 
 It will start a simple web server that is updated every time a new change in the target files is detected. If your browser is supported, the page is also refreshed when changes are detected.
 
-The application is available at [http://0.0.0.0:9000](http://0.0.0.0:9000) . If you add any extra dependency, you'll need to execute the first steps again.
+The application is available at [http://0.0.0.0:9000](http://0.0.0.0:9000). If you add any extra dependency, you'll need to execute the first steps again.
 
 Whenever the build completes the compiled `.js` file will be put into the `dist/` directory.  Don't forget to first do a `yarn build` before committing changes!
 

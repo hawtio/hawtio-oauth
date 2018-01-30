@@ -1,12 +1,12 @@
 /// <reference types="jquery" />
 /// <reference types="angular" />
-declare var KeycloakConfig: any;
-declare var Keycloak: any;
-declare var OSOAuthConfig: any;
-declare var GoogleOAuthConfig: any;
-declare var HAWTIO_OAUTH_CONFIG: any;
+declare let KeycloakConfig: any;
+declare let Keycloak: any;
+declare let OSOAuthConfig: any;
+declare let GoogleOAuthConfig: any;
+declare let HAWTIO_OAUTH_CONFIG: any;
 declare namespace HawtioOAuth {
-    var oauthPlugins: any[];
+    let oauthPlugins: any[];
     function doLogout(): void;
     function getUserProfile(): any;
     function getOAuthToken(): any;
@@ -54,18 +54,6 @@ declare namespace GoogleOAuth {
 declare namespace GoogleOAuth {
     var _module: angular.IModule;
 }
-declare namespace HawtioKeycloak {
-    var pluginName: string;
-    var log: Logging.Logger;
-    var keycloak: any;
-    var userProfile: any;
-}
-declare namespace HawtioKeycloak {
-    function doLogout(): void;
-}
-declare namespace HawtioKeycloak {
-    var _module: angular.IModule;
-}
 declare namespace OSOAuth {
     var pluginName: string;
     var log: Logging.Logger;
@@ -86,5 +74,17 @@ declare namespace OSOAuth {
     function checkToken(uri: any): any;
 }
 declare namespace OSOAuth {
+    var _module: angular.IModule;
+}
+declare namespace HawtioKeycloak {
+    var pluginName: string;
+    var log: Logging.Logger;
+    var keycloak: any;
+    var userProfile: any;
+}
+declare namespace HawtioKeycloak {
+    function doLogout(): void;
+}
+declare namespace HawtioKeycloak {
     var _module: angular.IModule;
 }
