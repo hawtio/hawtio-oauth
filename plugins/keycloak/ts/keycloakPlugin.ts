@@ -1,8 +1,9 @@
 /// <reference path="keycloakGlobals.ts"/>
 /// <reference path="keycloakHelpers.ts"/>
 namespace HawtioKeycloak {
+
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
-  export var _module = angular.module(pluginName, []);
+  export const _module = angular.module(pluginName, []);
 
   hawtioPluginLoader.addModule(pluginName);
 
@@ -40,7 +41,7 @@ namespace HawtioKeycloak {
       });
 
       $rootScope.$on('Keepalive', () => {
-        var keycloak = HawtioKeycloak.keycloak;
+        let keycloak = HawtioKeycloak.keycloak;
         if (keycloak) {
           keycloak.updateToken(5).success(() => {
             userDetails.token = keycloak.token;
@@ -59,51 +60,51 @@ namespace HawtioKeycloak {
         log.debug("Keycloak disabled");
         next();
         return;
-			}
-			let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
-			$.getScript(keycloakJsUri).done((script, textStatus) => {
-				var keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-				keycloak.init({ 
-					onLoad: 'login-required'
-				}).success((authenticated) => {
-					log.debug("Authenticated: ", authenticated);
-					if (!authenticated) {
-						keycloak.login({
-							redirectUri: window.location.href,
-						});
-					} else {
-						keycloak.loadUserProfile()
-						.success((profile) => {
-							userProfile = profile;
-							userProfile.token = keycloak.token;
-							next();
-						}).error(() => {
-							log.debug("Failed to load user profile");
-							next();
-						});
-					}
-				}).error(() => {
-					log.debug("Failed to initialize Keycloak, token unavailable");
-					next();
-				});
-				// end keycloak.init
-			})
-			.fail((response) => {
-				log.debug("Error fetching keycloak adapter: ", response);
-				next();
-			});
-			// end $.getScript
+      }
+      let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
+      $.getScript(keycloakJsUri).done((script, textStatus) => {
+        let keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+        keycloak.init({
+          onLoad: 'login-required'
+        }).success((authenticated) => {
+          log.debug("Authenticated: ", authenticated);
+          if (!authenticated) {
+            keycloak.login({
+              redirectUri: window.location.href,
+            });
+          } else {
+            keycloak.loadUserProfile()
+              .success((profile) => {
+                userProfile = profile;
+                userProfile.token = keycloak.token;
+                next();
+              }).error(() => {
+                log.debug("Failed to load user profile");
+                next();
+              });
+          }
+        }).error(() => {
+          log.debug("Failed to initialize Keycloak, token unavailable");
+          next();
+        });
+        // end keycloak.init
+      })
+        .fail((response) => {
+          log.debug("Error fetching keycloak adapter: ", response);
+          next();
+        });
+      // end $.getScript
     }
   });
 
   class AuthInterceptorService {
     public static $inject = ['$q', 'userDetails'];
 
-    public static Factory($q:ng.IQService, userDetails) {
+    public static Factory($q: ng.IQService, userDetails) {
       return new AuthInterceptorService($q, userDetails);
     }
 
-    constructor(private $q:ng.IQService, private userDetails) {
+    constructor(private $q: ng.IQService, private userDetails) {
     }
 
     request = (request) => {
@@ -111,11 +112,11 @@ namespace HawtioKeycloak {
       if (request.url.indexOf('http') !== 0) {
         return request;
       }
-      var addBearer, deferred;
+      let addBearer, deferred;
       addBearer = () => {
-        var keycloak = HawtioKeycloak.keycloak;
+        let keycloak = HawtioKeycloak.keycloak;
         return keycloak.updateToken(5).success(() => {
-          var token = HawtioKeycloak.keycloak.token;
+          let token = HawtioKeycloak.keycloak.token;
           this.userDetails.token = token;
           request.headers.Authorization = 'Bearer ' + token;
           deferred.notify();

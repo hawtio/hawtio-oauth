@@ -1,10 +1,11 @@
 /// <reference path="../../includes.ts"/>
 namespace GithubOAuth {
-  export var pluginName = 'github-oauth';
-  export var log:Logging.Logger = Logger.get(pluginName);
-  export var templatePath = 'plugins/github/html';
 
-  var LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
+  export const pluginName = 'hawtio-oauth-github';
+  export const log: Logging.Logger = Logger.get(pluginName);
+  export const templatePath = 'plugins/github/html';
+
+  const LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
 
   export function emptyBeforeSend() {
     return true;
@@ -19,7 +20,7 @@ namespace GithubOAuth {
   }
 
   export function getAuthHeader(oauthSettings) {
-    var token = oauthSettings.accessToken;
+    let token = oauthSettings.accessToken;
     if (!token) {
       return '';
     }
@@ -27,9 +28,9 @@ namespace GithubOAuth {
   }
 
   export function loadSettings() {
-    var answer = {};
+    let answer = {};
     if (LOCAL_STORAGE_KEY in localStorage) {
-      var settings = localStorage[LOCAL_STORAGE_KEY];
+      let settings = localStorage[LOCAL_STORAGE_KEY];
       try {
         settings = angular.fromJson(settings);
         answer = settings;
@@ -41,7 +42,7 @@ namespace GithubOAuth {
   }
 
   export function storeSettings(settings, oauthSettings = undefined) {
-    var toStore = {
+    let toStore = {
       username: settings.username,
       avatarURL: settings.avatarURL,
       accessToken: settings.accessToken,

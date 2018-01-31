@@ -2,9 +2,9 @@
 /// <reference path="githubHelpers.ts"/>
 namespace GithubOAuth {
 
-  export var _module = angular.module(pluginName, []);
+  export const _module = angular.module(pluginName, []);
 
-  var settings = {
+  let settings = {
     enabled: false,
     username: undefined,
     clientId: undefined,
@@ -21,7 +21,7 @@ namespace GithubOAuth {
   _module.constant('githubOAuthSettings', settings);
 
   _module.service('GithubOAuth', ['githubOAuthSettings', (settings) => {
-    var self = {
+    let self = {
       settings: settings,
       hasToken: () => {
         return !Core.isBlank(self.settings.accessToken);
@@ -33,7 +33,7 @@ namespace GithubOAuth {
         return getAuthHeader(self.settings);
       },
       getPreferencesLink: () => {
-        
+
       }
     }
     return self;
@@ -50,8 +50,8 @@ namespace GithubOAuth {
     name: 'GithubOAuthConfig',
     depends: ['HawtioOAuthConfig'],
     task: (next) => {
-      var clientId  = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
-      var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+      let clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+      let clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
       if (clientId && clientSecret) {
         log.debug("enabled");
         settings.enabled = true;
@@ -80,9 +80,9 @@ namespace GithubOAuth {
         next();
         return;
       }
-      var uri = new URI();
-      var search = uri.search(true);
-      var accessCode = search['code'];
+      let uri = new URI();
+      let search = uri.search(true);
+      let accessCode = search['code'];
       if (accessCode) {
         log.debug("Found github access code");
         delete search['code'];

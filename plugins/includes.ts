@@ -10,7 +10,8 @@ declare let GoogleOAuthConfig;
 declare let HAWTIO_OAUTH_CONFIG;
 
 namespace HawtioOAuth {
-  const pluginName = 'HawtioOAuth';
+
+  const pluginName = 'hawtio-oauth';
   const log: Logging.Logger = Logger.get(pluginName);
   const _module = angular.module(pluginName, []);
 
@@ -32,7 +33,7 @@ namespace HawtioOAuth {
   hawtioPluginLoader.addModule(pluginName);
   hawtioPluginLoader.addModule('ngIdle');
 
-  export let oauthPlugins = [];
+  export const oauthPlugins = [];
 
   let userProfile: any = undefined;
   let activePlugin: string = undefined;
@@ -95,11 +96,11 @@ namespace HawtioOAuth {
   // and then use a named task with the same name as <plugin name>
   //
   hawtioPluginLoader.registerPreBootstrapTask({
-    name: 'hawtio-oauth',
+    name: pluginName,
     depends: HawtioOAuth.oauthPlugins,
     task: (next) => {
       getUserProfile();
-      Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+      Logger.get(pluginName).info("All oauth plugins have executed");
       next();
     }
   });

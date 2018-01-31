@@ -1,9 +1,9 @@
 /// <reference path="../../includes.ts"/>
 
 namespace OSOAuth {
-  export var pluginName = 'hawtio-os-oauth';
-  export var log:Logging.Logger = Logger.get(pluginName);
+  export const pluginName = 'hawtio-oauth-os';
+  export const log: Logging.Logger = Logger.get(pluginName);
   // Keep this unset unless we have a token
-  export var userProfile:any = null;
+  export let userProfile: any = null;
 
 }

@@ -1,6 +1,6 @@
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    var pluginName = 'HawtioOAuth';
+    var pluginName = 'hawtio-oauth';
     var log = Logger.get(pluginName);
     var _module = angular.module(pluginName, []);
     _module.directive('hawtioUserDropdown', ['$compile', '$timeout', function ($compile, $timeout) {
@@ -79,11 +79,11 @@ var HawtioOAuth;
     // and then use a named task with the same name as <plugin name>
     //
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: 'hawtio-oauth',
+        name: pluginName,
         depends: HawtioOAuth.oauthPlugins,
         task: function (next) {
             getUserProfile();
-            Logger.get('hawtio-oauth').info("All oauth plugins have executed");
+            Logger.get(pluginName).info("All oauth plugins have executed");
             next();
         }
     });
@@ -91,7 +91,7 @@ var HawtioOAuth;
 /// <reference path="../plugins/includes.ts"/>
 var Example;
 (function (Example) {
-    Example.pluginName = "hawtio-google-test";
+    Example.pluginName = "hawtio-example-google";
     Example.log = Logger.get(Example.pluginName);
     Example.templatePath = "test-plugins/example/html";
 })(Example || (Example = {}));
@@ -106,8 +106,8 @@ var Example;
                 .id(Example.pluginName)
                 .title(function () { return "Examples"; })
                 .href(function () { return "/example"; })
-                .subPath("Github", "page2", builder.join(Example.templatePath, 'github.html'))
-                .subPath("Openshift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
+                .subPath("OpenShift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
+                .subPath("GitHub", "page2", builder.join(Example.templatePath, 'github.html'))
                 .build();
             builder.configureRouting($routeProvider, tab);
             $locationProvider.html5Mode(true);
@@ -154,9 +154,9 @@ var Example;
       name: 'test-init',
       depends: ['hawtio-oauth'],
       task: (next) => {
-        var uri = new URI('https://172.28.128.4:8443/api/v1');
+        let uri = new URI('https://172.28.128.4:8443/api/v1');
         uri.path('/api/v1/namespaces');
-        var url = uri.toString();
+        let url = uri.toString();
         HawtioOAuth.authenticatedHttpRequest({
           url: uri.toString()
         }).done((data) => {
@@ -208,5 +208,5 @@ var Example;
         }]);
 })(Example || (Example = {}));
 
-angular.module('hawtio-oauth-test-templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('test-plugins/example/html/github.html','<div  ng-controller="Example.Page2Controller">\n  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">\n    <div class="col-md-12">\n      <div class="alert alert-warning">\n        No Github credentials available, <a href="" ng-click="prefs.goto(\'Github\')">configure your github account</a>\n      </div>\n    </div>\n  </div>\n  <div class="row" ng-if="oauth.hasToken()">\n    <div class="col-md-12">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n');
-$templateCache.put('test-plugins/example/html/page1.html','<div class="row">\n  <div class="col-md-12" ng-controller="Example.Page1Controller">\n    <h1>User Details</h1>\n    <button class="btn btn-primary" ng-click="userDetails.logout()">Logout</button>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n');}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");
+angular.module('hawtio-oauth-test-templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('test-plugins/example/html/github.html','<div  ng-controller="Example.Page2Controller">\n  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">\n    <div class="col-md-12">\n      <div class="alert alert-warning">\n        No GitHub credentials available, <a href="" ng-click="prefs.goto(\'Github\')">configure your GitHub account</a>\n      </div>\n    </div>\n  </div>\n  <div class="row" ng-if="oauth.hasToken()">\n    <div class="col-md-12">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n');
+$templateCache.put('test-plugins/example/html/page1.html','<div class="row">\n  <div class="col-md-12" ng-controller="Example.Page1Controller">\n    <button class="btn btn-primary pull-right" ng-click="userDetails.logout()">Logout</button>\n    <h1>User Details</h1>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n');}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");

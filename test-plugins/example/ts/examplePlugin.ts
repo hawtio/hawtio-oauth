@@ -2,17 +2,21 @@
 /// <reference path="exampleGlobals.ts"/>
 namespace Example {
 
-  export var _module = angular.module(Example.pluginName, []);
+  export const _module = angular.module(pluginName, []);
 
   _module.constant('example-tabs', []);
 
-  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', ($locationProvider, $routeProvider: ng.route.IRouteProvider, builder: HawtioMainNav.BuilderFactory, tabs) => {
-    var tab = builder.create()
-      .id(Example.pluginName)
+  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', (
+    $locationProvider,
+    $routeProvider: ng.route.IRouteProvider,
+    builder: HawtioMainNav.BuilderFactory,
+    tabs) => {
+    let tab = builder.create()
+      .id(pluginName)
       .title(() => "Examples")
       .href(() => "/example")
-      .subPath("Github", "page2", builder.join(Example.templatePath, 'github.html'))
-      .subPath("Openshift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
+      .subPath("OpenShift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
+      .subPath("GitHub", "page2", builder.join(Example.templatePath, 'github.html'))
       .build();
     builder.configureRouting($routeProvider, tab);
     $locationProvider.html5Mode(true);
@@ -63,9 +67,9 @@ namespace Example {
     name: 'test-init',
     depends: ['hawtio-oauth'],
     task: (next) => {
-      var uri = new URI('https://172.28.128.4:8443/api/v1');
+      let uri = new URI('https://172.28.128.4:8443/api/v1');
       uri.path('/api/v1/namespaces');
-      var url = uri.toString();
+      let url = uri.toString();
       HawtioOAuth.authenticatedHttpRequest({
         url: uri.toString()
       }).done((data) => {
@@ -79,6 +83,5 @@ namespace Example {
   });
   */
 
-
-  hawtioPluginLoader.addModule(Example.pluginName);
+  hawtioPluginLoader.addModule(pluginName);
 }

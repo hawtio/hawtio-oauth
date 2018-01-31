@@ -1,8 +1,9 @@
 /// <reference path="googleOAuthHelpers.ts"/>
 
 namespace GoogleOAuth {
+
   HawtioOAuth.oauthPlugins.push('GoogleOAuth');
-  export var _module = angular.module(pluginName, []);
+  export const _module = angular.module(pluginName, []);
 
   hawtioPluginLoader.addModule(pluginName);
 
@@ -41,19 +42,18 @@ namespace GoogleOAuth {
         return;
       }
       if (!GoogleOAuthConfig.clientId ||
-          !GoogleOAuthConfig.redirectURI ||
-          !GoogleOAuthConfig.scope ||
-          !GoogleOAuthConfig.authenticationURI)
-      {
+        !GoogleOAuthConfig.redirectURI ||
+        !GoogleOAuthConfig.scope ||
+        !GoogleOAuthConfig.authenticationURI) {
         log.warn("Invalid oauth config, disabled oauth", GoogleOAuthConfig);
         next();
         return;
       }
       log.debug("config: ", GoogleOAuthConfig);
-      var currentURI = new URI(window.location.href);
+      let currentURI = new URI(window.location.href);
 
       try {
-        var userDetails = getTokenStorage();
+        let userDetails = getTokenStorage();
         if (userDetails && userDetails.token) {
           userProfile = userDetails;
           // setupJQueryAjax(userDetails);
@@ -68,14 +68,14 @@ namespace GoogleOAuth {
         clearTokenStorage();
       }
 
-      var authorizationCode = checkAuthorizationCode(currentURI);
+      let authorizationCode = checkAuthorizationCode(currentURI);
       if (authorizationCode) {
         log.info("found an authorization code so need to go back to google and get a token");
         exchangeCodeForToken(GoogleOAuthConfig, authorizationCode, {
           uri: currentURI.toString(),
         }).done((response) => {
           if (response && response.access_token) {
-            var tmp = {
+            let tmp = {
               token: response.access_token,
               expiry: response.expires_in,
               type: response.token_type
@@ -85,8 +85,8 @@ namespace GoogleOAuth {
             setupJQueryAjax(userProfile);
             log.info("Logged in with URL: " + window.location.href);
             // lets remove the auth code
-            var uri = new URI(window.location.href).removeQuery("code");
-            var target = uri.toString();
+            let uri = new URI(window.location.href).removeQuery("code");
+            let target = uri.toString();
             log.info("Now redirecting to: " + target);
             window.location.href = target;
           } else {

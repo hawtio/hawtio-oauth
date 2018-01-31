@@ -1,9 +1,9 @@
 /// <reference path="../../includes.ts"/>
 
 namespace GoogleOAuth {
-  export var pluginName = 'hawtio-google-oauth';
-  export var log:Logging.Logger = Logger.get(pluginName);
+  export const pluginName = 'hawtio-oauth-google';
+  export const log: Logging.Logger = Logger.get(pluginName);
 
   // Keep this unset unless we have a token
-  export var userProfile:any = null;
+  export let userProfile: any = null;
 }

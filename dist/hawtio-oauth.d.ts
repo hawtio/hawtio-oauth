@@ -6,16 +6,16 @@ declare let OSOAuthConfig: any;
 declare let GoogleOAuthConfig: any;
 declare let HAWTIO_OAUTH_CONFIG: any;
 declare namespace HawtioOAuth {
-    let oauthPlugins: any[];
+    const oauthPlugins: any[];
     function doLogout(): void;
     function getUserProfile(): any;
     function getOAuthToken(): any;
     function authenticatedHttpRequest(options: any): JQuery.jqXHR<any>;
 }
 declare namespace GithubOAuth {
-    var pluginName: string;
-    var log: Logging.Logger;
-    var templatePath: string;
+    const pluginName = "hawtio-oauth-github";
+    const log: Logging.Logger;
+    const templatePath = "plugins/github/html";
     function emptyBeforeSend(): boolean;
     function getTokenCheckAuthURL(oauthSettings: any): string;
     function getTokenCheckAuthHeader(oauthSettings: any): string;
@@ -24,14 +24,14 @@ declare namespace GithubOAuth {
     function storeSettings(settings: any, oauthSettings?: any): void;
 }
 declare namespace GithubOAuth {
-    var _module: angular.IModule;
+    const _module: angular.IModule;
 }
 declare namespace GithubOAuth {
 }
 declare namespace GoogleOAuth {
-    var pluginName: string;
-    var log: Logging.Logger;
-    var userProfile: any;
+    const pluginName = "hawtio-oauth-google";
+    const log: Logging.Logger;
+    let userProfile: any;
 }
 declare namespace GoogleOAuth {
     function authenticatedHttpRequest(options: any, userDetails: any): JQuery.jqXHR<any>;
@@ -52,12 +52,24 @@ declare namespace GoogleOAuth {
     function fetchUserInfo(http: any, successCallback: any, failureCallback: any): void;
 }
 declare namespace GoogleOAuth {
-    var _module: angular.IModule;
+    const _module: angular.IModule;
+}
+declare namespace HawtioKeycloak {
+    const pluginName = "hawtio-oauth-keycloak";
+    const log: Logging.Logger;
+    let keycloak: any;
+    let userProfile: any;
+}
+declare namespace HawtioKeycloak {
+    function doLogout(): void;
+}
+declare namespace HawtioKeycloak {
+    const _module: angular.IModule;
 }
 declare namespace OSOAuth {
-    var pluginName: string;
-    var log: Logging.Logger;
-    var userProfile: any;
+    const pluginName = "hawtio-oauth-os";
+    const log: Logging.Logger;
+    let userProfile: any;
 }
 declare namespace OSOAuth {
     function currentTimeSeconds(): number;
@@ -74,17 +86,5 @@ declare namespace OSOAuth {
     function checkToken(uri: any): any;
 }
 declare namespace OSOAuth {
-    var _module: angular.IModule;
-}
-declare namespace HawtioKeycloak {
-    var pluginName: string;
-    var log: Logging.Logger;
-    var keycloak: any;
-    var userProfile: any;
-}
-declare namespace HawtioKeycloak {
-    function doLogout(): void;
-}
-declare namespace HawtioKeycloak {
-    var _module: angular.IModule;
+    const _module: angular.IModule;
 }

@@ -1,11 +1,11 @@
 /// <reference path="../../includes.ts"/>
 
 namespace HawtioKeycloak {
-  export var pluginName = 'hawtio-keycloak';
-  export var log:Logging.Logger = Logger.get(pluginName);
-  export var keycloak:any = undefined;
+  export const pluginName = 'hawtio-oauth-keycloak';
+  export const log: Logging.Logger = Logger.get(pluginName);
+  export let keycloak: any = undefined;
 
   // used by HawtioOAuth, must have a 'token' field when set, otherwise
   // leave undefined
-  export var userProfile:any = undefined;
+  export let userProfile: any = undefined;
 } 

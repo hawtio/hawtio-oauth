@@ -1,7 +1,8 @@
 /// <reference path="examplePlugin.ts"/>
 namespace Example {
 
-  export var Page2Controller = _module.controller("Example.Page2Controller", ['$scope', 'GithubOAuth', 'HawtioPreferences', ($scope, GithubOAuth, HawtioPreferences) => {
+  export const Page2Controller = _module.controller("Example.Page2Controller", ['$scope', 'GithubOAuth', 'HawtioPreferences', (
+    $scope, GithubOAuth, HawtioPreferences) => {
     var oauth = $scope.oauth = GithubOAuth;
     $scope.prefs = HawtioPreferences;
 

@@ -35,7 +35,7 @@ namespace GithubOAuth {
     `,
     controllerAs: 'github',
     controller: ['$scope', 'githubOAuthSettings', function GithubPreferenceController($scope, githubOAuthSettings) {
-      var model = $scope.model = {
+      let model = $scope.model = {
         trying: false,
         error: false,
         username: githubOAuthSettings.username,
@@ -45,13 +45,13 @@ namespace GithubOAuth {
         accessToken: githubOAuthSettings.accessToken,
         data: undefined
       };
-      var settings = $scope.settings = githubOAuthSettings;
+      let settings = $scope.settings = githubOAuthSettings;
 
       $scope.disabled = () => {
         return Core.isBlank(model.username) || Core.isBlank(model.password);
       };
 
-      var error = (data) => {
+      let error = (data) => {
         model.trying = false;
         model.error = true;
         model.data = data;
@@ -105,7 +105,7 @@ namespace GithubOAuth {
       $scope.login = () => {
         model.error = false;
         model.trying = true;
-        var headers = {
+        let headers = {
           'Authorization': Core.getBasicAuthHeader(model.username, model.password)
         };
         storeSettings(model, githubOAuthSettings);
@@ -142,7 +142,7 @@ namespace GithubOAuth {
           error: error,
           beforeSend: emptyBeforeSend
         });
-      } 
+      }
     }]
   });
 }

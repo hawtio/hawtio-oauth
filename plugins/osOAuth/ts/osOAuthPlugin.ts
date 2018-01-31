@@ -4,7 +4,7 @@ namespace OSOAuth {
 
   HawtioOAuth.oauthPlugins.push('OSOAuth');
 
-  export var _module = angular.module(pluginName, ['ngIdle']);
+  export const _module = angular.module(pluginName, ['ngIdle']);
 
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
@@ -28,8 +28,8 @@ namespace OSOAuth {
     }
   }]);
 
-  var keepaliveUri:string = undefined;
-  var keepaliveInterval:number = undefined;
+  let keepaliveUri: string = undefined;
+  let keepaliveInterval: number = undefined;
 
   _module.config(['KeepaliveProvider', (KeepaliveProvider) => {
     log.debug("keepalive URI: ", keepaliveUri);
@@ -59,14 +59,14 @@ namespace OSOAuth {
   hawtioPluginLoader.registerPreBootstrapTask({
     name: 'OSOAuth',
     task: (next) => {
-      var openshiftConfig = null;
+      let openshiftConfig = null;
       try {
         openshiftConfig = window['OPENSHIFT_CONFIG'];
       } catch (e) {
         // ignore
       }
       if (openshiftConfig) {
-        var token = openshiftConfig.token;
+        let token = openshiftConfig.token;
         if (token) {
           log.warn("Loading OAuth token from server. We should switch to using a real OAuth login!");
           OSOAuth.userProfile = {
@@ -87,22 +87,22 @@ namespace OSOAuth {
         return;
       }
       if (!OSOAuthConfig.oauth_client_id ||
-          !OSOAuthConfig.oauth_authorize_uri) {
+        !OSOAuthConfig.oauth_authorize_uri) {
         log.debug("Invalid oauth config, disabled oauth");
         next();
         return;
       }
       log.debug("config: ", OSOAuthConfig);
-      var currentURI = new URI(window.location.href);
-      var fragmentParams = checkToken(currentURI);
+      let currentURI = new URI(window.location.href);
+      let fragmentParams = checkToken(currentURI);
       if (fragmentParams) {
-        var tmp = {
+        let tmp = {
           token: fragmentParams.access_token,
           expiry: fragmentParams.expires_in,
           type: fragmentParams.token_type,
           obtainedAt: fragmentParams.obtainedAt || 0
         }
-        var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+        let uri = new URI(OSOAuthConfig.oauth_authorize_uri);
         uri.path('/oapi/v1/users/~');
         keepaliveUri = uri.toString();
         userProfile = tmp;
@@ -111,10 +111,10 @@ namespace OSOAuth {
           url: keepaliveUri,
           success: (response) => {
             _.merge(userProfile, tmp, response, { provider: pluginName });
-            var obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
-            var expiry = Core.parseIntValue(userProfile.expiry) || 0;
+            let obtainedAt = Core.parseIntValue(userProfile.obtainedAt) || 0;
+            let expiry = Core.parseIntValue(userProfile.expiry) || 0;
             if (obtainedAt) {
-              var remainingTime = obtainedAt + expiry - currentTimeSeconds();
+              let remainingTime = obtainedAt + expiry - currentTimeSeconds();
               if (remainingTime > 0) {
                 keepaliveInterval = Math.round(remainingTime / 4);
               }
@@ -136,10 +136,10 @@ namespace OSOAuth {
             if (jqXHR.status > 0) {
               log.error('Failed to fetch user info, status: ', textStatus, ' error: ', errorThrown);
               clearTokenStorage();
-              doLogin(OSOAuthConfig, {uri: currentURI.toString()});
+              doLogin(OSOAuthConfig, { uri: currentURI.toString() });
             }
           },
-          beforeSend: request => request.setRequestHeader('Authorization', 'Bearer ' +  userProfile.token)
+          beforeSend: request => request.setRequestHeader('Authorization', 'Bearer ' + userProfile.token)
         });
       } else {
         clearTokenStorage();
