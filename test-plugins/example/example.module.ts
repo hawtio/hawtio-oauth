@@ -1,32 +1,38 @@
-/// <reference path="../../includes.ts"/>
-/// <reference path="exampleGlobals.ts"/>
+/// <reference path="../includes.ts"/>
+/// <reference path="example.globals.ts"/>
+/// <reference path="page1.controller.ts"/>
+/// <reference path="github.controller.ts"/>
+
 namespace Example {
 
-  export const _module = angular.module(pluginName, []);
+  export const exampleModule = angular
+    .module(pluginName, [])
+    .constant('tabs', [])
+    .config(buildTabs)
+    .run(loadTabs)
+    .controller("Example.Page1Controller", page1Controller)
+    .controller("Example.Page2Controller", page2Controller)
+    .name;
 
-  _module.constant('example-tabs', []);
-
-  _module.config(['$locationProvider', '$routeProvider', 'HawtioNavBuilderProvider', 'example-tabs', (
-    $locationProvider,
-    $routeProvider: ng.route.IRouteProvider,
-    builder: HawtioMainNav.BuilderFactory,
-    tabs) => {
-    let tab = builder.create()
+  function buildTabs($locationProvider: ng.ILocationProvider, $routeProvider: ng.route.IRouteProvider,
+    HawtioNavBuilderProvider: HawtioMainNav.BuilderFactory, tabs: HawtioMainNav.NavItem[]): void {
+    'ngInject';
+    let tab = HawtioNavBuilderProvider.create()
       .id(pluginName)
       .title(() => "Examples")
       .href(() => "/example")
-      .subPath("OpenShift OAuth", "page1", builder.join(Example.templatePath, 'page1.html'))
-      .subPath("GitHub", "page2", builder.join(Example.templatePath, 'github.html'))
+      .subPath("OpenShift OAuth", "page1", HawtioNavBuilderProvider.join(Example.templatePath, 'page1.html'))
+      .subPath("GitHub", "page2", HawtioNavBuilderProvider.join(Example.templatePath, 'github.html'))
       .build();
-    builder.configureRouting($routeProvider, tab);
+    HawtioNavBuilderProvider.configureRouting($routeProvider, tab);
     $locationProvider.html5Mode(true);
     tabs.push(tab);
-  }]);
+  }
 
-  _module.run(['HawtioNav', 'example-tabs', (HawtioNav: HawtioMainNav.Registry, tabs) => {
-    _.forEach(tabs, (tab: any) => { HawtioNav.add(tab); });
+  function loadTabs(HawtioNav: HawtioMainNav.Registry, tabs: HawtioMainNav.NavItem[]): void {
+    _.forEach(tabs, (tab) => HawtioNav.add(tab));
     log.debug("loaded");
-  }]);
+  }
 
   // Google
   /*
@@ -46,7 +52,7 @@ namespace Example {
   hawtioPluginLoader.registerPreBootstrapTask((next) => {
     KeycloakConfig = {
       clientId: 'hawtio-client',
-      url: 'http://localhost:8080/auth',
+      url: 'http://localhost:18080/auth',
       realm: 'hawtio-demo'
     };
     next();

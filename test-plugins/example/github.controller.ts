@@ -1,9 +1,9 @@
-/// <reference path="examplePlugin.ts"/>
 namespace Example {
 
-  export const Page2Controller = _module.controller("Example.Page2Controller", ['$scope', 'GithubOAuth', 'HawtioPreferences', (
-    $scope, GithubOAuth, HawtioPreferences) => {
-    var oauth = $scope.oauth = GithubOAuth;
+  export function page2Controller($scope, GithubOAuth, HawtioPreferences) {
+    'ngInject';
+
+    let oauth = $scope.oauth = GithubOAuth;
     $scope.prefs = HawtioPreferences;
 
     if (oauth.hasToken()) {
@@ -24,6 +24,6 @@ namespace Example {
         beforeSend: GithubOAuth.emptyBeforeSend
       });
     }
-  }]);
+  }
 
 }

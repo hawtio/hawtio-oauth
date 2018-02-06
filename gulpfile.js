@@ -40,6 +40,7 @@ gulp.task('example-tsc', ['tsc'], function() {
     .pipe(config.testTsProject());
 
     return tsResult.js
+        .pipe(plugins.ngAnnotate())
         .pipe(plugins.concat('test-compiled.js'))
         .pipe(gulp.dest('.'));
 });
