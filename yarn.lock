@@ -110,9 +110,9 @@
   version "2.8.5"
   resolved "https://registry.yarnpkg.com/@types/jasmine/-/jasmine-2.8.5.tgz#96e58872583fa80c7ea0dd29024b180d5e133678"
 
-"@types/jquery@*", "@types/jquery@3.3.0", "@types/jquery@~2.0.0", "@types/jquery@~2.0.46":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.3.0.tgz#6316ac20a1a13c5d521a2dc661befc7184f73f5b"
+"@types/jquery@*", "@types/jquery@~2.0.0", "@types/jquery@~2.0.46":
+  version "2.0.48"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-2.0.48.tgz#3e90d8cde2d29015e5583017f7830cb3975b2eef"
 
 "@types/jqueryui@1.12.0":
   version "1.12.0"
@@ -1737,9 +1737,9 @@ jquery-match-height@^0.7.2:
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/jquery-match-height/-/jquery-match-height-0.7.2.tgz#f8d9f3ba5314daab109cf07408674be204be5f0e"
 
-jquery@2.2.4, jquery@3.3.1, "jquery@>= 2.1.x", jquery@>=1.11.0, jquery@>=1.7, jquery@>=1.7.0, jquery@>=1.7.1, "jquery@>=1.7.1 <4.0.0", jquery@>=1.8, "jquery@^1.8.3 || ^2.0 || ^3.0", jquery@~2.2.4, jquery@~3.2.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.3.1.tgz#958ce29e81c9790f31be7792df5d4d95fc57fbca"
+jquery@2.2.4, "jquery@>= 2.1.x", jquery@>=1.11.0, jquery@>=1.7, jquery@>=1.7.0, jquery@>=1.7.1, "jquery@>=1.7.1 <4.0.0", jquery@>=1.8, "jquery@^1.8.3 || ^2.0 || ^3.0", jquery@~2.2.4, jquery@~3.2.1:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-2.2.4.tgz#2c89d6889b5eac522a7eea32c14521559c6cbf02"
 
 js-beautify@1.7.5, js-beautify@~1.6.14:
   version "1.7.5"

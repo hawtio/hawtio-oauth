@@ -10,7 +10,7 @@ declare namespace HawtioOAuth {
     function doLogout(): void;
     function getUserProfile(): any;
     function getOAuthToken(): any;
-    function authenticatedHttpRequest(options: any): JQuery.jqXHR<any>;
+    function authenticatedHttpRequest(options: any): JQueryXHR;
 }
 declare namespace GithubOAuth {
     const pluginName = "hawtio-oauth-github";
@@ -34,11 +34,11 @@ declare namespace GoogleOAuth {
     let userProfile: any;
 }
 declare namespace GoogleOAuth {
-    function authenticatedHttpRequest(options: any, userDetails: any): JQuery.jqXHR<any>;
+    function authenticatedHttpRequest(options: any, userDetails: any): JQueryXHR;
     function setupJQueryAjax(userDetails: any): void;
     function doLogout(config?: any, userDetails?: any): void;
     function doLogin(config: any, options: any): void;
-    function exchangeCodeForToken(config: any, code: any, options: any): JQuery.jqXHR<any>;
+    function exchangeCodeForToken(config: any, code: any, options: any): JQueryXHR;
     function extractToken(query: any): {
         type: any;
         token: any;
@@ -73,7 +73,7 @@ declare namespace OSOAuth {
 }
 declare namespace OSOAuth {
     function currentTimeSeconds(): number;
-    function authenticatedHttpRequest(options: any, userDetails: any): JQuery.jqXHR<any>;
+    function authenticatedHttpRequest(options: any, userDetails: any): JQueryXHR;
     function doLogout(config?: any, userDetails?: any): void;
     function doLogin(config: any, options: any): void;
     function extractToken(uri: any): {
