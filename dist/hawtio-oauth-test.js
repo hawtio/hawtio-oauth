@@ -165,6 +165,7 @@ var Example;
         tabs.push(tab);
     }
     function loadTabs(HawtioNav, tabs) {
+        'ngInject';
         _.forEach(tabs, function (tab) { return HawtioNav.add(tab); });
         Example.log.debug("loaded");
     }

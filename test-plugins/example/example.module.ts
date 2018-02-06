@@ -30,6 +30,7 @@ namespace Example {
   }
 
   function loadTabs(HawtioNav: HawtioMainNav.Registry, tabs: HawtioMainNav.NavItem[]): void {
+    'ngInject';
     _.forEach(tabs, (tab) => HawtioNav.add(tab));
     log.debug("loaded");
   }
