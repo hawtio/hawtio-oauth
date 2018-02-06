@@ -50,11 +50,13 @@ namespace GithubOAuth {
     name: 'GithubOAuthConfig',
     depends: ['HawtioOAuthConfig'],
     task: (next) => {
-      let clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
-      let clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
-      if (clientId && clientSecret) {
-        log.debug("enabled");
-        settings.enabled = true;
+      if (window['HAWTIO_OAUTH_CONFIG']) {
+        let clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+        let clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+        if (clientId && clientSecret) {
+          log.debug("enabled");
+          settings.enabled = true;
+        }
       }
       next();
     }

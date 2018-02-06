@@ -194,11 +194,13 @@ var GithubOAuth;
         name: 'GithubOAuthConfig',
         depends: ['HawtioOAuthConfig'],
         task: function (next) {
-            var clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
-            var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
-            if (clientId && clientSecret) {
-                GithubOAuth.log.debug("enabled");
-                settings.enabled = true;
+            if (window['HAWTIO_OAUTH_CONFIG']) {
+                var clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+                var clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+                if (clientId && clientSecret) {
+                    GithubOAuth.log.debug("enabled");
+                    settings.enabled = true;
+                }
             }
             next();
         }
