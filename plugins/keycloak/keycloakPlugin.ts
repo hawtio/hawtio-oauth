@@ -1,13 +1,19 @@
-/// <reference path="keycloakGlobals.ts"/>
-/// <reference path="keycloakHelpers.ts"/>
+/// <reference path="keycloak.globals.ts"/>
+/// <reference path="keycloak.helpers.ts"/>
+
 namespace HawtioKeycloak {
 
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
-  export const _module = angular.module(pluginName, []);
 
-  hawtioPluginLoader.addModule(pluginName);
+  export const hawtioKeycloakModule = angular
+    .module(pluginName, [])
+    .config(decorateUserDetails)
+    .run(configureIdleTimeout)
+    .name;
 
-  _module.config(['$provide', '$httpProvider', ($provide, $httpProvider) => {
+  function decorateUserDetails($provide: ng.IModule, $httpProvider: ng.IHttpProvider): void {
+    'ngInject';
+
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
       if (userProfile) {
         return _.merge($delegate, userProfile, {
@@ -24,13 +30,15 @@ namespace HawtioKeycloak {
 
     // only add the interceptor if we have keycloak otherwise
     // we'll get an undefined exception in the interceptor
-    if (HawtioKeycloak.keycloak) {
+    if (keycloak) {
       $httpProvider.interceptors.push(AuthInterceptorService.Factory);
     }
-  }]);
+  }
 
-  _module.run(['userDetails', 'Idle', '$rootScope', (userDetails, Idle, $rootScope) => {
-    if (HawtioKeycloak.keycloak) {
+  function configureIdleTimeout(userDetails, Idle, $rootScope): void {
+    'ngInject';
+
+    if (keycloak) {
       log.debug("Enabling idle timeout");
       Idle.watch();
 
@@ -41,7 +49,6 @@ namespace HawtioKeycloak {
       });
 
       $rootScope.$on('Keepalive', () => {
-        let keycloak = HawtioKeycloak.keycloak;
         if (keycloak) {
           keycloak.updateToken(5).success(() => {
             userDetails.token = keycloak.token;
@@ -51,7 +58,9 @@ namespace HawtioKeycloak {
     } else {
       log.debug("Not enabling idle timeout");
     }
-  }]);
+  }
+
+  hawtioPluginLoader.addModule(pluginName);
 
   hawtioPluginLoader.registerPreBootstrapTask({
     name: 'HawtioKeycloak',
@@ -63,7 +72,7 @@ namespace HawtioKeycloak {
       }
       let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
       $.getScript(keycloakJsUri).done((script, textStatus) => {
-        let keycloak = HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
+        keycloak = Keycloak(KeycloakConfig);
         keycloak.init({
           onLoad: 'login-required'
         }).success((authenticated) => {
@@ -139,5 +148,5 @@ namespace HawtioKeycloak {
   }
   AuthInterceptorService.Factory.$inject = AuthInterceptorService.$inject;
 
-  _module.requires.push("ngIdle");
+  angular.module(hawtioKeycloakModule).requires.push("ngIdle");
 }

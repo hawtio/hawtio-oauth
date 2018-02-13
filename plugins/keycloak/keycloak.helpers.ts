@@ -1,4 +1,4 @@
-/// <reference path="keycloakGlobals.ts"/>
+/// <reference path="keycloak.globals.ts"/>
 namespace HawtioKeycloak {
 
   export function doLogout() {
