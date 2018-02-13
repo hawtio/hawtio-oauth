@@ -12,6 +12,20 @@ declare namespace HawtioOAuth {
     function getOAuthToken(): any;
     function authenticatedHttpRequest(options: any): JQueryXHR;
 }
+declare namespace HawtioKeycloak {
+    const pluginName: string;
+    const log: Logging.Logger;
+    let keycloak: any;
+    let userProfile: {
+        token: any;
+    };
+}
+declare namespace HawtioKeycloak {
+    function doLogout(): void;
+}
+declare namespace HawtioKeycloak {
+    const hawtioKeycloakModule: string;
+}
 declare namespace GithubOAuth {
     const pluginName = "hawtio-oauth-github";
     const log: Logging.Logger;
@@ -52,18 +66,6 @@ declare namespace GoogleOAuth {
     function fetchUserInfo(http: any, successCallback: any, failureCallback: any): void;
 }
 declare namespace GoogleOAuth {
-    const _module: angular.IModule;
-}
-declare namespace HawtioKeycloak {
-    const pluginName = "hawtio-oauth-keycloak";
-    const log: Logging.Logger;
-    let keycloak: any;
-    let userProfile: any;
-}
-declare namespace HawtioKeycloak {
-    function doLogout(): void;
-}
-declare namespace HawtioKeycloak {
     const _module: angular.IModule;
 }
 declare namespace OSOAuth {
