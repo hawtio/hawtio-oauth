@@ -11,7 +11,7 @@ namespace HawtioKeycloak {
     .run(configureIdleTimeout)
     .name;
 
-  function decorateUserDetails($provide: ng.IModule, $httpProvider: ng.IHttpProvider): void {
+  function decorateUserDetails($provide: ng.auto.IProvideService, $httpProvider: ng.IHttpProvider): void {
     'ngInject';
 
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
