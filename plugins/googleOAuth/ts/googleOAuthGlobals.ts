@@ -1,4 +1,4 @@
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 
 namespace GoogleOAuth {
   export const pluginName = 'hawtio-oauth-google';

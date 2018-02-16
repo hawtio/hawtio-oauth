@@ -1,4 +1,4 @@
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 /// <reference path="githubHelpers.ts"/>
 namespace GithubOAuth {
 

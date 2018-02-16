@@ -1,4 +1,4 @@
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 namespace GithubOAuth {
 
   export const pluginName = 'hawtio-oauth-github';

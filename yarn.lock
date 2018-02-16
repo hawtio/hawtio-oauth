@@ -82,6 +82,12 @@
     human-date "~1.4.0"
     humanize-duration "~3.10.0"
 
+"@types/angular-idle@^1.1.31":
+  version "1.1.31"
+  resolved "https://registry.yarnpkg.com/@types/angular-idle/-/angular-idle-1.1.31.tgz#ed064d7afd0558b5ac43d0951b382f948c3f4103"
+  dependencies:
+    "@types/angular" "*"
+
 "@types/angular-route@1.3.4", "@types/angular-route@~1.3.4":
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/@types/angular-route/-/angular-route-1.3.4.tgz#10d3f7eb313fb8a4b832041f9401869803dcd4df"
@@ -2461,7 +2467,7 @@ pretty-hrtime@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/pretty-hrtime/-/pretty-hrtime-1.0.3.tgz#b7e3ea42435a4c9b2759d99e0f201eb195802ee1"
 
-process-nextick-args@^1.0.6, process-nextick-args@~2.0.0:
+process-nextick-args@1.0.7, process-nextick-args@^1.0.6, process-nextick-args@~2.0.0:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
 

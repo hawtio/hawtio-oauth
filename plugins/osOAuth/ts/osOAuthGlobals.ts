@@ -1,4 +1,4 @@
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 
 namespace OSOAuth {
   export const pluginName = 'hawtio-oauth-os';
