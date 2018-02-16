@@ -1,4 +1,5 @@
 /// <reference path="oauth.globals.ts"/>
+/// <reference path="oauth.helper.ts"/>
 
 namespace HawtioOAuth {
 
