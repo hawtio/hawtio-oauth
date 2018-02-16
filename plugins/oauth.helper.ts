@@ -4,10 +4,10 @@ namespace HawtioOAuth {
 
   export function getUserProfile() {
     if (!userProfile) {
-      activePlugin = _.find(oauthPlugins, (_module) => {
-        let p = Core.pathGet(window, [_module, 'userProfile']);
-        log.debug("Module:", _module, "userProfile:", p);
-        return p !== null && p !== undefined;
+      activePlugin = _.find(oauthPlugins, (plugin) => {
+        let profile = Core.pathGet(window, [plugin, 'userProfile']);
+        log.debug("Module:", plugin, "userProfile:", profile);
+        return profile !== null && profile !== undefined;
       });
       userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
       log.debug("Active OAuth plugin:", activePlugin);

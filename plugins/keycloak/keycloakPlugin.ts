@@ -97,13 +97,11 @@ namespace HawtioKeycloak {
               log.debug("Failed to initialize Keycloak, token unavailable");
               next();
             });
-          // end keycloak.init
         })
         .fail((response) => {
           log.debug("Error fetching keycloak adapter: ", response);
           next();
         });
-      // end $.getScript
     }
   });
 
