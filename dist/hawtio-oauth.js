@@ -1,46 +1,25 @@
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    var pluginName = 'hawtio-oauth';
-    var log = Logger.get(pluginName);
-    var _module = angular.module(pluginName, []);
-    _module.directive('hawtioUserDropdown', ['$compile', '$timeout', function ($compile, $timeout) {
-            return {
-                restrict: 'C',
-                scope: {},
-                link: function ($scope, $element, $attr) {
-                    $scope.doLogout = doLogout;
-                    $scope.userDetails = userProfile;
-                    var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-                    $timeout(function () {
-                        $element.append(el);
-                    }, 250);
-                }
-            };
-        }]);
-    hawtioPluginLoader.addModule(pluginName);
-    hawtioPluginLoader.addModule('ngIdle');
+    HawtioOAuth.pluginName = 'hawtio-oauth';
+    HawtioOAuth.log = Logger.get(HawtioOAuth.pluginName);
     HawtioOAuth.oauthPlugins = [];
-    var userProfile = undefined;
-    var activePlugin = undefined;
-    function doLogout() {
-        if (!activePlugin) {
-            return;
-        }
-        var plugin = window[activePlugin];
-        plugin.doLogout();
-    }
-    HawtioOAuth.doLogout = doLogout;
+    HawtioOAuth.userProfile = undefined;
+    HawtioOAuth.activePlugin = undefined;
+})(HawtioOAuth || (HawtioOAuth = {}));
+/// <reference path="oauth.globals.ts"/>
+var HawtioOAuth;
+(function (HawtioOAuth) {
     function getUserProfile() {
-        if (!userProfile) {
-            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (_module) {
-                var p = Core.pathGet(window, [_module, 'userProfile']);
-                log.debug("Module: ", _module, " userProfile: ", p);
-                return p !== null && p !== undefined;
+        if (!HawtioOAuth.userProfile) {
+            HawtioOAuth.activePlugin = _.find(HawtioOAuth.oauthPlugins, function (plugin) {
+                var profile = Core.pathGet(window, [plugin, 'userProfile']);
+                HawtioOAuth.log.debug("Module:", plugin, "userProfile:", profile);
+                return profile !== null && profile !== undefined;
             });
-            userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
-            log.debug("Active OAuth plugin: ", activePlugin);
+            HawtioOAuth.userProfile = Core.pathGet(window, [HawtioOAuth.activePlugin, 'userProfile']);
+            HawtioOAuth.log.debug("Active OAuth plugin:", HawtioOAuth.activePlugin);
         }
-        return userProfile;
+        return HawtioOAuth.userProfile;
     }
     HawtioOAuth.getUserProfile = getUserProfile;
     function getOAuthToken() {
@@ -62,61 +41,128 @@ var HawtioOAuth;
         }));
     }
     HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
-    // fetch oauth config
+})(HawtioOAuth || (HawtioOAuth = {}));
+/// <reference path="oauth.globals.ts"/>
+/// <reference path="oauth.helper.ts"/>
+var HawtioOAuth;
+(function (HawtioOAuth) {
+    addLogoutToUserDropdown.$inject = ["HawtioExtension", "$compile"];
+    var hawtioOAuthModule = angular
+        .module(HawtioOAuth.pluginName, ['ngIdle'])
+        .run(addLogoutToUserDropdown)
+        .name;
+    hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
+    function addLogoutToUserDropdown(HawtioExtension, $compile) {
+        'ngInject';
+        HawtioExtension.add('hawtio-user', function ($scope) {
+            $scope.doLogout = doLogout;
+            $scope.userDetails = HawtioOAuth.userProfile;
+            var template = '<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>';
+            return $compile(template)($scope);
+        });
+    }
+    HawtioOAuth.addLogoutToUserDropdown = addLogoutToUserDropdown;
+    function doLogout() {
+        if (!HawtioOAuth.activePlugin) {
+            return;
+        }
+        var plugin = window[HawtioOAuth.activePlugin];
+        plugin.doLogout();
+    }
+    /*
+     * Fetch oauth config
+     */
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'HawtioOAuthConfig',
         task: function (next) {
             $.getScript('oauth/config.js').always(next);
         }
     });
-    // global pre-bootstrap task that plugins can use to wait
-    // until all oauth plugins have been processed
-    // 
-    // OAuth plugins can add to this list via:
-    //
-    // HawtioOAuth.oauthPlugins.push(<plugin name>);
-    //
-    // and then use a named task with the same name as <plugin name>
-    //
+    /*
+     * Global pre-bootstrap task that plugins can use to wait
+     * until all oauth plugins have been processed
+     *
+     * OAuth plugins can add to this list via:
+     *
+     *   HawtioOAuth.oauthPlugins.push(<plugin name>);
+     *
+     * and then use a named task with the same name as <plugin name>
+     */
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: pluginName,
+        name: HawtioOAuth.pluginName,
         depends: HawtioOAuth.oauthPlugins,
         task: function (next) {
-            getUserProfile();
-            Logger.get(pluginName).info("All oauth plugins have executed");
+            HawtioOAuth.getUserProfile();
+            Logger.get(HawtioOAuth.pluginName).info("All oauth plugins have executed");
             next();
         }
     });
 })(HawtioOAuth || (HawtioOAuth = {}));
-/// <reference path="../includes.ts"/>
+/// <reference path="../oauth.globals.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     HawtioKeycloak.pluginName = 'hawtio-oauth-keycloak';
     HawtioKeycloak.log = Logger.get(HawtioKeycloak.pluginName);
     HawtioKeycloak.keycloak = null;
-    // used by HawtioOAuth, must have a 'token' field when set,
-    // otherwise leave null
     HawtioKeycloak.userProfile = null;
 })(HawtioKeycloak || (HawtioKeycloak = {}));
 /// <reference path="keycloak.globals.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
-    function doLogout() {
-        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
-            HawtioKeycloak.keycloak.logout();
+    var AuthInterceptor = /** @class */ (function () {
+        AuthInterceptor.$inject = ["$q", "userDetails"];
+        function AuthInterceptor($q, userDetails) {
+            'ngInject';
+            var _this = this;
+            this.$q = $q;
+            this.userDetails = userDetails;
+            this.request = function (request) {
+                // bypass for local templates
+                if (request.url.indexOf('http') !== 0) {
+                    return request;
+                }
+                var deferred = _this.$q.defer();
+                var addBearer = function () {
+                    var keycloak = HawtioKeycloak.keycloak;
+                    return keycloak.updateToken(5)
+                        .success(function () {
+                        var token = HawtioKeycloak.keycloak.token;
+                        _this.userDetails.token = token;
+                        request.headers.Authorization = 'Bearer ' + token;
+                        deferred.notify();
+                        return deferred.resolve(request);
+                    })
+                        .error(function () {
+                        HawtioKeycloak.log.error("Couldn't update token");
+                    });
+                };
+                addBearer();
+                return _this.$q.when(deferred.promise);
+            };
+            this.responseError = function (rejection) {
+                if (rejection.status === 401) {
+                    HawtioKeycloak.keycloak.logout();
+                }
+                return _this.$q.reject(rejection);
+            };
         }
-    }
-    HawtioKeycloak.doLogout = doLogout;
+        AuthInterceptor.Factory = ["$q", "userDetails", function ($q, userDetails) {
+            'ngInject';
+            return new AuthInterceptor($q, userDetails);
+        }];
+        return AuthInterceptor;
+    }());
+    HawtioKeycloak.AuthInterceptor = AuthInterceptor;
 })(HawtioKeycloak || (HawtioKeycloak = {}));
 /// <reference path="keycloak.globals.ts"/>
-/// <reference path="keycloak.helpers.ts"/>
+/// <reference path="keycloak.interceptor.ts"/>
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     decorateUserDetails.$inject = ["$provide", "$httpProvider"];
     configureIdleTimeout.$inject = ["userDetails", "Idle", "$rootScope"];
     HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
     HawtioKeycloak.hawtioKeycloakModule = angular
-        .module(HawtioKeycloak.pluginName, [])
+        .module(HawtioKeycloak.pluginName, ['ngIdle'])
         .config(decorateUserDetails)
         .run(configureIdleTimeout)
         .name;
@@ -139,7 +185,7 @@ var HawtioKeycloak;
         // only add the interceptor if we have keycloak otherwise
         // we'll get an undefined exception in the interceptor
         if (HawtioKeycloak.keycloak) {
-            $httpProvider.interceptors.push(AuthInterceptorService.Factory);
+            $httpProvider.interceptors.push(HawtioKeycloak.AuthInterceptor.Factory);
         }
     }
     function configureIdleTimeout(userDetails, Idle, $rootScope) {
@@ -174,12 +220,12 @@ var HawtioKeycloak;
                 return;
             }
             var keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
-            $.getScript(keycloakJsUri).done(function (script, textStatus) {
+            $.getScript(keycloakJsUri)
+                .done(function (script, textStatus) {
                 HawtioKeycloak.keycloak = Keycloak(KeycloakConfig);
-                HawtioKeycloak.keycloak.init({
-                    onLoad: 'login-required'
-                }).success(function (authenticated) {
-                    HawtioKeycloak.log.debug("Authenticated: ", authenticated);
+                HawtioKeycloak.keycloak.init({ onLoad: 'login-required' })
+                    .success(function (authenticated) {
+                    HawtioKeycloak.log.debug("Authenticated:", authenticated);
                     if (!authenticated) {
                         HawtioKeycloak.keycloak.login({
                             redirectUri: window.location.href,
@@ -196,63 +242,26 @@ var HawtioKeycloak;
                             next();
                         });
                     }
-                }).error(function () {
+                })
+                    .error(function () {
                     HawtioKeycloak.log.debug("Failed to initialize Keycloak, token unavailable");
                     next();
                 });
-                // end keycloak.init
             })
                 .fail(function (response) {
                 HawtioKeycloak.log.debug("Error fetching keycloak adapter: ", response);
                 next();
             });
-            // end $.getScript
         }
     });
-    var AuthInterceptorService = /** @class */ (function () {
-        function AuthInterceptorService($q, userDetails) {
-            var _this = this;
-            this.$q = $q;
-            this.userDetails = userDetails;
-            this.request = function (request) {
-                // bypass for local templates
-                if (request.url.indexOf('http') !== 0) {
-                    return request;
-                }
-                var addBearer, deferred;
-                addBearer = function () {
-                    var keycloak = HawtioKeycloak.keycloak;
-                    return keycloak.updateToken(5).success(function () {
-                        var token = HawtioKeycloak.keycloak.token;
-                        _this.userDetails.token = token;
-                        request.headers.Authorization = 'Bearer ' + token;
-                        deferred.notify();
-                        return deferred.resolve(request);
-                    }).error(function () {
-                        console.log("Couldn't update token");
-                    });
-                };
-                deferred = _this.$q.defer();
-                addBearer();
-                return _this.$q.when(deferred.promise);
-            };
-            this.responseError = function (rejection) {
-                if (rejection.status === 401) {
-                    HawtioKeycloak.keycloak.logout();
-                }
-                return _this.$q.reject(rejection);
-            };
+    function doLogout() {
+        if (HawtioKeycloak.userProfile && HawtioKeycloak.keycloak) {
+            HawtioKeycloak.keycloak.logout();
         }
-        AuthInterceptorService.Factory = function ($q, userDetails) {
-            return new AuthInterceptorService($q, userDetails);
-        };
-        AuthInterceptorService.$inject = ['$q', 'userDetails'];
-        return AuthInterceptorService;
-    }());
-    AuthInterceptorService.Factory.$inject = AuthInterceptorService.$inject;
-    angular.module(HawtioKeycloak.hawtioKeycloakModule).requires.push("ngIdle");
+    }
+    HawtioKeycloak.doLogout = doLogout;
 })(HawtioKeycloak || (HawtioKeycloak = {}));
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 var GithubOAuth;
 (function (GithubOAuth) {
     GithubOAuth.pluginName = 'hawtio-oauth-github';
@@ -313,7 +322,7 @@ var GithubOAuth;
     }
     GithubOAuth.storeSettings = storeSettings;
 })(GithubOAuth || (GithubOAuth = {}));
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 /// <reference path="githubHelpers.ts"/>
 var GithubOAuth;
 (function (GithubOAuth) {
@@ -523,7 +532,7 @@ var GithubOAuth;
             }]
     });
 })(GithubOAuth || (GithubOAuth = {}));
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 var GoogleOAuth;
 (function (GoogleOAuth) {
     GoogleOAuth.pluginName = 'hawtio-oauth-google';
@@ -797,7 +806,7 @@ var GoogleOAuth;
         }
     });
 })(GoogleOAuth || (GoogleOAuth = {}));
-/// <reference path="../../includes.ts"/>
+/// <reference path="../../oauth.globals.ts"/>
 var OSOAuth;
 (function (OSOAuth) {
     OSOAuth.pluginName = 'hawtio-oauth-os';

@@ -1,94 +1,67 @@
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    var pluginName = 'hawtio-oauth';
-    var log = Logger.get(pluginName);
-    var _module = angular.module(pluginName, []);
-    _module.directive('hawtioUserDropdown', ['$compile', '$timeout', function ($compile, $timeout) {
-            return {
-                restrict: 'C',
-                scope: {},
-                link: function ($scope, $element, $attr) {
-                    $scope.doLogout = doLogout;
-                    $scope.userDetails = userProfile;
-                    var el = $compile('<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>')($scope);
-                    $timeout(function () {
-                        $element.append(el);
-                    }, 250);
-                }
-            };
-        }]);
-    hawtioPluginLoader.addModule(pluginName);
-    hawtioPluginLoader.addModule('ngIdle');
+    HawtioOAuth.pluginName = 'hawtio-oauth';
+    HawtioOAuth.log = Logger.get(HawtioOAuth.pluginName);
     HawtioOAuth.oauthPlugins = [];
-    var userProfile = undefined;
-    var activePlugin = undefined;
+    HawtioOAuth.userProfile = undefined;
+    HawtioOAuth.activePlugin = undefined;
+})(HawtioOAuth || (HawtioOAuth = {}));
+/// <reference path="oauth.globals.ts"/>
+var HawtioOAuth;
+(function (HawtioOAuth) {
+    addLogoutToUserDropdown.$inject = ["HawtioExtension", "$compile"];
+    var hawtioOAuthModule = angular
+        .module(HawtioOAuth.pluginName, ['ngIdle'])
+        .run(addLogoutToUserDropdown)
+        .name;
+    hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
+    function addLogoutToUserDropdown(HawtioExtension, $compile) {
+        'ngInject';
+        HawtioExtension.add('hawtio-user', function ($scope) {
+            $scope.doLogout = doLogout;
+            $scope.userDetails = HawtioOAuth.userProfile;
+            var template = '<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>';
+            return $compile(template)($scope);
+        });
+    }
+    HawtioOAuth.addLogoutToUserDropdown = addLogoutToUserDropdown;
     function doLogout() {
-        if (!activePlugin) {
+        if (!HawtioOAuth.activePlugin) {
             return;
         }
-        var plugin = window[activePlugin];
+        var plugin = window[HawtioOAuth.activePlugin];
         plugin.doLogout();
     }
-    HawtioOAuth.doLogout = doLogout;
-    function getUserProfile() {
-        if (!userProfile) {
-            activePlugin = _.find(HawtioOAuth.oauthPlugins, function (_module) {
-                var p = Core.pathGet(window, [_module, 'userProfile']);
-                log.debug("Module: ", _module, " userProfile: ", p);
-                return p !== null && p !== undefined;
-            });
-            userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
-            log.debug("Active OAuth plugin: ", activePlugin);
-        }
-        return userProfile;
-    }
-    HawtioOAuth.getUserProfile = getUserProfile;
-    function getOAuthToken() {
-        var userProfile = getUserProfile();
-        if (!userProfile) {
-            return null;
-        }
-        return userProfile.token;
-    }
-    HawtioOAuth.getOAuthToken = getOAuthToken;
-    function authenticatedHttpRequest(options) {
-        return $.ajax(_.extend(options, {
-            beforeSend: function (request) {
-                var token = getOAuthToken();
-                if (token) {
-                    request.setRequestHeader('Authorization', 'Bearer ' + token);
-                }
-            }
-        }));
-    }
-    HawtioOAuth.authenticatedHttpRequest = authenticatedHttpRequest;
-    // fetch oauth config
+    /*
+     * Fetch oauth config
+     */
     hawtioPluginLoader.registerPreBootstrapTask({
         name: 'HawtioOAuthConfig',
         task: function (next) {
             $.getScript('oauth/config.js').always(next);
         }
     });
-    // global pre-bootstrap task that plugins can use to wait
-    // until all oauth plugins have been processed
-    // 
-    // OAuth plugins can add to this list via:
-    //
-    // HawtioOAuth.oauthPlugins.push(<plugin name>);
-    //
-    // and then use a named task with the same name as <plugin name>
-    //
+    /*
+     * Global pre-bootstrap task that plugins can use to wait
+     * until all oauth plugins have been processed
+     *
+     * OAuth plugins can add to this list via:
+     *
+     *   HawtioOAuth.oauthPlugins.push(<plugin name>);
+     *
+     * and then use a named task with the same name as <plugin name>
+     */
     hawtioPluginLoader.registerPreBootstrapTask({
-        name: pluginName,
+        name: HawtioOAuth.pluginName,
         depends: HawtioOAuth.oauthPlugins,
         task: function (next) {
             getUserProfile();
-            Logger.get(pluginName).info("All oauth plugins have executed");
+            Logger.get(HawtioOAuth.pluginName).info("All oauth plugins have executed");
             next();
         }
     });
 })(HawtioOAuth || (HawtioOAuth = {}));
-/// <reference path="../plugins/includes.ts"/>
+/// <reference path="../plugins/oauth.module.ts"/>
 var Example;
 (function (Example) {
     Example.pluginName = "hawtio-example-oauth";
@@ -224,5 +197,5 @@ var Example;
     hawtioPluginLoader.addModule(Example.pluginName);
 })(Example || (Example = {}));
 
-angular.module('hawtio-oauth-test-templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('test-plugins/example/github.html','<div  ng-controller="Example.Page2Controller">\n  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">\n    <div class="col-md-12">\n      <div class="alert alert-warning">\n        No GitHub credentials available, <a href="" ng-click="prefs.goto(\'Github\')">configure your GitHub account</a>\n      </div>\n    </div>\n  </div>\n  <div class="row" ng-if="oauth.hasToken()">\n    <div class="col-md-12">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n');
-$templateCache.put('test-plugins/example/page1.html','<div class="row">\n  <div class="col-md-12" ng-controller="Example.Page1Controller">\n    <button class="btn btn-primary pull-right" ng-click="userDetails.logout()">Logout</button>\n    <h1>User Details</h1>\n    <pre>{{userDetailsStr}}</pre>\n  </div>\n</div>\n');}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");
+angular.module('hawtio-oauth-test-templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('test-plugins/example/github.html','<div ng-controller="Example.Page2Controller">\n  <div class="row" ng-if="!oauth.hasToken() || data.status === 403">\n    <div class="col-md-12">\n      <div class="alert alert-warning">\n        No GitHub credentials available, <a href="" ng-click="prefs.goto(\'Github\')">configure your GitHub account</a>\n      </div>\n    </div>\n  </div>\n  <div class="row" ng-if="oauth.hasToken()">\n    <div class="col-md-12">\n      <pre>{{data | json}}</pre>\n    </div>\n  </div>\n</div>\n');
+$templateCache.put('test-plugins/example/page1.html','<div ng-controller="Example.Page1Controller">\n  <h1>User Details</h1>\n  <pre>{{userDetailsStr}}</pre>\n</div>\n');}]); hawtioPluginLoader.addModule("hawtio-oauth-test-templates");
