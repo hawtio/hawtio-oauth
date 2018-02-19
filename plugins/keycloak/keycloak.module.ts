@@ -17,11 +17,7 @@ namespace HawtioKeycloak {
     $provide.decorator('userDetails', ['$delegate', ($delegate) => {
       if (userProfile) {
         return _.merge($delegate, userProfile, {
-          logout: () => {
-            if (userProfile && keycloak) {
-              keycloak.logout();
-            }
-          }
+          logout: () => doLogout()
         });
       } else {
         return $delegate;
@@ -32,6 +28,12 @@ namespace HawtioKeycloak {
     // we'll get an undefined exception in the interceptor
     if (keycloak) {
       $httpProvider.interceptors.push(AuthInterceptor.Factory);
+    }
+  }
+
+  export function doLogout() {
+    if (userProfile && keycloak) {
+      keycloak.logout();
     }
   }
 
@@ -73,41 +75,39 @@ namespace HawtioKeycloak {
       let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
       $.getScript(keycloakJsUri)
         .done((script, textStatus) => {
-          keycloak = Keycloak(KeycloakConfig);
-          keycloak.init({ onLoad: 'login-required' })
-            .success((authenticated) => {
-              log.debug("Authenticated:", authenticated);
-              if (!authenticated) {
-                keycloak.login({
-                  redirectUri: window.location.href,
-                });
-              } else {
-                keycloak.loadUserProfile()
-                  .success((profile) => {
-                    userProfile = profile;
-                    userProfile.token = keycloak.token;
-                    next();
-                  }).error(() => {
-                    log.debug("Failed to load user profile");
-                    next();
-                  });
-              }
-            })
-            .error(() => {
-              log.debug("Failed to initialize Keycloak, token unavailable");
-              next();
-            });
+          initKeycloak(next);
         })
         .fail((response) => {
-          log.debug("Error fetching keycloak adapter: ", response);
+          log.debug("Error fetching keycloak adapter:", response);
           next();
         });
     }
   });
 
-  export function doLogout() {
-    if (userProfile && keycloak) {
-      keycloak.logout();
-    }
+  function initKeycloak(callback: () => void): void {
+    keycloak = Keycloak(KeycloakConfig);
+    keycloak.init({ onLoad: 'login-required' })
+      .success((authenticated) => {
+        log.debug("Authenticated:", authenticated);
+        if (!authenticated) {
+          keycloak.login({
+            redirectUri: window.location.href,
+          });
+        } else {
+          keycloak.loadUserProfile()
+            .success((profile) => {
+              userProfile = profile;
+              userProfile.token = keycloak.token;
+              callback();
+            }).error(() => {
+              log.debug("Failed to load user profile");
+              callback();
+            });
+        }
+      })
+      .error(() => {
+        log.debug("Failed to initialize Keycloak, token unavailable");
+        callback();
+      });
   }
 }

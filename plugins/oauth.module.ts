@@ -12,24 +12,16 @@ namespace HawtioOAuth {
 
   export function addLogoutToUserDropdown(
     HawtioExtension: Core.HawtioExtension,
-    $compile: ng.ICompileService): void {
+    $compile: ng.ICompileService,
+    userDetails: Core.UserDetails): void {
     'ngInject';
 
     HawtioExtension.add('hawtio-user', ($scope) => {
-      $scope.doLogout = doLogout;
-      $scope.userDetails = userProfile;
+      $scope.userDetails = userDetails;
       let template =
-        '<li ng-show="userDetails.token"><a href="" ng-click="doLogout()">Logout</a></li>';
+        '<li ng-show="userDetails"><a href="" ng-click="userDetails.logout()">Logout</a></li>';
       return $compile(template)($scope);
     });
-  }
-
-  function doLogout() {
-    if (!activePlugin) {
-      return;
-    }
-    let plugin = window[activePlugin];
-    plugin.doLogout();
   }
 
   /*
@@ -57,7 +49,7 @@ namespace HawtioOAuth {
     depends: oauthPlugins,
     task: (next) => {
       getUserProfile();
-      Logger.get(pluginName).info("All oauth plugins have executed");
+      log.info("All oauth plugins have executed");
       next();
     }
   });
