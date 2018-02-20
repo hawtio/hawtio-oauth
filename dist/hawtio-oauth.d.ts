@@ -20,7 +20,7 @@ declare namespace HawtioOAuth {
     function authenticatedHttpRequest(options: any): JQueryXHR;
 }
 declare namespace HawtioOAuth {
-    function addLogoutToUserDropdown(HawtioExtension: Core.HawtioExtension, $compile: ng.ICompileService): void;
+    function addLogoutToUserDropdown(HawtioExtension: Core.HawtioExtension, $compile: ng.ICompileService, userDetails: Core.UserDetails): void;
 }
 declare namespace HawtioKeycloak {
     const pluginName: string;
