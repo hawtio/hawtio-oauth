@@ -32,14 +32,12 @@ namespace GithubOAuth {
       getHeader: () => {
         return getAuthHeader(self.settings);
       },
-      getPreferencesLink: () => {
-
-      }
+      getPreferencesLink: () => { }
     }
     return self;
   }]);
 
-  _module.run(['preferencesRegistry', (preferencesRegistry) => {
+  _module.run(['preferencesRegistry', (preferencesRegistry: Core.PreferencesRegistry) => {
     preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"), () => { return settings.enabled; });
     log.debug("loaded");
   }]);

@@ -50,13 +50,16 @@ namespace Example {
   */
 
   // Standard Keycloak server
-  hawtioPluginLoader.registerPreBootstrapTask((next) => {
-    KeycloakConfig = {
-      clientId: 'hawtio-client',
-      url: 'http://localhost:18080/auth',
-      realm: 'hawtio-demo'
-    };
-    next();
+  hawtioPluginLoader.registerPreBootstrapTask({
+    name: 'ExampleKeycloakConfig',
+    task: (next) => {
+      window['KeycloakConfig'] = {
+        clientId: 'hawtio-client',
+        url: 'http://localhost:18080/auth',
+        realm: 'hawtio-demo'
+      };
+      next();
+    }
   }, true);
 
   // openshift

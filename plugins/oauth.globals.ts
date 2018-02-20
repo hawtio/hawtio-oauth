@@ -16,7 +16,4 @@ namespace HawtioOAuth {
 
   export const oauthPlugins: string[] = [];
 
-  export let userProfile: any = undefined;
-  export let activePlugin: string = undefined;
-
 }

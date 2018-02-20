@@ -2,20 +2,27 @@
 
 namespace HawtioOAuth {
 
-  export function getUserProfile() {
+  let userProfile: any = null;
+
+  export function getUserProfile(): any {
     if (!userProfile) {
-      activePlugin = _.find(oauthPlugins, (plugin) => {
-        let profile = Core.pathGet(window, [plugin, 'userProfile']);
-        log.debug("Module:", plugin, "userProfile:", profile);
-        return profile !== null && profile !== undefined;
-      });
-      userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
-      log.debug("Active OAuth plugin:", activePlugin);
+      log.debug("Finding 'userProfile' from the active OAuth plugin");
+      findUserProfile();
     }
     return userProfile;
   }
 
-  export function getOAuthToken() {
+  function findUserProfile(): void {
+    let activePlugin = _.find(oauthPlugins, (plugin) => {
+      let profile = Core.pathGet(window, [plugin, 'userProfile']);
+      log.debug("Module:", plugin, "userProfile:", profile);
+      return !_.isNil(profile);
+    });
+    userProfile = Core.pathGet(window, [activePlugin, 'userProfile']);
+    log.debug("Active OAuth plugin:", activePlugin);
+  }
+
+  function getOAuthToken(): string {
     let userProfile = getUserProfile();
     if (!userProfile) {
       return null;
@@ -23,7 +30,7 @@ namespace HawtioOAuth {
     return userProfile.token;
   }
 
-  export function authenticatedHttpRequest(options) {
+  export function authenticatedHttpRequest(options): JQueryXHR {
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
         let token = getOAuthToken();

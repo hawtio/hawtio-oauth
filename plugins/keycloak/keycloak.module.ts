@@ -5,11 +5,10 @@ namespace HawtioKeycloak {
 
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
 
-  export const hawtioKeycloakModule = angular
+  angular
     .module(pluginName, ['ngIdle'])
     .config(decorateUserDetails)
-    .run(configureIdleTimeout)
-    .name;
+    .run(configureIdleTimeout);
 
   function decorateUserDetails($provide: ng.auto.IProvideService, $httpProvider: ng.IHttpProvider): void {
     'ngInject';
@@ -62,27 +61,25 @@ namespace HawtioKeycloak {
     }
   }
 
-  hawtioPluginLoader.addModule(pluginName);
-
-  hawtioPluginLoader.registerPreBootstrapTask({
-    name: 'HawtioKeycloak',
-    task: (next) => {
-      if (!window['KeycloakConfig']) {
-        log.debug("Keycloak disabled");
-        next();
-        return;
-      }
-      let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
-      $.getScript(keycloakJsUri)
-        .done((script, textStatus) => {
-          initKeycloak(next);
-        })
-        .fail((response) => {
-          log.debug("Error fetching keycloak adapter:", response);
+  hawtioPluginLoader
+    .addModule(pluginName)
+    .registerPreBootstrapTask({
+      name: 'HawtioKeycloak',
+      task: (next) => {
+        if (!window['KeycloakConfig']) {
+          log.debug("Keycloak disabled");
           next();
-        });
-    }
-  });
+          return;
+        }
+        let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
+        $.getScript(keycloakJsUri)
+          .done((script, textStatus) => initKeycloak(next))
+          .fail((response) => {
+            log.warn("Error fetching keycloak adapter:", response);
+            next();
+          });
+      }
+    });
 
   function initKeycloak(callback: () => void): void {
     keycloak = Keycloak(KeycloakConfig);
@@ -106,7 +103,7 @@ namespace HawtioKeycloak {
         }
       })
       .error(() => {
-        log.debug("Failed to initialize Keycloak, token unavailable");
+        log.warn("Failed to initialize Keycloak, token unavailable");
         callback();
       });
   }

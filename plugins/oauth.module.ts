@@ -1,10 +1,19 @@
-/// <reference path="oauth.globals.ts"/>
 /// <reference path="oauth.helper.ts"/>
+/// <reference path="github/ts/githubPlugin.ts"/>
+/// <reference path="googleOAuth/ts/googleOAuthPlugin.ts"/>
+/// <reference path="osOAuth/ts/osOAuthPlugin.ts"/>
+/// <reference path="keycloak/keycloak.module.ts"/>
 
 namespace HawtioOAuth {
 
   const hawtioOAuthModule = angular
-    .module(pluginName, ['ngIdle'])
+    .module(pluginName, [
+      'ngIdle',
+      GithubOAuth.pluginName,
+      GoogleOAuth.pluginName,
+      HawtioKeycloak.pluginName,
+      OSOAuth.pluginName
+    ])
     .run(addLogoutToUserDropdown)
     .name;
 
@@ -45,11 +54,11 @@ namespace HawtioOAuth {
    * and then use a named task with the same name as <plugin name>
    */
   hawtioPluginLoader.registerPreBootstrapTask({
-    name: pluginName,
+    name: 'HawtioOAuthBootstrap',
     depends: oauthPlugins,
     task: (next) => {
       getUserProfile();
-      log.info("All oauth plugins have executed");
+      log.info("All OAuth plugins have been executed:", oauthPlugins);
       next();
     }
   });
