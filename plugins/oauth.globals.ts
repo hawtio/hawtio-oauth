@@ -1,7 +1,3 @@
-// Variables for keycloak config and the keycloak object
-declare let KeycloakConfig;
-declare let Keycloak;
-
 // variable for getting openshift oauth config from
 declare let OSOAuthConfig;
 declare let GoogleOAuthConfig;

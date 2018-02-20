@@ -53,7 +53,7 @@ namespace Example {
   hawtioPluginLoader.registerPreBootstrapTask({
     name: 'ExampleKeycloakConfig',
     task: (next) => {
-      window['KeycloakConfig'] = {
+      HawtioKeycloak.config = {
         clientId: 'hawtio-client',
         url: 'http://localhost:18080/auth',
         realm: 'hawtio-demo'

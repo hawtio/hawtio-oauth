@@ -18,9 +18,8 @@ namespace HawtioKeycloak {
         return _.merge($delegate, userProfile, {
           logout: () => doLogout()
         });
-      } else {
-        return $delegate;
       }
+      return $delegate;
     }]);
 
     // only add the interceptor if we have keycloak otherwise
@@ -30,7 +29,7 @@ namespace HawtioKeycloak {
     }
   }
 
-  export function doLogout() {
+  function doLogout() {
     if (userProfile && keycloak) {
       keycloak.logout();
     }
@@ -65,45 +64,46 @@ namespace HawtioKeycloak {
     .addModule(pluginName)
     .registerPreBootstrapTask({
       name: 'HawtioKeycloak',
-      task: (next) => {
-        if (!window['KeycloakConfig']) {
-          log.debug("Keycloak disabled");
-          next();
-          return;
-        }
-        let keycloakJsUri = new URI(KeycloakConfig.url).segment('js/keycloak.js').toString();
-        $.getScript(keycloakJsUri)
-          .done((script, textStatus) => initKeycloak(next))
-          .fail((response) => {
-            log.warn("Error fetching keycloak adapter:", response);
-            next();
-          });
-      }
+      task: (next) => loadKeycloakJs(next)
     });
 
+  function loadKeycloakJs(callback: () => void): void {
+    if (!config) {
+      log.debug("Keycloak disabled");
+      callback();
+      return;
+    }
+    let keycloakJsUri = new URI(config.url).segment('js/keycloak.js').toString();
+    $.getScript(keycloakJsUri)
+      .done((script, textStatus) => initKeycloak(callback))
+      .fail((response) => {
+        log.warn("Error fetching keycloak adapter:", response);
+        callback();
+      });
+  }
+
   function initKeycloak(callback: () => void): void {
-    keycloak = Keycloak(KeycloakConfig);
+    keycloak = Keycloak(config);
     keycloak.init({ onLoad: 'login-required' })
       .success((authenticated) => {
         log.debug("Authenticated:", authenticated);
         if (!authenticated) {
-          keycloak.login({
-            redirectUri: window.location.href,
-          });
-        } else {
-          keycloak.loadUserProfile()
-            .success((profile) => {
-              userProfile = profile;
-              userProfile.token = keycloak.token;
-              callback();
-            }).error(() => {
-              log.debug("Failed to load user profile");
-              callback();
-            });
+          keycloak.login({ redirectUri: window.location.href });
+          return;
         }
+        keycloak.loadUserProfile()
+          .success((profile) => {
+            userProfile = profile;
+            userProfile.token = keycloak.token;
+            callback();
+          })
+          .error(() => {
+            log.debug("Failed to load user profile");
+            callback();
+          });
       })
-      .error(() => {
-        log.warn("Failed to initialize Keycloak, token unavailable");
+      .error((error) => {
+        log.warn("Failed to initialize Keycloak, token unavailable", error);
         callback();
       });
   }

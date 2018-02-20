@@ -9,10 +9,10 @@ In either case these plugins need to be configured at application bootstrap.
 
 ## Keycloak
 
-Simply create a KeycloakConfig at bootstrap:
+Simply create a `HawtioKeycloak.config` at bootstrap:
 
     hawtioPluginLoader.registerPreBootstrapTask((next) => {
-      KeycloakConfig = {
+      HawtioKeycloak.config = {
         clientId: 'hawtio-client',
         url: 'http://localhost:8080/auth',
         realm: 'hawtio-demo' 
@@ -20,7 +20,7 @@ Simply create a KeycloakConfig at bootstrap:
       next();
     }, true);
 
-The `KeycloakConfig` accepts all the parameters that the official Keycloak JavaScript adapter supports.
+The `HawtioKeycloak.config` accepts all the parameters that the official Keycloak JavaScript adapter supports.
 
 ## OpenShift
 
