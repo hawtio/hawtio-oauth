@@ -1018,7 +1018,7 @@ var OSOAuth;
                     obtainedAt: fragmentParams.obtainedAt || 0
                 };
                 var uri = void 0;
-                if (openshiftConfig.master_uri) {
+                if (openshiftConfig && openshiftConfig.master_uri) {
                     uri = new URI(openshiftConfig.master_uri);
                     uri.segment('oapi/v1/users/~');
                 }
