@@ -28,7 +28,8 @@ var config = {
   dts: 'hawtio-oauth.d.ts',
   testJs: 'hawtio-oauth-test.js',
   tsProject: plugins.typescript.createProject('tsconfig.json'),
-  testTsProject: plugins.typescript.createProject('tsconfig.json')
+  testTsProject: plugins.typescript.createProject('tsconfig.json'),
+  sourceMap: argv.sourcemap
 };
 
 gulp.task('clean-defs', function() {
@@ -37,10 +38,12 @@ gulp.task('clean-defs', function() {
 
 gulp.task('example-tsc', ['tsc'], function() {
   var tsResult = gulp.src(config.testTs)
+    .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.init()))
     .pipe(config.testTsProject());
 
     return tsResult.js
         .pipe(plugins.ngAnnotate())
+        .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.write()))
         .pipe(plugins.concat('test-compiled.js'))
         .pipe(gulp.dest('.'));
 });
@@ -69,11 +72,13 @@ gulp.task('example-clean', ['example-concat', 'clean'], function() {
 
 gulp.task('tsc', ['clean-defs'], function() {
   var tsResult = gulp.src(config.ts)
+    .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.init()))
     .pipe(config.tsProject());
 
   return eventStream.merge(
     tsResult.js
       .pipe(plugins.ngAnnotate())
+      .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.write()))
       .pipe(gulp.dest('.')),
     tsResult.dts
       .pipe(plugins.rename(config.dts))

@@ -61,6 +61,14 @@ The application is available at [http://0.0.0.0:9000](http://0.0.0.0:9000). If y
 
 Whenever the build completes the compiled `.js` file will be put into the `dist/` directory.  Don't forget to first do a `yarn build` before committing changes!
 
+### Turn on source maps generation for debugging TypeScript
+
+If you want to debug `.ts` using a browser developer tool such as Chrome DevTools, pass the `--sourcemap` flag:
+
+    yarn start --sourcemap
+
+Do not use this flag when you are committing the compiled `.js` file, as it embeds source maps to the output file. Use this flag only during development.
+
 ### Keycloak setup for development
 
 You can import the realm sample file located in [test-plugins/hawtio-demo-realm.json](test-plugins/hawtio-demo-realm.json) into Keycloak. To do that, start Keycloak and select "Add Realm" and then select the sample JSON file. Alternatively, you can import the file automatically on the first boot:
