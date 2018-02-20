@@ -1017,8 +1017,15 @@ var OSOAuth;
                     type: fragmentParams.token_type,
                     obtainedAt: fragmentParams.obtainedAt || 0
                 };
-                var uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-                uri.path('/oapi/v1/users/~');
+                var uri = void 0;
+                if (openshiftConfig.master_uri) {
+                    uri = new URI(openshiftConfig.master_uri);
+                    uri.segment('oapi/v1/users/~');
+                }
+                else {
+                    uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+                    uri.path('/oapi/v1/users/~');
+                }
                 keepaliveUri = uri.toString();
                 OSOAuth.userProfile = tmp_1;
                 $.ajax({
