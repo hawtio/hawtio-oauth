@@ -102,8 +102,14 @@ namespace OSOAuth {
           type: fragmentParams.token_type,
           obtainedAt: fragmentParams.obtainedAt || 0
         }
-        let uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-        uri.path('/oapi/v1/users/~');
+        let uri;
+        if (openshiftConfig && openshiftConfig.master_uri) {
+          uri = new URI(openshiftConfig.master_uri);
+          uri.segment('oapi/v1/users/~');
+        } else {
+          uri = new URI(OSOAuthConfig.oauth_authorize_uri);
+          uri.path('/oapi/v1/users/~');
+        }
         keepaliveUri = uri.toString();
         userProfile = tmp;
         $.ajax({
