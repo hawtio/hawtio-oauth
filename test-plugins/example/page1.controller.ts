@@ -1,11 +1,13 @@
 namespace Example {
 
-  export function page1Controller($scope, userDetails) {
+  export function page1Controller($scope, userDetails: Core.UserDetails): void {
     'ngInject';
-    log.debug("userDetails: ", userDetails);
-    $scope.userDetails = userDetails;
-    $scope.userDetailsStr = angular.toJson(userDetails, true);
-    $scope.target = "World!";
+    log.debug("userDetails:", userDetails);
+    $scope.userDetails = angular.toJson({
+      username: userDetails.username,
+      password: '********',
+      token: userDetails.token
+    }, true);
   }
 
 }

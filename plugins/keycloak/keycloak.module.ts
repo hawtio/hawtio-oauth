@@ -7,57 +7,62 @@ namespace HawtioKeycloak {
 
   angular
     .module(pluginName, ['ngIdle'])
-    .config(decorateUserDetails)
+    .config(applyAuthInterceptor)
+    .run(loginUserDetails)
     .run(configureIdleTimeout);
 
-  function decorateUserDetails($provide: ng.auto.IProvideService, $httpProvider: ng.IHttpProvider): void {
+  function applyAuthInterceptor($provide: ng.auto.IProvideService,
+    $httpProvider: ng.IHttpProvider): void {
     'ngInject';
-
-    $provide.decorator('userDetails', ['$delegate', ($delegate) => {
-      if (userProfile) {
-        return _.merge($delegate, userProfile, {
-          logout: () => doLogout()
-        });
-      }
-      return $delegate;
-    }]);
-
     // only add the interceptor if we have keycloak otherwise
     // we'll get an undefined exception in the interceptor
     if (keycloak) {
+      log.debug("Applying AuthInterceptor to $http");
       $httpProvider.interceptors.push(AuthInterceptor.Factory);
     }
   }
 
-  function doLogout() {
-    if (userProfile && keycloak) {
-      keycloak.logout();
-    }
-  }
-
-  function configureIdleTimeout(userDetails: Core.UserDetails, Idle: ng.idle.IIdleService, $rootScope): void {
+  function loginUserDetails(userDetails: Core.UserDetails, postLogoutTasks: Core.Tasks): void {
     'ngInject';
 
-    if (keycloak) {
-      log.debug("Enabling idle timeout");
-      Idle.watch();
-
-      $rootScope.$on('IdleTimeout', () => {
-        log.debug("Idle timeout triggered");
-        // let the end application handle this event
-        // userDetails.logout();
-      });
-
-      $rootScope.$on('Keepalive', () => {
-        if (keycloak) {
-          keycloak.updateToken(5).success(() => {
-            userDetails.token = keycloak.token;
-          });
-        }
-      });
-    } else {
-      log.debug("Not enabling idle timeout");
+    if (!keycloak || !userProfile) {
+      return;
     }
+
+    userDetails.login(userProfile.username, null, userProfile.token);
+
+    log.debug("Register 'LogoutKeycloak' to postLogoutTasks");
+    postLogoutTasks.addTask('LogoutKeycloak', () => {
+      log.info("Log out Keycloak");
+      keycloak.logout();
+    });
+  }
+
+  function configureIdleTimeout(userDetails: Core.UserDetails, Idle: ng.idle.IIdleService,
+    $rootScope: ng.IRootScopeService): void {
+    'ngInject';
+
+    if (!keycloak) {
+      log.debug("Not enabling idle timeout");
+      return;
+    }
+
+    log.debug("Enabling idle timeout");
+    Idle.watch();
+
+    $rootScope.$on('IdleTimeout', () => {
+      log.debug("Idle timeout triggered");
+      // let the end application handle this event
+      // userDetails.logout();
+    });
+
+    $rootScope.$on('Keepalive', () => {
+      if (keycloak) {
+        keycloak.updateToken(5).success(() => {
+          userDetails.token = keycloak.token;
+        });
+      }
+    });
   }
 
   hawtioPluginLoader
