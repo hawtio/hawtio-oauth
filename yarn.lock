@@ -25,9 +25,9 @@
   dependencies:
     "@types/jquery" "~2.0.46"
 
-"@hawtio/core@3.2.1", "@hawtio/core@3.2.3", "@hawtio/core@3.2.7", "@hawtio/core@~3.0.9", "@hawtio/core@~3.1.0":
-  version "3.2.7"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-3.2.7.tgz#d0889a9c3484a23f3c31eb1b68f020c00177426c"
+"@hawtio/core@3.2.1", "@hawtio/core@3.2.12", "@hawtio/core@3.2.3", "@hawtio/core@~3.0.9", "@hawtio/core@~3.1.0":
+  version "3.2.12"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-3.2.12.tgz#8284bed7b2d2bbd8fdf1934c0ce91d6319361b59"
   dependencies:
     "@hawtio/core-dts" "3.0.18"
     "@types/angular" "1.6.39"
@@ -90,11 +90,11 @@
     codemirror "5.33.0"
     js-beautify "1.7.5"
 
-"@hawtio/utilities@3.2.0", "@hawtio/utilities@~3.0.8":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@hawtio/utilities/-/utilities-3.2.0.tgz#31506054856fdd3013ab3e4c8dadbcb55f599ef9"
+"@hawtio/utilities@3.2.0", "@hawtio/utilities@3.2.2", "@hawtio/utilities@~3.0.8":
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/@hawtio/utilities/-/utilities-3.2.2.tgz#b9b30194d135d7af85af3f87f554f12d47e01965"
   dependencies:
-    "@hawtio/core" "3.2.1"
+    "@hawtio/core" "3.2.12"
     angular-file-upload "~2.5.0"
     human-date "~1.4.0"
     humanize-duration "~3.10.0"
