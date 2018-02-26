@@ -35,7 +35,7 @@ Very similar to Keycloak, except you initialize the OSOAuthConfig object with th
       next();
     }, true);
 
-Note in either case we need to pass 'true' to `hawtioPluginLoader.registerPreBootstrapTask` so that it's added to the start of the bootstrap queue.
+Note in either case we need to pass `true` to `hawtioPluginLoader.registerPreBootstrapTask` so that it's added to the start of the bootstrap queue.
 
 In general for OAuth we want to establish the user's credentials at app bootstrap, as many services tend to need them to access backend services.
 

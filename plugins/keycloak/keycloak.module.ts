@@ -1,5 +1,6 @@
 /// <reference path="keycloak.globals.ts"/>
 /// <reference path="keycloak.interceptor.ts"/>
+/// <reference path="keycloak.service.ts"/>
 
 namespace HawtioKeycloak {
 
@@ -8,24 +9,33 @@ namespace HawtioKeycloak {
   angular
     .module(pluginName, ['ngIdle'])
     .config(applyAuthInterceptor)
+    .factory('keycloakService', () => new KeycloakService(isKeycloakEnabled(), keycloak))
     .run(loginUserDetails)
     .run(configureIdleTimeout);
+
+  function isKeycloakEnabled(): boolean {
+    if (keycloak && userProfile) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   function applyAuthInterceptor($provide: ng.auto.IProvideService,
     $httpProvider: ng.IHttpProvider): void {
     'ngInject';
     // only add the interceptor if we have keycloak otherwise
     // we'll get an undefined exception in the interceptor
-    if (keycloak) {
+    if (isKeycloakEnabled()) {
       log.debug("Applying AuthInterceptor to $http");
       $httpProvider.interceptors.push(AuthInterceptor.Factory);
     }
   }
 
-  function loginUserDetails(userDetails: Core.UserDetails, postLogoutTasks: Core.Tasks): void {
+  function loginUserDetails(userDetails: Core.AuthService, postLogoutTasks: Core.Tasks): void {
     'ngInject';
 
-    if (!keycloak || !userProfile) {
+    if (!isKeycloakEnabled()) {
       return;
     }
 
@@ -38,11 +48,11 @@ namespace HawtioKeycloak {
     });
   }
 
-  function configureIdleTimeout(userDetails: Core.UserDetails, Idle: ng.idle.IIdleService,
+  function configureIdleTimeout(userDetails: Core.AuthService, Idle: ng.idle.IIdleService,
     $rootScope: ng.IRootScopeService): void {
     'ngInject';
 
-    if (!keycloak) {
+    if (!isKeycloakEnabled()) {
       log.debug("Not enabling idle timeout");
       return;
     }

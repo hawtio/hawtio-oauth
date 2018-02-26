@@ -22,7 +22,7 @@ namespace HawtioOAuth {
   export function addLogoutToUserDropdown(
     HawtioExtension: Core.HawtioExtension,
     $compile: ng.ICompileService,
-    userDetails: Core.UserDetails): void {
+    userDetails: Core.AuthService): void {
     'ngInject';
 
     HawtioExtension.add('hawtio-user', ($scope) => {

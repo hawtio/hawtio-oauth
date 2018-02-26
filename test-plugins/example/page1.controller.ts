@@ -1,6 +1,6 @@
 namespace Example {
 
-  export function page1Controller($scope, userDetails: Core.UserDetails): void {
+  export function page1Controller($scope, userDetails: Core.AuthService): void {
     'ngInject';
     log.debug("userDetails:", userDetails);
     $scope.userDetails = angular.toJson({

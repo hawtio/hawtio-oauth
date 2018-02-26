@@ -6,12 +6,12 @@ namespace HawtioKeycloak {
 
     private keycloak: Keycloak.KeycloakInstance = HawtioKeycloak.keycloak;
 
-    static Factory($q: ng.IQService, userDetails: Core.UserDetails) {
+    static Factory($q: ng.IQService, userDetails: Core.AuthService) {
       'ngInject';
       return new AuthInterceptor($q, userDetails);
     }
 
-    constructor(private $q: ng.IQService, private userDetails: Core.UserDetails) {
+    constructor(private $q: ng.IQService, private userDetails: Core.AuthService) {
       'ngInject';
     }
 
