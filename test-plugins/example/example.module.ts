@@ -55,7 +55,7 @@ namespace Example {
     task: (next) => {
       HawtioKeycloak.config = {
         clientId: 'hawtio-client',
-        url: 'http://localhost:18080/auth',
+        url: 'http://localhost:8080/auth',
         realm: 'hawtio-demo'
       };
       next();
