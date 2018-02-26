@@ -1,5 +1,4 @@
 /// <reference path="../oauth.globals.ts"/>
-/// <reference path="../../node_modules/keycloak-js/dist/keycloak.d.ts"/>
 
 namespace HawtioKeycloak {
 

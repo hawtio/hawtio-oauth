@@ -17,7 +17,7 @@ var config = {
   proxyPort: argv.port || 8181,
   targetPath: argv.path || '/jolokia',
   logLevel: argv.debug ? logger.DEBUG : logger.INFO,
-  ts: ['plugins/**/*.ts'],
+  ts: ['plugins/**/*.ts', 'vendor/**/*.ts'],
   testTs: ['test-plugins/**/*.ts'],
   templates: ['plugins/**/*.html', 'plugins/**/*.md'],
   testTemplates: ['test-plugins/**/*.html'],
