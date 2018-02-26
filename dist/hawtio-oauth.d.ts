@@ -1,9 +1,6 @@
 /// <reference types="jquery" />
-/// <reference types="core" />
 /// <reference types="angular" />
-/// <reference types="utilities" />
-declare let KeycloakConfig: any;
-declare let Keycloak: any;
+/// <reference types="core" />
 declare let OSOAuthConfig: any;
 declare let GoogleOAuthConfig: any;
 declare let HAWTIO_OAUTH_CONFIG: any;
@@ -11,39 +8,10 @@ declare namespace HawtioOAuth {
     const pluginName = "hawtio-oauth";
     const log: Logging.Logger;
     const oauthPlugins: string[];
-    let userProfile: any;
-    let activePlugin: string;
 }
 declare namespace HawtioOAuth {
     function getUserProfile(): any;
-    function getOAuthToken(): any;
     function authenticatedHttpRequest(options: any): JQueryXHR;
-}
-declare namespace HawtioOAuth {
-    function addLogoutToUserDropdown(HawtioExtension: Core.HawtioExtension, $compile: ng.ICompileService, userDetails: Core.UserDetails): void;
-}
-declare namespace HawtioKeycloak {
-    const pluginName: string;
-    const log: Logging.Logger;
-    let keycloak: any;
-    type UserProfile = {
-        token: string;
-    };
-    let userProfile: UserProfile;
-}
-declare namespace HawtioKeycloak {
-    class AuthInterceptor {
-        private $q;
-        private userDetails;
-        static Factory($q: ng.IQService, userDetails: Core.UserDetails): AuthInterceptor;
-        constructor($q: ng.IQService, userDetails: Core.UserDetails);
-        request: (request: any) => angular.IPromise<any>;
-        responseError: (rejection: any) => angular.IPromise<any>;
-    }
-}
-declare namespace HawtioKeycloak {
-    const hawtioKeycloakModule: string;
-    function doLogout(): void;
 }
 declare namespace GithubOAuth {
     const pluginName = "hawtio-oauth-github";
@@ -58,8 +26,6 @@ declare namespace GithubOAuth {
 }
 declare namespace GithubOAuth {
     const _module: angular.IModule;
-}
-declare namespace GithubOAuth {
 }
 declare namespace GoogleOAuth {
     const pluginName = "hawtio-oauth-google";
@@ -108,4 +74,51 @@ declare namespace OSOAuth {
 }
 declare namespace OSOAuth {
     const _module: angular.IModule;
+}
+declare namespace HawtioKeycloak {
+    type UserProfile = Keycloak.KeycloakProfile & {
+        token?: string;
+    };
+    type KeycloakConfig = {
+        url: string;
+        [key: string]: string;
+    };
+    const pluginName: string;
+    const log: Logging.Logger;
+    /**
+     * Variable for Keycloak config that users can initialise.
+     */
+    let config: KeycloakConfig;
+    let keycloak: Keycloak.KeycloakInstance;
+    /**
+     * Used by HawtioOAuth, must have a 'token' field when set,
+     * otherwise leave null
+     */
+    let userProfile: UserProfile;
+}
+declare namespace HawtioKeycloak {
+    class AuthInterceptor {
+        private $q;
+        private userDetails;
+        private keycloak;
+        static Factory($q: ng.IQService, userDetails: Core.AuthService): AuthInterceptor;
+        constructor($q: ng.IQService, userDetails: Core.AuthService);
+        request: (request: any) => angular.IPromise<any>;
+        private addBearer(request, deferred);
+        responseError: (rejection: any) => angular.IPromise<any>;
+    }
+}
+declare namespace HawtioKeycloak {
+    class KeycloakService {
+        readonly enabled: boolean;
+        readonly keycloak: Keycloak.KeycloakInstance;
+        constructor(enabled: boolean, keycloak: Keycloak.KeycloakInstance);
+    }
+}
+declare namespace HawtioKeycloak {
+}
+declare namespace HawtioOAuth {
+    function addLogoutToUserDropdown(HawtioExtension: Core.HawtioExtension, $compile: ng.ICompileService, userDetails: Core.AuthService): void;
+}
+declare namespace GithubOAuth {
 }
