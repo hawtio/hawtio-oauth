@@ -937,7 +937,6 @@ var HawtioKeycloak;
 /// <reference path="keycloak/keycloak.module.ts"/>
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    addLogoutToUserDropdown.$inject = ["HawtioExtension", "$compile", "userDetails"];
     var hawtioOAuthModule = angular
         .module(HawtioOAuth.pluginName, [
         'ngIdle',
@@ -946,18 +945,8 @@ var HawtioOAuth;
         HawtioKeycloak.pluginName,
         OSOAuth.pluginName
     ])
-        .run(addLogoutToUserDropdown)
         .name;
     hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
-    function addLogoutToUserDropdown(HawtioExtension, $compile, userDetails) {
-        'ngInject';
-        HawtioExtension.add('hawtio-user', function ($scope) {
-            $scope.userDetails = userDetails;
-            var template = '<li ng-show="userDetails"><a href="" ng-click="userDetails.logout()">Logout</a></li>';
-            return $compile(template)($scope);
-        });
-    }
-    HawtioOAuth.addLogoutToUserDropdown = addLogoutToUserDropdown;
     /*
      * Fetch oauth config
      */
@@ -1044,11 +1033,13 @@ var Example;
 (function (Example) {
     buildTabs.$inject = ["$locationProvider", "$routeProvider", "HawtioNavBuilderProvider", "tabs"];
     loadTabs.$inject = ["HawtioNav", "tabs"];
+    addLogoutToUserDropdown.$inject = ["HawtioExtension", "$compile", "userDetails"];
     Example.exampleModule = angular
         .module(Example.pluginName, [])
         .constant('tabs', [])
         .config(buildTabs)
         .run(loadTabs)
+        .run(addLogoutToUserDropdown)
         .controller("Example.Page1Controller", Example.page1Controller)
         .controller("Example.Page2Controller", Example.page2Controller)
         .name;
@@ -1070,6 +1061,15 @@ var Example;
         _.forEach(tabs, function (tab) { return HawtioNav.add(tab); });
         Example.log.debug("loaded");
     }
+    function addLogoutToUserDropdown(HawtioExtension, $compile, userDetails) {
+        'ngInject';
+        HawtioExtension.add('hawtio-logout', function ($scope) {
+            $scope.userDetails = userDetails;
+            var template = '<a href="" ng-click="userDetails.logout()">Logout</a>';
+            return $compile(template)($scope);
+        });
+    }
+    Example.addLogoutToUserDropdown = addLogoutToUserDropdown;
     // Google
     /*
     hawtioPluginLoader.registerPreBootstrapTask((next) => {

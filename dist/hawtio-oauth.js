@@ -937,7 +937,6 @@ var HawtioKeycloak;
 /// <reference path="keycloak/keycloak.module.ts"/>
 var HawtioOAuth;
 (function (HawtioOAuth) {
-    addLogoutToUserDropdown.$inject = ["HawtioExtension", "$compile", "userDetails"];
     var hawtioOAuthModule = angular
         .module(HawtioOAuth.pluginName, [
         'ngIdle',
@@ -946,18 +945,8 @@ var HawtioOAuth;
         HawtioKeycloak.pluginName,
         OSOAuth.pluginName
     ])
-        .run(addLogoutToUserDropdown)
         .name;
     hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
-    function addLogoutToUserDropdown(HawtioExtension, $compile, userDetails) {
-        'ngInject';
-        HawtioExtension.add('hawtio-user', function ($scope) {
-            $scope.userDetails = userDetails;
-            var template = '<li ng-show="userDetails"><a href="" ng-click="userDetails.logout()">Logout</a></li>';
-            return $compile(template)($scope);
-        });
-    }
-    HawtioOAuth.addLogoutToUserDropdown = addLogoutToUserDropdown;
     /*
      * Fetch oauth config
      */

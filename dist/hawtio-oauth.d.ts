@@ -118,7 +118,6 @@ declare namespace HawtioKeycloak {
 declare namespace HawtioKeycloak {
 }
 declare namespace HawtioOAuth {
-    function addLogoutToUserDropdown(HawtioExtension: Core.HawtioExtension, $compile: ng.ICompileService, userDetails: Core.AuthService): void;
 }
 declare namespace GithubOAuth {
 }
