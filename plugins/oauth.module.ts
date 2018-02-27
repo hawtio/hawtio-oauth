@@ -14,24 +14,9 @@ namespace HawtioOAuth {
       HawtioKeycloak.pluginName,
       OSOAuth.pluginName
     ])
-    .run(addLogoutToUserDropdown)
     .name;
 
   hawtioPluginLoader.addModule(pluginName);
-
-  export function addLogoutToUserDropdown(
-    HawtioExtension: Core.HawtioExtension,
-    $compile: ng.ICompileService,
-    userDetails: Core.AuthService): void {
-    'ngInject';
-
-    HawtioExtension.add('hawtio-user', ($scope) => {
-      $scope.userDetails = userDetails;
-      let template =
-        '<li ng-show="userDetails"><a href="" ng-click="userDetails.logout()">Logout</a></li>';
-      return $compile(template)($scope);
-    });
-  }
 
   /*
    * Fetch oauth config

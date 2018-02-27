@@ -10,6 +10,7 @@ namespace Example {
     .constant('tabs', [])
     .config(buildTabs)
     .run(loadTabs)
+    .run(addLogoutToUserDropdown)
     .controller("Example.Page1Controller", page1Controller)
     .controller("Example.Page2Controller", page2Controller)
     .name;
@@ -33,6 +34,20 @@ namespace Example {
     'ngInject';
     _.forEach(tabs, (tab) => HawtioNav.add(tab));
     log.debug("loaded");
+  }
+
+  export function addLogoutToUserDropdown(
+    HawtioExtension: Core.HawtioExtension,
+    $compile: ng.ICompileService,
+    userDetails: Core.AuthService): void {
+    'ngInject';
+
+    HawtioExtension.add('hawtio-logout', ($scope) => {
+      $scope.userDetails = userDetails;
+      let template =
+        '<a href="" ng-click="userDetails.logout()">Logout</a>';
+      return $compile(template)($scope);
+    });
   }
 
   // Google
