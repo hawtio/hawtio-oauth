@@ -16,7 +16,7 @@ namespace Example {
     .name;
 
   function buildTabs($locationProvider: ng.ILocationProvider, $routeProvider: ng.route.IRouteProvider,
-    HawtioNavBuilderProvider: HawtioMainNav.BuilderFactory, tabs: HawtioMainNav.NavItem[]): void {
+    HawtioNavBuilderProvider: Nav.BuilderFactory, tabs: Nav.NavItem[]): void {
     'ngInject';
     let tab = HawtioNavBuilderProvider.create()
       .id(pluginName)
@@ -30,7 +30,7 @@ namespace Example {
     tabs.push(tab);
   }
 
-  function loadTabs(HawtioNav: HawtioMainNav.Registry, tabs: HawtioMainNav.NavItem[]): void {
+  function loadTabs(HawtioNav: Nav.Registry, tabs: Nav.NavItem[]): void {
     'ngInject';
     _.forEach(tabs, (tab) => HawtioNav.add(tab));
     log.debug("loaded");
