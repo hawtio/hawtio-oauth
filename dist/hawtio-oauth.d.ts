@@ -11,6 +11,7 @@ declare namespace HawtioOAuth {
 }
 declare namespace HawtioOAuth {
     function getUserProfile(): any;
+    function getOAuthToken(): string;
     function authenticatedHttpRequest(options: any): JQueryXHR;
 }
 declare namespace GithubOAuth {

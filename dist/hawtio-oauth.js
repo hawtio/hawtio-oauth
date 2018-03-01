@@ -32,6 +32,7 @@ var HawtioOAuth;
         }
         return userProfile.token;
     }
+    HawtioOAuth.getOAuthToken = getOAuthToken;
     function authenticatedHttpRequest(options) {
         return $.ajax(_.extend(options, {
             beforeSend: function (request) {

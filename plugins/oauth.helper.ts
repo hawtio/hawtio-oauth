@@ -22,7 +22,7 @@ namespace HawtioOAuth {
     log.debug("Active OAuth plugin:", activePlugin);
   }
 
-  function getOAuthToken(): string {
+  export function getOAuthToken(): string {
     let userProfile = getUserProfile();
     if (!userProfile) {
       return null;
