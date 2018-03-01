@@ -26,8 +26,8 @@
     "@types/jquery" "~2.0.46"
 
 "@hawtio/core@~3.2.0":
-  version "3.2.16"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-3.2.16.tgz#ebed0dfc860ebbf87ba3aa48b915da2d418eba16"
+  version "3.2.17"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-3.2.17.tgz#9426f60d83155caf9b145cae06bc5b5d8c799777"
   dependencies:
     "@hawtio/core-dts" "3.0.18"
     "@types/angular" "1.6.39"
@@ -198,8 +198,8 @@ angular-drag-and-drop-lists@2.0.0:
   resolved "https://registry.yarnpkg.com/angular-drag-and-drop-lists/-/angular-drag-and-drop-lists-2.0.0.tgz#a01d44b94cf233c9c2d45a31842cb35a9d0882ca"
 
 angular-patternfly@^4.0.0:
-  version "4.14.11"
-  resolved "https://registry.yarnpkg.com/angular-patternfly/-/angular-patternfly-4.14.11.tgz#a4c54c29bae1ee245393d972c335d5d7adc7b269"
+  version "4.15.0"
+  resolved "https://registry.yarnpkg.com/angular-patternfly/-/angular-patternfly-4.15.0.tgz#17fd980f7ce84217e4bbbe7d773fcf655b7e912c"
   dependencies:
     angular "1.5.*"
     angular-animate "1.5.*"
@@ -494,8 +494,8 @@ bytes@1, bytes@1.0.0, bytes@3.0.0:
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.0.0.tgz#d32815404d689699f85a4ea4fa8755dd13a96048"
 
 c3@~0.4.11:
-  version "0.4.18"
-  resolved "https://registry.yarnpkg.com/c3/-/c3-0.4.18.tgz#6f1c4409635263b8a3de607edbab4bdc678c62cb"
+  version "0.4.21"
+  resolved "https://registry.yarnpkg.com/c3/-/c3-0.4.21.tgz#61a2dc5a31c6a64e011d15b136c160c44fbb9631"
   dependencies:
     d3 "~3.5.0"
 
@@ -735,8 +735,8 @@ datatables.net-dt@^1.10.11:
     jquery ">=1.7"
 
 datatables.net-select@~1.2.0:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/datatables.net-select/-/datatables.net-select-1.2.4.tgz#799eed5d8cfcf21e4502b49c61e84fc4b5f457f7"
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/datatables.net-select/-/datatables.net-select-1.2.5.tgz#4f764669b464d5576a59c576c1250a5d069aa2e9"
   dependencies:
     datatables.net "^1.10.15"
     jquery ">=1.7"
