@@ -2,7 +2,10 @@
   "name": "@hawtio/oauth",
   "version": "3.0.7",
   "main": "dist/hawtio-oauth.js",
-  "types": "dist/hawtio-oauth.d.ts",
+  "types": [
+    "dist/hawtio-oauth.d.ts",
+    "dist/keycloak-js/keycloak.d.ts"
+  ],
   "files": [
     "dist"
   ],

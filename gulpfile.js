@@ -97,6 +97,11 @@ gulp.task('template', ['tsc'], function() {
     .pipe(gulp.dest('.'));
 });
 
+gulp.task('vendor-defs', ['clean-defs'], function() {
+  return gulp.src('vendor/**/*.d.ts')
+    .pipe(gulp.dest(config.dist));
+})
+
 gulp.task('concat', ['template'], function() {
   return gulp.src(['compiled.js', 'templates.js'])
     .pipe(plugins.concat(config.js))
@@ -211,7 +216,7 @@ gulp.task('reload', function() {
     .pipe(hawtio.reload());
 });
 
-gulp.task('build', ['tsc', 'template', 'concat', 'clean']);
+gulp.task('build', ['tsc', 'template', 'concat', 'vendor-defs', 'clean']);
 
 gulp.task('build-example', ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 
