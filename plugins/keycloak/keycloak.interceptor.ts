@@ -4,14 +4,14 @@ namespace HawtioKeycloak {
 
   export class AuthInterceptor {
 
-    private keycloak: Keycloak.KeycloakInstance = HawtioKeycloak.keycloak;
-
-    static Factory($q: ng.IQService, userDetails: Core.AuthService) {
+    static Factory($q: ng.IQService, userDetails: Core.AuthService,
+      keycloakService: KeycloakService): AuthInterceptor {
       'ngInject';
-      return new AuthInterceptor($q, userDetails);
+      return new AuthInterceptor($q, userDetails, keycloakService);
     }
 
-    constructor(private $q: ng.IQService, private userDetails: Core.AuthService) {
+    constructor(private $q: ng.IQService, private userDetails: Core.AuthService,
+      private keycloakService: KeycloakService) {
       'ngInject';
     }
 
@@ -26,22 +26,17 @@ namespace HawtioKeycloak {
     };
 
     private addBearer(request: any, deferred: ng.IDeferred<any>): void {
-      this.keycloak.updateToken(5)
-        .success(() => {
-          let token = this.keycloak.token;
-          this.userDetails.token = token;
-          request.headers.Authorization = 'Bearer ' + token;
-          deferred.notify();
-          deferred.resolve(request);
-        })
-        .error(() => {
-          log.error("Couldn't update token");
-        });
+      this.keycloakService.updateToken((token) => {
+        this.userDetails.token = token;
+        request.headers.Authorization = 'Bearer ' + token;
+        deferred.notify();
+        deferred.resolve(request);
+      });
     }
 
     responseError = (rejection): ng.IPromise<any> => {
-      if (rejection.status === 401) {
-        this.keycloak.logout();
+      if (rejection.status === 401 && this.userDetails.loggedIn) {
+        this.userDetails.logout();
       }
       return this.$q.reject(rejection);
     };
