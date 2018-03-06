@@ -41,6 +41,15 @@ namespace HawtioKeycloak {
 
     userDetails.login(userProfile.username, null, userProfile.token);
 
+    log.debug("Setting authorization header to token");
+    $.ajaxSetup({
+      beforeSend: (xhr: JQueryXHR, settings: JQueryAjaxSettings) => {
+        if (userDetails.token) {
+          xhr.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
+        }
+      }
+    });
+
     log.debug("Register 'LogoutKeycloak' to postLogoutTasks");
     postLogoutTasks.addTask('LogoutKeycloak', () => {
       log.info("Log out Keycloak");
