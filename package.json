@@ -1,6 +1,6 @@
 {
   "name": "@hawtio/oauth",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "main": "dist/hawtio-oauth.js",
   "types": "dist/hawtio-oauth.d.ts",
   "files": [
