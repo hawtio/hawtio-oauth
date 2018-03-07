@@ -32,7 +32,8 @@ namespace HawtioKeycloak {
     }
   }
 
-  function loginUserDetails(userDetails: Core.AuthService, postLogoutTasks: Core.Tasks): void {
+  function loginUserDetails(userDetails: Core.AuthService, keycloakService: KeycloakService,
+    postLogoutTasks: Core.Tasks): void {
     'ngInject';
 
     if (!isKeycloakEnabled()) {
@@ -41,14 +42,7 @@ namespace HawtioKeycloak {
 
     userDetails.login(userProfile.username, null, userProfile.token);
 
-    log.debug("Setting authorization header to token");
-    $.ajaxSetup({
-      beforeSend: (xhr: JQueryXHR, settings: JQueryAjaxSettings) => {
-        if (userDetails.token) {
-          xhr.setRequestHeader('Authorization', 'Bearer ' + userDetails.token);
-        }
-      }
-    });
+    keycloakService.setupJQueryAjax(userDetails);
 
     log.debug("Register 'LogoutKeycloak' to postLogoutTasks");
     postLogoutTasks.addTask('LogoutKeycloak', () => {
