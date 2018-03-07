@@ -101,9 +101,9 @@ declare namespace HawtioKeycloak {
     class AuthInterceptor {
         private $q;
         private userDetails;
-        private keycloak;
-        static Factory($q: ng.IQService, userDetails: Core.AuthService): AuthInterceptor;
-        constructor($q: ng.IQService, userDetails: Core.AuthService);
+        private keycloakService;
+        static Factory($q: ng.IQService, userDetails: Core.AuthService, keycloakService: KeycloakService): AuthInterceptor;
+        constructor($q: ng.IQService, userDetails: Core.AuthService, keycloakService: KeycloakService);
         request: (request: any) => angular.IPromise<any>;
         private addBearer(request, deferred);
         responseError: (rejection: any) => angular.IPromise<any>;
@@ -114,6 +114,8 @@ declare namespace HawtioKeycloak {
         readonly enabled: boolean;
         readonly keycloak: Keycloak.KeycloakInstance;
         constructor(enabled: boolean, keycloak: Keycloak.KeycloakInstance);
+        updateToken(onSuccess: (token: string) => void, onError?: () => void): void;
+        setupJQueryAjax(userDetails: Core.AuthService): void;
     }
 }
 declare namespace HawtioKeycloak {

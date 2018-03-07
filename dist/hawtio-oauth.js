@@ -764,13 +764,13 @@ var HawtioKeycloak;
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     var AuthInterceptor = /** @class */ (function () {
-        AuthInterceptor.$inject = ["$q", "userDetails"];
-        function AuthInterceptor($q, userDetails) {
+        AuthInterceptor.$inject = ["$q", "userDetails", "keycloakService"];
+        function AuthInterceptor($q, userDetails, keycloakService) {
             'ngInject';
             var _this = this;
             this.$q = $q;
             this.userDetails = userDetails;
-            this.keycloak = HawtioKeycloak.keycloak;
+            this.keycloakService = keycloakService;
             this.request = function (request) {
                 // bypass for local templates
                 if (request.url.indexOf('http') !== 0) {
@@ -781,28 +781,23 @@ var HawtioKeycloak;
                 return _this.$q.when(deferred.promise);
             };
             this.responseError = function (rejection) {
-                if (rejection.status === 401) {
-                    _this.keycloak.logout();
+                if (rejection.status === 401 && _this.userDetails.loggedIn) {
+                    _this.userDetails.logout();
                 }
                 return _this.$q.reject(rejection);
             };
         }
-        AuthInterceptor.Factory = ["$q", "userDetails", function ($q, userDetails) {
+        AuthInterceptor.Factory = ["$q", "userDetails", "keycloakService", function ($q, userDetails, keycloakService) {
             'ngInject';
-            return new AuthInterceptor($q, userDetails);
+            return new AuthInterceptor($q, userDetails, keycloakService);
         }];
         AuthInterceptor.prototype.addBearer = function (request, deferred) {
             var _this = this;
-            this.keycloak.updateToken(5)
-                .success(function () {
-                var token = _this.keycloak.token;
+            this.keycloakService.updateToken(function (token) {
                 _this.userDetails.token = token;
                 request.headers.Authorization = 'Bearer ' + token;
                 deferred.notify();
                 deferred.resolve(request);
-            })
-                .error(function () {
-                HawtioKeycloak.log.error("Couldn't update token");
             });
         };
         return AuthInterceptor;
@@ -811,11 +806,50 @@ var HawtioKeycloak;
 })(HawtioKeycloak || (HawtioKeycloak = {}));
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
+    var TOKEN_UPDATE_INTERVAL = 5; // 5 sec.
     var KeycloakService = /** @class */ (function () {
         function KeycloakService(enabled, keycloak) {
             this.enabled = enabled;
             this.keycloak = keycloak;
         }
+        KeycloakService.prototype.updateToken = function (onSuccess, onError) {
+            var _this = this;
+            this.keycloak.updateToken(TOKEN_UPDATE_INTERVAL)
+                .success(function () {
+                var token = _this.keycloak.token;
+                onSuccess(token);
+            })
+                .error(function () {
+                HawtioKeycloak.log.error("Couldn't update token");
+                if (onError) {
+                    onError();
+                }
+            });
+        };
+        KeycloakService.prototype.setupJQueryAjax = function (userDetails) {
+            var _this = this;
+            HawtioKeycloak.log.debug("Setting authorization header to token");
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (_this.keycloak.authenticated && !_this.keycloak.isTokenExpired(TOKEN_UPDATE_INTERVAL)) {
+                        // hawtio uses BearerTokenLoginModule on server side
+                        xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(HawtioKeycloak.keycloak.subject, HawtioKeycloak.keycloak.token));
+                    }
+                    else {
+                        HawtioKeycloak.log.debug("Skipped request", settings.url, "for now.");
+                        _this.updateToken(function (token) {
+                            if (token) {
+                                HawtioKeycloak.log.debug('Keycloak token refreshed. Set new value to userDetails');
+                                userDetails.token = token;
+                            }
+                            HawtioKeycloak.log.debug("Re-sending request after successfully update keycloak token:", settings.url);
+                            $.ajax(settings);
+                        }, function () { return userDetails.logout(); });
+                        return false;
+                    }
+                }
+            });
+        };
         return KeycloakService;
     }());
     HawtioKeycloak.KeycloakService = KeycloakService;
@@ -826,7 +860,7 @@ var HawtioKeycloak;
 var HawtioKeycloak;
 (function (HawtioKeycloak) {
     applyAuthInterceptor.$inject = ["$provide", "$httpProvider"];
-    loginUserDetails.$inject = ["userDetails", "postLogoutTasks"];
+    loginUserDetails.$inject = ["userDetails", "keycloakService", "postLogoutTasks"];
     configureIdleTimeout.$inject = ["userDetails", "Idle", "$rootScope"];
     HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
     angular
@@ -852,12 +886,13 @@ var HawtioKeycloak;
             $httpProvider.interceptors.push(HawtioKeycloak.AuthInterceptor.Factory);
         }
     }
-    function loginUserDetails(userDetails, postLogoutTasks) {
+    function loginUserDetails(userDetails, keycloakService, postLogoutTasks) {
         'ngInject';
         if (!isKeycloakEnabled()) {
             return;
         }
         userDetails.login(HawtioKeycloak.userProfile.username, null, HawtioKeycloak.userProfile.token);
+        keycloakService.setupJQueryAjax(userDetails);
         HawtioKeycloak.log.debug("Register 'LogoutKeycloak' to postLogoutTasks");
         postLogoutTasks.addTask('LogoutKeycloak', function () {
             HawtioKeycloak.log.info("Log out Keycloak");
