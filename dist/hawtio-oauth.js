@@ -833,7 +833,7 @@ var HawtioKeycloak;
                 beforeSend: function (xhr, settings) {
                     if (_this.keycloak.authenticated && !_this.keycloak.isTokenExpired(TOKEN_UPDATE_INTERVAL)) {
                         // hawtio uses BearerTokenLoginModule on server side
-                        xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(HawtioKeycloak.keycloak.subject, HawtioKeycloak.keycloak.token));
+                        xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(HawtioKeycloak.keycloak.profile.username, HawtioKeycloak.keycloak.token));
                     }
                     else {
                         HawtioKeycloak.log.debug("Skipped request", settings.url, "for now.");
