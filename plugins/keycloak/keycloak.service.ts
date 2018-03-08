@@ -29,7 +29,7 @@ namespace HawtioKeycloak {
         beforeSend: (xhr: JQueryXHR, settings: JQueryAjaxSettings) => {
           if (this.keycloak.authenticated && !this.keycloak.isTokenExpired(TOKEN_UPDATE_INTERVAL)) {
             // hawtio uses BearerTokenLoginModule on server side
-            xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(keycloak.subject, keycloak.token));
+            xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(keycloak.profile.username, keycloak.token));
           } else {
             log.debug("Skipped request", settings.url, "for now.");
             this.updateToken(
