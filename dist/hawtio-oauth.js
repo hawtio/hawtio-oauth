@@ -554,7 +554,7 @@ var OSOAuth;
             delete fragmentParams.access_token;
             delete fragmentParams.expires_in;
             delete fragmentParams.scope;
-            uri.fragment("").query(fragmentParams);
+            uri.fragment("").query(query);
             var target = uri.toString();
             OSOAuth.log.debug("redirecting to: ", target);
             window.location.href = target;

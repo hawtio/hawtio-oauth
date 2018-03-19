@@ -67,7 +67,7 @@ namespace OSOAuth {
       delete fragmentParams.access_token;
       delete fragmentParams.expires_in;
       delete fragmentParams.scope;
-      uri.fragment("").query(fragmentParams);
+      uri.fragment("").query(query);
       const target = uri.toString();
       log.debug("redirecting to: ", target);
       window.location.href = target;
