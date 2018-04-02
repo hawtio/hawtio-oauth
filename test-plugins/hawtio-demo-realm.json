@@ -38,7 +38,7 @@
       "temporary" : false
     } ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "user", "viewer", "admin" ],
+    "realmRoles" : [ "user", "viewer", "manager", "admin" ],
     "clientRoles" : {
       "account" : [ "view-profile", "manage-account" ]
     }
