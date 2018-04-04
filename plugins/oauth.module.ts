@@ -14,9 +14,15 @@ namespace HawtioOAuth {
       HawtioKeycloak.pluginName,
       OSOAuth.pluginName
     ])
+    .run(addProductInfo)
     .name;
 
   hawtioPluginLoader.addModule(pluginName);
+
+  function addProductInfo(aboutService: About.AboutService) {
+    'ngInject';
+    aboutService.addProductInfo('Hawtio OAuth', 'PACKAGE_VERSION_PLACEHOLDER');
+  }
 
   /*
    * Fetch oauth config

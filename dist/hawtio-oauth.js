@@ -973,6 +973,7 @@ var HawtioKeycloak;
 /// <reference path="keycloak/keycloak.module.ts"/>
 var HawtioOAuth;
 (function (HawtioOAuth) {
+    addProductInfo.$inject = ["aboutService"];
     var hawtioOAuthModule = angular
         .module(HawtioOAuth.pluginName, [
         'ngIdle',
@@ -981,8 +982,13 @@ var HawtioOAuth;
         HawtioKeycloak.pluginName,
         OSOAuth.pluginName
     ])
+        .run(addProductInfo)
         .name;
     hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
+    function addProductInfo(aboutService) {
+        'ngInject';
+        aboutService.addProductInfo('Hawtio OAuth', '3.0.12');
+    }
     /*
      * Fetch oauth config
      */

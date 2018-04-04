@@ -1,19 +1,20 @@
-var gulp = require('gulp'),
-    eventStream = require('event-stream'),
-    gulpLoadPlugins = require('gulp-load-plugins'),
-    fs = require('fs'),
-    del = require('del'),
-    path = require('path'),
-    uri = require('urijs'),
-    s = require('underscore.string'),
-    argv = require('yargs').argv,
-    stringifyObject = require('stringify-object'),
-    logger = require('js-logger'),
-    hawtio = require('@hawtio/node-backend');
+const gulp = require('gulp'),
+      eventStream = require('event-stream'),
+      gulpLoadPlugins = require('gulp-load-plugins'),
+      fs = require('fs'),
+      del = require('del'),
+      path = require('path'),
+      uri = require('urijs'),
+      s = require('underscore.string'),
+      argv = require('yargs').argv,
+      stringifyObject = require('stringify-object'),
+      logger = require('js-logger'),
+      hawtio = require('@hawtio/node-backend');
 
-var plugins = gulpLoadPlugins({});
+const package = require('./package.json');
+const plugins = gulpLoadPlugins({});
 
-var config = {
+const config = {
   proxyPort: argv.port || 8181,
   targetPath: argv.path || '/jolokia',
   logLevel: argv.debug ? logger.DEBUG : logger.INFO,
@@ -216,7 +217,13 @@ gulp.task('reload', function() {
     .pipe(hawtio.reload());
 });
 
-gulp.task('build', ['tsc', 'template', 'concat', 'vendor-defs', 'clean']);
+gulp.task('version', ['concat'], function() {
+  return gulp.src(path.join(config.dist, config.js))
+    .pipe(plugins.replace('PACKAGE_VERSION_PLACEHOLDER', package.version))
+    .pipe(gulp.dest(config.dist));
+});
+
+gulp.task('build', ['tsc', 'template', 'concat', 'version', 'vendor-defs', 'clean']);
 
 gulp.task('build-example', ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 
