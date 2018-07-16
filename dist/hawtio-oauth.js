@@ -987,7 +987,7 @@ var HawtioOAuth;
     hawtioPluginLoader.addModule(HawtioOAuth.pluginName);
     function addProductInfo(aboutService) {
         'ngInject';
-        aboutService.addProductInfo('Hawtio OAuth', '3.1.0');
+        aboutService.addProductInfo('Hawtio OAuth', '3.3.0');
     }
     /*
      * Fetch oauth config
