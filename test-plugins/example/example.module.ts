@@ -7,33 +7,33 @@ namespace Example {
 
   export const exampleModule = angular
     .module(pluginName, [])
-    .constant('tabs', [])
-    .config(buildTabs)
-    .run(loadTabs)
+    .config(addRoutes)
+    .run(addTabs)
     .run(addLogoutToUserDropdown)
     .controller("Example.Page1Controller", page1Controller)
     .controller("Example.Page2Controller", page2Controller)
     .name;
 
-  function buildTabs($locationProvider: ng.ILocationProvider, $routeProvider: ng.route.IRouteProvider,
-    HawtioNavBuilderProvider: Nav.BuilderFactory, tabs: Nav.NavItem[]): void {
+  function addRoutes($routeProvider: angular.route.IRouteProvider) {
     'ngInject';
-    let tab = HawtioNavBuilderProvider.create()
-      .id(pluginName)
-      .title(() => "Examples")
-      .href(() => "/example")
-      .subPath("OpenShift OAuth", "page1", HawtioNavBuilderProvider.join(Example.templatePath, 'page1.html'))
-      .subPath("GitHub", "page2", HawtioNavBuilderProvider.join(Example.templatePath, 'github.html'))
-      .build();
-    HawtioNavBuilderProvider.configureRouting($routeProvider, tab);
-    $locationProvider.html5Mode(true);
-    tabs.push(tab);
+
+    $routeProvider
+      .when('/github', { templateUrl: UrlHelpers.join(Example.templatePath, 'github.html') })
+      .when('/openshift', { templateUrl: UrlHelpers.join(Example.templatePath, 'page1.html') });
   }
 
-  function loadTabs(HawtioNav: Nav.Registry, tabs: Nav.NavItem[]): void {
+  function addTabs(mainNavService: Nav.MainNavService): void {
     'ngInject';
-    _.forEach(tabs, (tab) => HawtioNav.add(tab));
-    log.debug("loaded");
+
+    mainNavService.addItem({
+      title: 'OpenShift OAuth',
+      href: 'openshift',
+    });
+
+    mainNavService.addItem({
+      title: 'GitHub',
+      href: 'github',
+    });
   }
 
   export function addLogoutToUserDropdown(
