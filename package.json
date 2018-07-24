@@ -9,7 +9,7 @@
   "scripts": {
     "start": "gulp connect",
     "build": "gulp build",
-    "version": "gulp version && git add -A dist",
+    "version": "gulp version",
     "build-example": "gulp build-example"
   },
   "dependencies": {
