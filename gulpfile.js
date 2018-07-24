@@ -217,13 +217,13 @@ gulp.task('reload', function() {
     .pipe(hawtio.reload());
 });
 
-gulp.task('version', ['concat'], function() {
+gulp.task('version', function () {
   return gulp.src(path.join(config.dist, config.js))
     .pipe(plugins.replace('PACKAGE_VERSION_PLACEHOLDER', package.version))
     .pipe(gulp.dest(config.dist));
 });
 
-gulp.task('build', ['tsc', 'template', 'concat', 'version', 'vendor-defs', 'clean']);
+gulp.task('build', ['tsc', 'template', 'concat', 'vendor-defs', 'clean']);
 
 gulp.task('build-example', ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 
