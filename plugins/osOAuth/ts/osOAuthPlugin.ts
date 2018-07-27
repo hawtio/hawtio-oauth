@@ -10,7 +10,6 @@ namespace OSOAuth {
     $provide.decorator('userDetails', ['$delegate', ($delegate: Core.AuthService) => {
       if (userProfile) {
         return _.merge($delegate, userProfile, {
-          username: userProfile.fullName,
           logout: () => {
             $delegate.logout();
             doLogout(OSOAuthConfig, userProfile);
