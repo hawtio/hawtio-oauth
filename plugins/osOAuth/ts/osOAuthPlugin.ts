@@ -7,11 +7,12 @@ namespace OSOAuth {
   export const _module = angular.module(pluginName, ['ngIdle']);
 
   _module.config(['$provide', ($provide) => {
-    $provide.decorator('userDetails', ['$delegate', ($delegate) => {
+    $provide.decorator('userDetails', ['$delegate', ($delegate: Core.AuthService) => {
       if (userProfile) {
         return _.merge($delegate, userProfile, {
           username: userProfile.fullName,
           logout: () => {
+            $delegate.logout();
             doLogout(OSOAuthConfig, userProfile);
           }
         });
@@ -41,14 +42,15 @@ namespace OSOAuth {
   }]);
 
 
-  _module.run(['userDetails', 'Keepalive', '$rootScope', (userDetails, Keepalive, $rootScope) => {
+  _module.run(['userDetails', 'Keepalive', '$rootScope', (userDetails: Core.AuthService, Keepalive, $rootScope) => {
     if (userProfile && userProfile.token) {
+      userDetails.login(userProfile.metadata.name, null, userProfile.token);
       log.debug("Starting keepalive");
       $rootScope.$on('KeepaliveResponse', ($event, data, status) => {
         log.debug("keepaliveStatus: ", status);
         log.debug("keepalive response: ", data);
         if (status === 401) {
-          doLogout(OSOAuthConfig, userProfile);
+          userDetails.logout();
         }
       });
       Keepalive.start();
