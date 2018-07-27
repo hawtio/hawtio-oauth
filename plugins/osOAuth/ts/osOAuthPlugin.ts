@@ -9,9 +9,11 @@ namespace OSOAuth {
   _module.config(['$provide', ($provide) => {
     $provide.decorator('userDetails', ['$delegate', ($delegate: Core.AuthService) => {
       if (userProfile) {
+        const logout = $delegate.logout;
+        // The decorated delegate should ideally not be mutated though AuthService declares getters and setters that are not easy to port over the decoratee.
         return _.merge($delegate, userProfile, {
           logout: () => {
-            $delegate.logout();
+            logout();
             doLogout(OSOAuthConfig, userProfile);
           }
         });
@@ -44,6 +46,7 @@ namespace OSOAuth {
   _module.run(['userDetails', 'Keepalive', '$rootScope', (userDetails: Core.AuthService, Keepalive, $rootScope) => {
     if (userProfile && userProfile.token) {
       userDetails.login(userProfile.metadata.name, null, userProfile.token);
+      console.log('LOGIN:', userDetails)
       log.debug("Starting keepalive");
       $rootScope.$on('KeepaliveResponse', ($event, data, status) => {
         log.debug("keepaliveStatus: ", status);
