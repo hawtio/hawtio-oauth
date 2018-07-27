@@ -20,7 +20,9 @@ namespace OSOAuth {
   export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile) {
     const currentURI = new URI(window.location.href);
     const uri        = new URI(config.oauth_authorize_uri);
-    uri.path('/oapi/v1/oAuthAccessTokens' + userDetails.token);
+    uri.path(`/apis/oauth.openshift.io/v1/oauthaccesstokens/${userDetails.token}`);
+    // The following request may return 403 when delegated authentication with a service account as OAuthClient is used
+    // See https://github.com/openshift/origin/issues/7011
     authenticatedHttpRequest({
       type: 'DELETE',
       url : uri.toString()
