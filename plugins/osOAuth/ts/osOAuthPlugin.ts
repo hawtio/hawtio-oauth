@@ -46,7 +46,6 @@ namespace OSOAuth {
   _module.run(['userDetails', 'Keepalive', '$rootScope', (userDetails: Core.AuthService, Keepalive, $rootScope) => {
     if (userProfile && userProfile.token) {
       userDetails.login(userProfile.metadata.name, null, userProfile.token);
-      console.log('LOGIN:', userDetails)
       log.debug("Starting keepalive");
       $rootScope.$on('KeepaliveResponse', ($event, data, status) => {
         log.debug("keepaliveStatus: ", status);
