@@ -33,7 +33,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
     "gulp-sourcemaps": "^2.6.4",
-    "gulp-typescript": "^3.0.0",
+    "gulp-typescript": "^4.0.0",
     "js-logger": "^1.4.1",
     "keycloak-js": "^3.4.3",
     "stringify-object": "^2.4.0",
@@ -180,6 +180,8 @@
     "gulp-rename": "1.2.3",
     "angular-animate": "1.7.2",
     "bootstrap-select": "1.12.4",
-    "http-errors": "1.6.2"
+    "http-errors": "1.6.2",
+    "duplexify": "3.6.0",
+    "to-absolute-glob": "2.0.2"
   }
 }
