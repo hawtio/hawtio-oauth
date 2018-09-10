@@ -37,7 +37,7 @@
     "js-logger": "^1.4.1",
     "keycloak-js": "^3.4.3",
     "stringify-object": "^2.4.0",
-    "typescript": "^2.6.2",
+    "typescript": "^3.0.0",
     "underscore.string": "^3.0.0",
     "urijs": "^1.17.0",
     "which": "^1.0.8",
