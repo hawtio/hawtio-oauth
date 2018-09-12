@@ -82,7 +82,8 @@ namespace HawtioKeycloak {
     .addModule(pluginName)
     .registerPreBootstrapTask({
       name: 'HawtioKeycloak',
-      task: (next) => loadKeycloakJs(next)
+      task: (next) => loadKeycloakJs(next),
+      depends: "KeycloakLoginBootstrap"
     });
 
   function loadKeycloakJs(callback: () => void): void {
