@@ -13,7 +13,7 @@
     "prepack": "gulp --series build version"
   },
   "dependencies": {
-    "@hawtio/core": "^4.0.0",
+    "@hawtio/core": "~4.1.0",
     "ng-idle": "^1.3.2"
   },
   "devDependencies": {
