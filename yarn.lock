@@ -1298,7 +1298,7 @@ event-emitter@^0.3.5:
     d "1"
     es5-ext "~0.10.14"
 
-event-stream@*, event-stream@3.3.4, event-stream@^3.1.7, event-stream@^3.3.4:
+event-stream@*, event-stream@3.3.4, event-stream@^3.3.4:
   version "3.3.4"
   resolved "https://registry.yarnpkg.com/event-stream/-/event-stream-3.3.4.tgz#4ab4c9a0f5a54db9338b4c34d86bfce8f4b35571"
   integrity sha1-SrTJoPWlTbkzi0w02Gv86PSzVXE=
@@ -2702,7 +2702,7 @@ micromatch@3.1.5, micromatch@^2.3.7, micromatch@^2.3.8, micromatch@^3.0.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-mime-db@1.30.0, mime-db@~1.12.0, mime-db@~1.30.0, mime-db@~1.36.0:
+mime-db@1.30.0, mime-db@~1.12.0, mime-db@~1.30.0, mime-db@~1.37.0:
   version "1.30.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
   integrity sha1-dMZD2i3Z1qRTmZY0ZbJtXKfXHwE=
