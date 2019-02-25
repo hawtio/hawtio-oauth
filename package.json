@@ -13,7 +13,7 @@
     "prepack": "gulp --series build version"
   },
   "dependencies": {
-    "@hawtio/core": "~4.1.0",
+    "@hawtio/core": "~4.4.0",
     "ng-idle": "^1.3.2"
   },
   "devDependencies": {
@@ -182,6 +182,9 @@
     "bootstrap-select": "1.12.4",
     "http-errors": "1.6.2",
     "duplexify": "3.6.0",
-    "to-absolute-glob": "2.0.2"
+    "to-absolute-glob": "2.0.2",
+    "typescript": "3.3.3333",
+    "bootstrap": "3.3.7",
+    "bootstrap-sass": "3.3.7"
   }
 }
