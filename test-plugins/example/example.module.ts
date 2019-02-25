@@ -45,7 +45,7 @@ namespace Example {
     HawtioExtension.add('hawtio-logout', ($scope) => {
       $scope.userDetails = userDetails;
       let template =
-        '<a href="" ng-click="userDetails.logout()">Logout</a>';
+        '<li><a class="pf-c-dropdown__menu-item" href="#" ng-focus="userDetails.logout()">Logout</a></li>';
       return $compile(template)($scope);
     });
   }
