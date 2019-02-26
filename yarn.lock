@@ -29,9 +29,9 @@
     "@types/jquery" "2.0.53"
 
 "@hawtio/core@~4.4.0":
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.4.1.tgz#5e7031e5091aef5e2a7bf7267fc5d9dd8a2b9adb"
-  integrity sha512-es/hCd4OsHZny+nT5a+FE+uMdiB979dIdIrdcmuc0UXNrigAe20YEpzl3dB6r3mopjWB5Dq5P+ro4fpOBNjwyg==
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.4.3.tgz#d7f076e98a0518fad7e0469ad7d0b082f22072c5"
+  integrity sha512-5+WjnVzqrN9r1kYAruvyg9PErdBeVOxMT9eApnU/r8UrCbwpvUyG//LP0EWejVzIKFwg6bet9RV2vuZtnCyd1Q==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "~1.0.192"

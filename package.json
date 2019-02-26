@@ -1,6 +1,6 @@
 {
   "name": "@hawtio/oauth",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "main": "dist/hawtio-oauth.js",
   "types": "dist/hawtio-oauth.d.ts",
   "files": [
@@ -10,7 +10,8 @@
     "start": "gulp connect",
     "build": "gulp build",
     "build-example": "gulp build-example",
-    "prepack": "gulp --series build version"
+    "prepack": "gulp --series build version",
+    "test": "gulp build"
   },
   "dependencies": {
     "@hawtio/core": "~4.4.0",
