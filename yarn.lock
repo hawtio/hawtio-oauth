@@ -29,9 +29,9 @@
     "@types/jquery" "2.0.53"
 
 "@hawtio/core@~4.4.0":
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.4.3.tgz#d7f076e98a0518fad7e0469ad7d0b082f22072c5"
-  integrity sha512-5+WjnVzqrN9r1kYAruvyg9PErdBeVOxMT9eApnU/r8UrCbwpvUyG//LP0EWejVzIKFwg6bet9RV2vuZtnCyd1Q==
+  version "4.4.4"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.4.4.tgz#078d35341e3a950c958ba595c62bfd8349918bde"
+  integrity sha512-HWL/s4y6ZNdpGijrhcycTLMxU56lp8IcYgjYGx7EH4JEl/Fb91s2agb5TaFA4jbht2zBLzDQpmQ1uPjh90EKiQ==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "~1.0.192"
@@ -74,9 +74,9 @@
     urijs "^1.18.10"
 
 "@patternfly/patternfly@~1.0.192":
-  version "1.0.209"
-  resolved "https://registry.yarnpkg.com/@patternfly/patternfly/-/patternfly-1.0.209.tgz#6fa7af6cbbbcca3928fb619eb1c82e1031cf4a0a"
-  integrity sha512-i16e6M/Il9PS7UKNxsbFA9ch22cHEvSomhXn0dxAwQGvq8FXAOdHqZiUCRaw+tlKHpTva9CCi4IGUXTHBZiNAg==
+  version "1.0.212"
+  resolved "https://registry.yarnpkg.com/@patternfly/patternfly/-/patternfly-1.0.212.tgz#fefa4ff58a1398ab586c4dbee285fda6774c293d"
+  integrity sha512-HSK+aMNj7eZz7Gf2uW+jqwl3/aCdpEGZ+CaM0BFViTiJ2dtEC7SidQfjwngOiCeXjN1WsEswUJ6vuTaH27ORTA==
 
 "@types/angular-idle@^1.1.31":
   version "1.1.31"
