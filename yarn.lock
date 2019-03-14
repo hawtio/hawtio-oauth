@@ -28,10 +28,10 @@
   dependencies:
     "@types/jquery" "2.0.53"
 
-"@hawtio/core@~4.4.0":
-  version "4.4.4"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.4.4.tgz#078d35341e3a950c958ba595c62bfd8349918bde"
-  integrity sha512-HWL/s4y6ZNdpGijrhcycTLMxU56lp8IcYgjYGx7EH4JEl/Fb91s2agb5TaFA4jbht2zBLzDQpmQ1uPjh90EKiQ==
+"@hawtio/core@~4.5.0":
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.5.1.tgz#7076fcc18fcbd911eaf7481d7a0a839d5d3ed105"
+  integrity sha512-6bc9K7COc3vAHBtTMXPq2M6CiD+EpNKgTc51aLhlnYoipVVagxAfGtgdqWV3S7674RPl1viPzNICNUrgqWMYzg==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "~1.0.192"
@@ -239,9 +239,9 @@
   integrity sha512-G+eO+2G1iW3GNrROxhoU+ar+bIJbQq1QkxcfhwjQ19xA20n3T31j5pSJqAOWvPSoFTz4Ets/DQgYhmgT4jepDg==
 
 "@types/d3-shape@*":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@types/d3-shape/-/d3-shape-1.2.3.tgz#cadc9f93a626db9190f306048a650df4ffa4e500"
-  integrity sha512-iP9TcX0EVi+LlX+jK9ceS+yhEz5abTitF+JaO2ugpRE/J+bccaYLe/0/3LETMmdaEkYarIyboZW8OF67Mpnj1w==
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@types/d3-shape/-/d3-shape-1.3.1.tgz#1b4f92b7efd7306fe2474dc6ee94c0f0ed2e6ab6"
+  integrity sha512-usqdvUvPJ7AJNwpd2drOzRKs1ELie53p2m2GnPKr076/ADM579jVTJ5dPsoZ5E/CMNWk8lvPWYQSvilpp6jjwg==
   dependencies:
     "@types/d3-path" "*"
 
@@ -281,9 +281,9 @@
     "@types/d3-selection" "*"
 
 "@types/d3@^4":
-  version "4.13.0"
-  resolved "https://registry.yarnpkg.com/@types/d3/-/d3-4.13.0.tgz#aae092b368266409cfbf19c611203145ec0d5f65"
-  integrity sha512-L7C+aOIl+z/e7pPBvRXxA9EZ8a5RIZSq4UnTgdjCnypYV3bPI1wpx81snC8pE1zB4SZQC/WK4noZUHzWAABfBA==
+  version "4.13.1"
+  resolved "https://registry.yarnpkg.com/@types/d3/-/d3-4.13.1.tgz#6d12ecab1ceb704fb41e4ac43e1c45f7fef016c8"
+  integrity sha512-aJDD18fjLurxior2/3aZ+Trvu5kcCEwoujGGt6LrLXsdxv9KR1gCeJQOve7tUwvSQhrIUsXNfTHhXNnfRxnyaA==
   dependencies:
     "@types/d3-array" "*"
     "@types/d3-axis" "*"
@@ -352,11 +352,6 @@
   version "7.0.52"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.52.tgz#8990d3350375542b0c21a83cd0331e6a8fc86716"
   integrity sha512-jjpyQsKGsOF/wUElNjfPULk+d8PKvJOIXk3IUeBYYmNCy5dMWfrI+JiixYNw8ppKOlcRwWTXFl0B+i5oGrf95Q==
-
-"@types/sizzle@*":
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/@types/sizzle/-/sizzle-2.3.2.tgz#a811b8c18e2babab7d542b3365887ae2e4d9de47"
-  integrity sha512-7EJYyKTL7tFR8+gDbB6Wwz/arpGa0Mywk1TJbNzKzHtzbwVmY4HR9WqS5VV7dsBUKQmPNr192jHr/VpBluj/hg==
 
 "@types/urijs@~1.15.38":
   version "1.15.38"
