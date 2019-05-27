@@ -108,10 +108,10 @@ namespace OSOAuth {
         let uri;
         if (openshiftConfig && openshiftConfig.master_uri) {
           uri = new URI(openshiftConfig.master_uri);
-          uri.segment('oapi/v1/users/~');
+          uri.segment('apis/user.openshift.io/v1/users/~');
         } else {
           uri = new URI(OSOAuthConfig.oauth_authorize_uri);
-          uri.path('/oapi/v1/users/~');
+          uri.path('/apis/user.openshift.io/v1/users/~');
         }
         keepaliveUri = uri.toString();
         userProfile = tmp;
