@@ -18,18 +18,19 @@ namespace OSOAuth {
   }
 
   export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile) {
+    const openShiftConfig = window['OPENSHIFT_CONFIG'];
     const currentURI = new URI(window.location.href);
-    const uri        = new URI(config.oauth_authorize_uri);
+    const uri = new URI(openShiftConfig.master_uri);
     uri.path(`/apis/oauth.openshift.io/v1/oauthaccesstokens/${userDetails.token}`);
-    // The following request may return 403 when delegated authentication with a service account as OAuthClient is used
+    // The following request returns 403 when delegated authentication with an OAuthClient is used, as possible scopes do not grant permissions to access the OAuth API:
     // See https://github.com/openshift/origin/issues/7011
     authenticatedHttpRequest({
       type: 'DELETE',
-      url : uri.toString()
+      url : uri.toString(),
     }, userDetails).always(() => {
       clearTokenStorage();
       doLogin(OSOAuthConfig, {
-        uri: currentURI.toString()
+        uri: currentURI.toString(),
       });
     });
   }
