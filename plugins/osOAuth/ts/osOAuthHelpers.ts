@@ -21,7 +21,7 @@ namespace OSOAuth {
     const openShiftConfig = window['OPENSHIFT_CONFIG'];
     const currentURI = new URI(window.location.href);
     const uri = new URI(openShiftConfig.master_uri);
-    uri.path(`/apis/oauth.openshift.io/v1/oauthaccesstokens/${userDetails.token}`);
+    uri.segment(`/apis/oauth.openshift.io/v1/oauthaccesstokens/${userDetails.token}`);
     // The following request returns 403 when delegated authentication with an OAuthClient is used, as possible scopes do not grant permissions to access the OAuth API:
     // See https://github.com/openshift/origin/issues/7011
     authenticatedHttpRequest({
