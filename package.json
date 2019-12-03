@@ -14,7 +14,7 @@
     "test": "gulp build"
   },
   "dependencies": {
-    "@hawtio/core": "~4.9.0",
+    "@hawtio/core": "~4.10.0",
     "ng-idle": "^1.3.2"
   },
   "devDependencies": {
