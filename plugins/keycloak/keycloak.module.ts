@@ -7,11 +7,18 @@ namespace HawtioKeycloak {
   HawtioOAuth.oauthPlugins.push('HawtioKeycloak');
 
   angular
-    .module(pluginName, ['ngIdle'])
+    .module(pluginName, ['ngIdle', 'ngCookies'])
     .config(applyAuthInterceptor)
-    .factory('keycloakService', () => new KeycloakService(isKeycloakEnabled(), keycloak))
+    .factory('keycloakService', createKeycloakService)
     .run(loginUserDetails)
     .run(configureIdleTimeout);
+
+  function createKeycloakService($cookies: ng.cookies.ICookiesService): KeycloakService {
+    'ngInject';
+    // always set jaas to true unless explicitly configured as 'false'
+    let jaas = config.jaas !== false;
+    return new KeycloakService(isKeycloakEnabled(), keycloak, jaas, $cookies);
+  }
 
   function isKeycloakEnabled(): boolean {
     if (keycloak && userProfile) {

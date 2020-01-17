@@ -75,6 +75,13 @@
   resolved "https://registry.yarnpkg.com/@patternfly/patternfly/-/patternfly-2.24.0.tgz#dec25e8bf1593b6a4acdb18d167cb5c9f3e71378"
   integrity sha512-/hcfFEy85E/l7XScFiHjUc6qdYQHCWo7mny5gSnEg3y6ShUg1/JJksqAVeYDkgGGKQHGZ+Bfgaw3upU5Wl0jEw==
 
+"@types/angular-cookies@^1.4.5":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/@types/angular-cookies/-/angular-cookies-1.4.5.tgz#f5ccf5f42a7b9f4d13e77afb8722034ea9f40bd3"
+  integrity sha512-WJJX4Z0JDte/0KSKGm4JGJbnv3wz8fnK6Li3aKdXUGu+mvjTvmJF7h0acFV9ODGhgwpFXzH9dLw3IjR6WbgG3w==
+  dependencies:
+    "@types/angular" "*"
+
 "@types/angular-idle@^1.1.31":
   version "1.1.31"
   resolved "https://registry.yarnpkg.com/@types/angular-idle/-/angular-idle-1.1.31.tgz#ed064d7afd0558b5ac43d0951b382f948c3f4103"
@@ -401,6 +408,11 @@ angular-animate@1.7.2, angular-animate@^1.7.7:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/angular-animate/-/angular-animate-1.7.2.tgz#48d1d22caf0057b57b50f882b68d51c297aa7747"
   integrity sha512-/MQL2FEFXhdzFUKJ9AJq6gAYz3YGsh2xHTztuQKY5FkqjEBpF5YGypgprTz153P7t51T8nFqLsG8jwkpRdM6gg==
+
+angular-cookies@^1.7.9:
+  version "1.7.9"
+  resolved "https://registry.yarnpkg.com/angular-cookies/-/angular-cookies-1.7.9.tgz#0f0cd2a9d1c81e5b8d6c6711d41f0909f9d0b8e0"
+  integrity sha512-3eRq/aPrtCZKDWQnc3nW3sFoMbLiHkCkyDF2O9u7VXnqvVsUPaipk5R1ZqahgcSQHQrN/F5IU4T4nrz52qAZmA==
 
 angular-drag-and-drop-lists@2.0.0:
   version "2.0.0"
@@ -2819,7 +2831,7 @@ micromatch@3.1.5, micromatch@^2.3.7, micromatch@^2.3.8, micromatch@^3.0.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-mime-db@1.30.0, mime-db@1.42.0, mime-db@~1.12.0, mime-db@~1.30.0:
+mime-db@1.30.0, mime-db@1.43.0, mime-db@~1.12.0, mime-db@~1.30.0:
   version "1.30.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
   integrity sha1-dMZD2i3Z1qRTmZY0ZbJtXKfXHwE=

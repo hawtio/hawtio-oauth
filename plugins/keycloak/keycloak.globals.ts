@@ -8,7 +8,13 @@ namespace HawtioKeycloak {
 
   export type KeycloakConfig = {
     url: string;
-    [key: string]: string;
+    [key: string]: any;
+
+    /**
+     * Hawtio custom option to instruct whether to use JAAS authentication or not.
+     * Default: true
+     */
+    jaas?: boolean;
   }
 
   export const pluginName: string = 'hawtio-oauth-keycloak';

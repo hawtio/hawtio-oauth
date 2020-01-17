@@ -6,7 +6,9 @@ namespace HawtioKeycloak {
 
     constructor(
       public readonly enabled: boolean,
-      public readonly keycloak: Keycloak.KeycloakInstance) {
+      public readonly keycloak: Keycloak.KeycloakInstance,
+      private readonly jaas: boolean,
+      private readonly $cookies) {
     }
 
     updateToken(onSuccess: (token: string) => void, onError?: () => void): void {
@@ -28,8 +30,18 @@ namespace HawtioKeycloak {
       $.ajaxSetup({
         beforeSend: (xhr: JQueryXHR, settings: JQueryAjaxSettings) => {
           if (this.keycloak.authenticated && !this.keycloak.isTokenExpired(TOKEN_UPDATE_INTERVAL)) {
-            // hawtio uses BearerTokenLoginModule on server side
-            xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(keycloak.profile.username, keycloak.token));
+            if (this.jaas) {
+              // use BearerTokenLoginModule on server side
+              xhr.setRequestHeader('Authorization', Core.getBasicAuthHeader(keycloak.profile.username, keycloak.token));
+            } else {
+              // otherwise bearer token is used
+              xhr.setRequestHeader('Authorization', 'Bearer ' + keycloak.token);
+            }
+            // For CSRF protection with Spring Security
+            if (this.$cookies.get('XSRF-TOKEN')) {
+              log.debug("Setting XSRF token header from cookies");
+              xhr.setRequestHeader('X-XSRF-TOKEN', this.$cookies.get('XSRF-TOKEN'));
+            }
           } else {
             log.debug("Skipped request", settings.url, "for now.");
             this.updateToken(
