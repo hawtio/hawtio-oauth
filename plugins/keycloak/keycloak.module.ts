@@ -16,7 +16,7 @@ namespace HawtioKeycloak {
   function createKeycloakService($cookies: ng.cookies.ICookiesService): KeycloakService {
     'ngInject';
     // always set jaas to true unless explicitly configured as 'false'
-    let jaas = config.jaas !== false;
+    let jaas = !config || config.jaas !== false;
     return new KeycloakService(isKeycloakEnabled(), keycloak, jaas, $cookies);
   }
 
