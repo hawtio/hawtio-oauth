@@ -28,10 +28,10 @@
   dependencies:
     "@types/jquery" "2.0.53"
 
-"@hawtio/core@~4.10.0":
-  version "4.10.0"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.10.0.tgz#7aa33d333902774d6084f98b8f0144d1a38ab156"
-  integrity sha512-gJwH1LcNvFuh3lpZ0L5AIb03VWcWpHOzLBewgVKCrwsnMuzVmuEj/CiR2UNCx9VjycZUqe2WhLzZba/M70yXeg==
+"@hawtio/core@~4.12.0":
+  version "4.12.0"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.12.0.tgz#1b0c1bcdf651f9f63b8636df6cb1f0b287adbe80"
+  integrity sha512-EZbpk09h/1zD/NtQGE2SSkxqKajvzKILQ1d7pzo+JIXHPDqfEfB0Web4RuXXAwLlBb6mL83Ky9Hlyga5FbIHbQ==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "^2.0.0"
@@ -1499,7 +1499,7 @@ fancy-log@^1.1.0, fancy-log@^1.2.0:
     color-support "^1.1.3"
     time-stamp "^1.0.0"
 
-fast-deep-equal@2.0.1, fast-deep-equal@^1.0.0, fast-deep-equal@^2.0.1:
+fast-deep-equal@2.0.1, fast-deep-equal@^1.0.0, fast-deep-equal@^3.1.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
   integrity sha1-ewUhjd+WZ79/Nwv3/bLLFf3Qqkk=
