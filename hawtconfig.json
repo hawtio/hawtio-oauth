@@ -1,6 +1,6 @@
 {
   "branding": {
-    "appName": "Hawtio Management Console",
+    "appName": "hawtio-oauth",
     "appLogoUrl": "node_modules/@hawtio/core/dist/img/hawtio-logo.svg"
   },
   "disabledRoutes": []
