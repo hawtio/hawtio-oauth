@@ -28,10 +28,10 @@
   dependencies:
     "@types/jquery" "2.0.53"
 
-"@hawtio/core@^4.14.0":
-  version "4.14.0"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.14.0.tgz#dfcf898ad76b16b8425fbfae3ca04863bc086c9c"
-  integrity sha512-WSEH1E5YWPYH2bRG3MaglmQquQrTpM+cIjQ36by9qWMUxoUsK/ucmkX8d9gI69FBxXcWi2uJH0aJgsXNR0IQsA==
+"@hawtio/core@^4.14.1":
+  version "4.14.1"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.14.1.tgz#fd7b23c3525e617ca955ac98b493ef932720d8dd"
+  integrity sha512-d+DeI0teqfXiwX7AGqN8oOYe+RwJCnKfAzzey0hEccWtqc/24VBvbDf7SiDMBcNKStUXGBO94HjW8UBiAwA3dQ==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "^2.0.0"
@@ -2104,6 +2104,13 @@ has-values@1.0.0, has-values@^0.1.4, has-values@^1.0.0:
     is-number "^3.0.0"
     kind-of "^4.0.0"
 
+has@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/has/-/has-1.0.3.tgz#722d7cbfc1f6aa8241f16dd814e011e1f41e8796"
+  integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
+  dependencies:
+    function-bind "^1.1.1"
+
 hoek@4.x.x:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/hoek/-/hoek-4.2.0.tgz#72d9d0754f7fe25ca2d01ad8f8f9a9449a89526d"
@@ -2227,6 +2234,13 @@ is-buffer@^1.1.5:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-1.1.6.tgz#efaa2ea9daa0d7ab2ea13a97b2b8ad51fefbe8be"
   integrity sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==
+
+is-core-module@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.2.0.tgz#97037ef3d52224d85163f5597b2b63d9afed981a"
+  integrity sha512-XRAfAdyyY5F5cOXn7hYQDqh2Xmii+DEfIcQGxK/uNwMHhIkPWO0g8msXcbzLe+MpGoR951MlqM/2iIlU4vKDdQ==
+  dependencies:
+    has "^1.0.3"
 
 is-data-descriptor@1.0.0, is-data-descriptor@^0.1.4, is-data-descriptor@^1.0.0:
   version "1.0.0"
@@ -2832,7 +2846,7 @@ micromatch@3.1.5, micromatch@^2.3.7, micromatch@^2.3.8, micromatch@^3.0.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-mime-db@1.30.0, mime-db@1.44.0, mime-db@~1.12.0, mime-db@~1.30.0:
+mime-db@1.30.0, mime-db@1.45.0, mime-db@~1.12.0, mime-db@~1.30.0:
   version "1.30.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
   integrity sha1-dMZD2i3Z1qRTmZY0ZbJtXKfXHwE=
