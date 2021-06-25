@@ -28,10 +28,10 @@
   dependencies:
     "@types/jquery" "2.0.53"
 
-"@hawtio/core@^4.14.1":
-  version "4.14.1"
-  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.14.1.tgz#fd7b23c3525e617ca955ac98b493ef932720d8dd"
-  integrity sha512-d+DeI0teqfXiwX7AGqN8oOYe+RwJCnKfAzzey0hEccWtqc/24VBvbDf7SiDMBcNKStUXGBO94HjW8UBiAwA3dQ==
+"@hawtio/core@^4.14.2":
+  version "4.14.2"
+  resolved "https://registry.yarnpkg.com/@hawtio/core/-/core-4.14.2.tgz#3c3185cfdf8694005bdb711366b85fea4dec25a1"
+  integrity sha512-lwTrS5jRmbnW6C9y/sk9BsBzVKb0skWzR7bNjWhPpLPY/u3g04vOA7Tb6CLvwsT3kXQxmzdnZTxsOTPhobEMHw==
   dependencies:
     "@hawtio/core-dts" "~3.3.0"
     "@patternfly/patternfly" "^2.0.0"
@@ -47,7 +47,7 @@
     angular-route "^1.7.7"
     jquery "2.2.4"
     js-logger "1.4.1"
-    lodash "~4.17.0"
+    lodash "~4.17.21"
     marked "0.6.1"
     typescript "^3.0.3"
     urijs "1.19.0"
@@ -2235,10 +2235,10 @@ is-buffer@^1.1.5:
   resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-1.1.6.tgz#efaa2ea9daa0d7ab2ea13a97b2b8ad51fefbe8be"
   integrity sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==
 
-is-core-module@^2.1.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.2.0.tgz#97037ef3d52224d85163f5597b2b63d9afed981a"
-  integrity sha512-XRAfAdyyY5F5cOXn7hYQDqh2Xmii+DEfIcQGxK/uNwMHhIkPWO0g8msXcbzLe+MpGoR951MlqM/2iIlU4vKDdQ==
+is-core-module@^2.2.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.4.0.tgz#8e9fc8e15027b011418026e98f0e6f4d86305cc1"
+  integrity sha512-6A2fkfq1rfeQZjxrZJGerpLCTHRNEBiSgnu0+obeJpEPZRUooHgsizvzv0ZjJwOz3iWIHdJtVWJ/tmPr3D21/A==
   dependencies:
     has "^1.0.3"
 
@@ -2696,10 +2696,10 @@ lodash.templatesettings@4.1.0, lodash.templatesettings@^3.0.0, lodash.templatese
   dependencies:
     lodash._reinterpolate "~3.0.0"
 
-lodash@4.17.4, lodash@^4.0.0, lodash@^4.17.11, lodash@^4.17.4, lodash@~1.0.1, lodash@~4.17.0, lodash@~4.17.10:
-  version "4.17.4"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
-  integrity sha1-eCA6TRwyiuHYbcpkYONptX9AVa4=
+lodash@4.17.21, lodash@^4.0.0, lodash@^4.17.11, lodash@^4.17.4, lodash@~1.0.1, lodash@~4.17.10, lodash@~4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 loud-rejection@^1.0.0:
   version "1.6.0"
@@ -2846,7 +2846,7 @@ micromatch@3.1.5, micromatch@^2.3.7, micromatch@^2.3.8, micromatch@^3.0.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-mime-db@1.30.0, mime-db@1.45.0, mime-db@~1.12.0, mime-db@~1.30.0:
+mime-db@1.30.0, mime-db@1.48.0, mime-db@~1.12.0, mime-db@~1.30.0:
   version "1.30.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
   integrity sha1-dMZD2i3Z1qRTmZY0ZbJtXKfXHwE=
@@ -4506,7 +4506,7 @@ yallist@^2.1.2:
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-2.1.2.tgz#1c11f9218f076089a47dd512f93c6699a6a81d52"
   integrity sha1-HBH5IY8HYImkfdUS+TxmmaaoHVI=
 
-yargs-parser@5.0.0-security.0, yargs-parser@7.0.0, yargs-parser@^7.0.0:
+yargs-parser@7.0.0, yargs-parser@^5.0.1, yargs-parser@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-7.0.0.tgz#8d0ac42f16ea55debd332caf4c4038b3e3f5dfd9"
   integrity sha1-jQrELxbqVd69MyyvTEA4s+P139k=
