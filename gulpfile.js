@@ -192,7 +192,8 @@ gulp.task('connect', ['watch'], function() {
       },
       github: {
         clientId: process.env.GITHUB_OAUTH_CLIENT_ID,
-        clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET
+        clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
+        accessToken: process.env.GITHUB_ACCESS_TOKEN
       }
     };
     // TODO for now 'disable oauth' means turn off the openshift oauth flow

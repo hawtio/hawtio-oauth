@@ -1,10 +1,12 @@
 /// <reference path="../../oauth.globals.ts"/>
 /// <reference path="githubHelpers.ts"/>
+/// <reference path="githubPreferences.ts"/>
+
 namespace GithubOAuth {
 
   export const _module = angular.module(pluginName, []);
 
-  let settings = {
+  const settings = {
     enabled: false,
     username: undefined,
     clientId: undefined,
@@ -19,6 +21,8 @@ namespace GithubOAuth {
   };
 
   _module.constant('githubOAuthSettings', settings);
+
+  _module.controller('GithubPreferencesController', GithubPreferencesController);
 
   _module.service('GithubOAuth', ['githubOAuthSettings', (settings) => {
     let self = {
@@ -38,7 +42,7 @@ namespace GithubOAuth {
   }]);
 
   _module.run(['preferencesRegistry', (preferencesRegistry: Core.PreferencesRegistry) => {
-    preferencesRegistry.addTab("Github", UrlHelpers.join(templatePath, "githubPreferences.html"), () => { return settings.enabled; });
+    preferencesRegistry.addTab("GitHub", UrlHelpers.join(templatePath, "githubPreferences.html"), () => settings.enabled);
     log.debug("loaded");
   }]);
 
@@ -49,8 +53,9 @@ namespace GithubOAuth {
     depends: ['HawtioOAuthConfig'],
     task: (next) => {
       if (window['HAWTIO_OAUTH_CONFIG']) {
-        let clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
-        let clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+        const clientId = settings.clientId = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientId']);
+        const clientSecret = settings.clientSecret = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'clientSecret']);
+        settings.accessToken = Core.pathGet(HAWTIO_OAUTH_CONFIG, ['github', 'accessToken']);
         if (clientId && clientSecret) {
           log.debug("enabled");
           settings.enabled = true;

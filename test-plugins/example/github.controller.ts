@@ -1,10 +1,9 @@
 namespace Example {
 
-  export function page2Controller($scope, GithubOAuth, HawtioPreferences) {
+  export function page2Controller($scope, GithubOAuth) {
     'ngInject';
 
     let oauth = $scope.oauth = GithubOAuth;
-    $scope.prefs = HawtioPreferences;
 
     if (oauth.hasToken()) {
       $.ajax('https://api.github.com/user/orgs', <any>{

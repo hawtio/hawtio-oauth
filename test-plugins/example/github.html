@@ -1,8 +1,9 @@
 <div ng-controller="Example.Page2Controller">
+  <h1>User Details</h1>
   <div class="row" ng-if="!oauth.hasToken() || data.status === 403">
     <div class="col-md-12">
       <div class="alert alert-warning">
-        No GitHub credentials available, <a href="" ng-click="prefs.goto('Github')">configure your GitHub account</a>
+        No GitHub credentials available. Go to Preferences > GitHub to configure your GitHub account.</a>
       </div>
     </div>
   </div>
