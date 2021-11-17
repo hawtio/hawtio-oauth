@@ -1,5 +1,7 @@
 # hawtio-oauth
 
+[![Build](https://github.com/hawtio/hawtio-oauth/actions/workflows/build.yml/badge.svg)](https://github.com/hawtio/hawtio-oauth/actions/workflows/build.yml)
+
 This module contains a couple different OAuth clients that can be configured by other plugins:
 
 1. keycloak - a plugin that integrates with Keycloak
