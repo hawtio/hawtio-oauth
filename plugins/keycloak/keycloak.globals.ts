@@ -2,9 +2,7 @@
 
 namespace HawtioKeycloak {
 
-  export type UserProfile = Keycloak.KeycloakProfile & {
-    token?: string
-  };
+  export type UserProfile = Keycloak.KeycloakProfile & HawtioOAuth.UserProfile;
 
   export type KeycloakConfig = {
     url: string;
@@ -15,7 +13,7 @@ namespace HawtioKeycloak {
      * Default: true
      */
     jaas?: boolean;
-  }
+  };
 
   export const pluginName: string = 'hawtio-oauth-keycloak';
   export const log: Logging.Logger = Logger.get(pluginName);

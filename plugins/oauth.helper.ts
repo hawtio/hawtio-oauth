@@ -2,9 +2,9 @@
 
 namespace HawtioOAuth {
 
-  let userProfile: any = null;
+  let userProfile: UserProfile = null;
 
-  export function getUserProfile(): any {
+  export function getUserProfile(): UserProfile {
     if (!userProfile) {
       log.debug("Finding 'userProfile' from the active OAuth plugin");
       findUserProfile();
