@@ -89,13 +89,12 @@ namespace OSOAuth {
         next();
         return;
       }
-      if (!OSOAuthConfig.oauth_client_id ||
-        !OSOAuthConfig.oauth_authorize_uri) {
+      if (!OSOAuthConfig.oauth_client_id || !OSOAuthConfig.oauth_authorize_uri) {
         log.debug("Invalid oauth config, disabled oauth");
         next();
         return;
       }
-      log.debug("config: ", OSOAuthConfig);
+      log.debug("config:", OSOAuthConfig);
       let currentURI = new URI(window.location.href);
       let fragmentParams = checkToken(currentURI);
       if (fragmentParams) {
@@ -105,7 +104,7 @@ namespace OSOAuth {
           type: fragmentParams.token_type,
           obtainedAt: fragmentParams.obtainedAt || 0
         }
-        let uri;
+        let uri: uri.URI;
         if (openshiftConfig && openshiftConfig.master_uri) {
           uri = new URI(openshiftConfig.master_uri);
           uri.segment('apis/user.openshift.io/v1/users/~');

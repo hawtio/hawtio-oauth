@@ -47,16 +47,16 @@ namespace OSOAuth {
       scope        : config.scope
     });
     const target = uri.toString();
-    log.debug("Redirecting to URI: ", target);
+    log.debug("Redirecting to URI:", target);
     window.location.href = target;
   }
 
-  export function extractToken(uri) {
+  export function extractToken(uri: uri.URI): any {
     const query = uri.query(true);
-    log.debug("Query: ", query);
+    log.debug("Query:", query);
     const fragmentParams: any = new URI("?" + uri.fragment()).query(true);
-    log.debug("FragmentParams: ", fragmentParams);
-    if (fragmentParams.access_token && (fragmentParams.token_type === "bearer") || fragmentParams.token_type === "Bearer") {
+    log.debug("FragmentParams:", fragmentParams);
+    if (fragmentParams.access_token && (fragmentParams.token_type === "bearer" || fragmentParams.token_type === "Bearer")) {
       log.debug("Got token");
       const localStorage          = Core.getLocalStorage();
       const creds                 = {
@@ -72,7 +72,7 @@ namespace OSOAuth {
       delete fragmentParams.scope;
       uri.fragment("").query(query);
       const target = uri.toString();
-      log.debug("redirecting to: ", target);
+      log.debug("redirecting to:", target);
       window.location.href = target;
       return creds;
     } else {
@@ -86,7 +86,7 @@ namespace OSOAuth {
     delete localStorage[OS_TOKEN_STORAGE_KEY];
   }
 
-  export function checkToken(uri):any {
+  export function checkToken(uri: uri.URI): any {
     const localStorage = Core.getLocalStorage();
     let answer         = undefined;
     if (OS_TOKEN_STORAGE_KEY in localStorage) {
@@ -95,13 +95,13 @@ namespace OSOAuth {
       } catch (e) {
         clearTokenStorage();
         // must be broken...
-        log.debug("Error extracting osAuthCreds value: ", e);
+        log.debug("Error extracting osAuthCreds value:", e);
       }
     }
     if (!answer) {
       answer = extractToken(uri);
     }
-    log.debug("Using creds: ", answer);
+    log.debug("Using creds:", answer);
     return answer;
   }
 }
