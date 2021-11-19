@@ -3,11 +3,11 @@ namespace OSOAuth {
 
   const OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
 
-  export function currentTimeSeconds() {
+  export function currentTimeSeconds(): number {
     return Math.floor(new Date().getTime() / 1000);
   }
 
-  export function authenticatedHttpRequest(options, userDetails) {
+  export function authenticatedHttpRequest(options, userDetails): JQueryXHR {
     return $.ajax(_.extend(options, {
       beforeSend: (request) => {
         if (userDetails.token) {
@@ -17,7 +17,7 @@ namespace OSOAuth {
     }));
   }
 
-  export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile) {
+  export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile): void {
     const openShiftConfig = window['OPENSHIFT_CONFIG'];
     const currentURI = new URI(window.location.href);
     const uri = new URI(openShiftConfig.master_uri);
@@ -26,7 +26,7 @@ namespace OSOAuth {
     // See https://github.com/openshift/origin/issues/7011
     authenticatedHttpRequest({
       type: 'DELETE',
-      url : uri.toString(),
+      url: uri.toString(),
     }, userDetails).always(() => {
       clearTokenStorage();
       doLogin(OSOAuthConfig, {
@@ -35,16 +35,16 @@ namespace OSOAuth {
     });
   }
 
-  export function doLogin(config, options) {
-    const clientId  = config.oauth_client_id;
+  export function doLogin(config: { oauth_client_id: string, oauth_authorize_uri: string, scope: string; }, options: { uri: string; }): void {
+    const clientId = config.oauth_client_id;
     const targetURI = config.oauth_authorize_uri;
-    const uri       = new URI(targetURI);
+    const uri = new URI(targetURI);
     uri.query({
-      client_id    : clientId,
+      client_id: clientId,
       response_type: 'token',
-      state        : options.uri,
-      redirect_uri : options.uri,
-      scope        : config.scope
+      state: options.uri,
+      redirect_uri: options.uri,
+      scope: config.scope
     });
     const target = uri.toString();
     log.debug("Redirecting to URI:", target);
@@ -53,42 +53,42 @@ namespace OSOAuth {
 
   export function extractToken(uri: uri.URI): any {
     const query = uri.query(true);
-    log.debug("Query:", query);
+    log.debug("Extract token from URI - query:", query);
     const fragmentParams: any = new URI("?" + uri.fragment()).query(true);
-    log.debug("FragmentParams:", fragmentParams);
-    if (fragmentParams.access_token && (fragmentParams.token_type === "bearer" || fragmentParams.token_type === "Bearer")) {
-      log.debug("Got token");
-      const localStorage          = Core.getLocalStorage();
-      const creds                 = {
-        token_type  : fragmentParams.token_type,
-        access_token: fragmentParams.access_token,
-        expires_in  : fragmentParams.expires_in,
-        obtainedAt  : currentTimeSeconds()
-      };
-      localStorage[OS_TOKEN_STORAGE_KEY] = angular.toJson(creds);
-      delete fragmentParams.token_type;
-      delete fragmentParams.access_token;
-      delete fragmentParams.expires_in;
-      delete fragmentParams.scope;
-      uri.fragment("").query(query);
-      const target = uri.toString();
-      log.debug("redirecting to:", target);
-      window.location.href = target;
-      return creds;
-    } else {
+    log.debug("Extract token from URI - fragmentParams:", fragmentParams);
+    if (!fragmentParams.access_token || (fragmentParams.token_type !== "bearer" && fragmentParams.token_type !== "Bearer")) {
       log.debug("No token in URI");
       return undefined;
     }
+
+    log.debug("Got token");
+    const localStorage = Core.getLocalStorage();
+    const creds = {
+      token_type: fragmentParams.token_type,
+      access_token: fragmentParams.access_token,
+      expires_in: fragmentParams.expires_in,
+      obtainedAt: currentTimeSeconds()
+    };
+    localStorage[OS_TOKEN_STORAGE_KEY] = angular.toJson(creds);
+    delete fragmentParams.token_type;
+    delete fragmentParams.access_token;
+    delete fragmentParams.expires_in;
+    delete fragmentParams.scope;
+    uri.fragment("").query(query);
+    const target = uri.toString();
+    log.debug("redirecting to:", target);
+    window.location.href = target;
+    return creds;
   }
 
-  export function clearTokenStorage() {
+  export function clearTokenStorage(): void {
     const localStorage = Core.getLocalStorage();
     delete localStorage[OS_TOKEN_STORAGE_KEY];
   }
 
   export function checkToken(uri: uri.URI): any {
     const localStorage = Core.getLocalStorage();
-    let answer         = undefined;
+    let answer: any;
     if (OS_TOKEN_STORAGE_KEY in localStorage) {
       try {
         answer = angular.fromJson(localStorage[OS_TOKEN_STORAGE_KEY]);
@@ -103,5 +103,11 @@ namespace OSOAuth {
     }
     log.debug("Using creds:", answer);
     return answer;
+  }
+
+  export function ajaxSetup(token: string): void {
+    $.ajaxSetup({
+      beforeSend: xhr => xhr.setRequestHeader('Authorization', 'Bearer ' + token)
+    });
   }
 }
