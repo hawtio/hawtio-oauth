@@ -1,9 +1,9 @@
-/// <reference path="../../oauth.globals.ts"/>
+/// <reference path="../oauth.globals.ts"/>
+
 namespace GithubOAuth {
 
   export const pluginName = 'hawtio-oauth-github';
   export const log: Logging.Logger = Logger.get(pluginName);
-  export const templatePath = 'plugins/github/html';
 
   const LOCAL_STORAGE_KEY = 'GithubOAuthSettings';
 

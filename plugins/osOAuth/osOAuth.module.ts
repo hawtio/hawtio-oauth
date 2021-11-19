@@ -1,4 +1,4 @@
-/// <reference path="osOAuthHelpers.ts"/>
+/// <reference path="osOAuth.helpers.ts"/>
 
 namespace OSOAuth {
 

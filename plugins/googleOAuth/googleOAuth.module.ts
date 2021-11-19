@@ -1,4 +1,4 @@
-/// <reference path="googleOAuthHelpers.ts"/>
+/// <reference path="googleOAuth.helpers.ts"/>
 
 namespace GoogleOAuth {
 

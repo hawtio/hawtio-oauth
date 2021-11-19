@@ -1,6 +1,6 @@
-/// <reference path="../../oauth.globals.ts"/>
-/// <reference path="githubHelpers.ts"/>
-/// <reference path="githubPreferences.ts"/>
+/// <reference path="../oauth.globals.ts"/>
+/// <reference path="github.helpers.ts"/>
+/// <reference path="github-preferences.ts"/>
 
 namespace GithubOAuth {
 
@@ -42,7 +42,7 @@ namespace GithubOAuth {
   }]);
 
   _module.run(['preferencesRegistry', (preferencesRegistry: Core.PreferencesRegistry) => {
-    preferencesRegistry.addTab("GitHub", UrlHelpers.join(templatePath, "githubPreferences.html"), () => settings.enabled);
+    preferencesRegistry.addTab("GitHub", "plugins/github/github-preferences.html", () => settings.enabled);
     log.debug("loaded");
   }]);
 

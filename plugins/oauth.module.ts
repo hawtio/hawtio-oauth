@@ -1,7 +1,7 @@
 /// <reference path="oauth.helper.ts"/>
-/// <reference path="github/ts/githubPlugin.ts"/>
-/// <reference path="googleOAuth/ts/googleOAuthPlugin.ts"/>
-/// <reference path="osOAuth/ts/osOAuthPlugin.ts"/>
+/// <reference path="github/github.module.ts"/>
+/// <reference path="googleOAuth/googleOAuth.module.ts"/>
+/// <reference path="osOAuth/osOAuth.module.ts"/>
 /// <reference path="keycloak/keycloak.module.ts"/>
 
 namespace HawtioOAuth {

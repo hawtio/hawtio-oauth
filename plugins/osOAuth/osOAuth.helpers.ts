@@ -1,4 +1,4 @@
-/// <reference path="osOAuthGlobals.ts"/>
+/// <reference path="osOAuth.globals.ts"/>
 namespace OSOAuth {
 
   const OS_TOKEN_STORAGE_KEY = 'osAuthCreds';
