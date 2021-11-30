@@ -1,4 +1,5 @@
 /// <reference path="osOAuth.helpers.ts"/>
+/// <reference path="../oauth.helper.ts"/>
 
 namespace OSOAuth {
 
@@ -63,12 +64,7 @@ namespace OSOAuth {
   hawtioPluginLoader.registerPreBootstrapTask({
     name: 'OSOAuth',
     task: (next) => {
-      let openshiftConfig = null;
-      try {
-        openshiftConfig = window['OPENSHIFT_CONFIG'];
-      } catch (e) {
-        // ignore
-      }
+      let openshiftConfig: HawtioOAuth.Config = window['OPENSHIFT_CONFIG'];
       if (openshiftConfig && openshiftConfig.token) {
         useProvidedToken(openshiftConfig.token);
         next();
@@ -115,7 +111,7 @@ namespace OSOAuth {
             keepaliveInterval = 10;
           }
           log.debug("userProfile:", userProfile);
-          ajaxSetup(userProfile.token);
+          HawtioOAuth.ajaxSetup(userProfile.token);
           next();
         },
         error: (jqXHR, textStatus, errorThrown) => {
@@ -139,7 +135,7 @@ namespace OSOAuth {
     OSOAuth.userProfile = {
       token: token
     };
-    ajaxSetup(token);
+    HawtioOAuth.ajaxSetup(token);
   }
 
   function validateConfig(): boolean {
@@ -148,7 +144,7 @@ namespace OSOAuth {
       return false;
     }
     if (!OSOAuthConfig.oauth_client_id || !OSOAuthConfig.oauth_authorize_uri) {
-      log.debug("Invalid oauth config, disabled oauth");
+      log.debug("Invalid oauth config, disabled oauth", OSOAuthConfig);
       return false;
     }
     return true;

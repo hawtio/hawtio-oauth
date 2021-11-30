@@ -17,7 +17,7 @@ namespace OSOAuth {
     }));
   }
 
-  export function doLogout(config = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile): void {
+  export function doLogout(config: HawtioOAuth.OpenShiftConfig = window['OSOAuthConfig'], userDetails = OSOAuth.userProfile): void {
     const openShiftConfig = window['OPENSHIFT_CONFIG'];
     const currentURI = new URI(window.location.href);
     const uri = new URI(openShiftConfig.master_uri);
@@ -35,7 +35,7 @@ namespace OSOAuth {
     });
   }
 
-  export function doLogin(config: { oauth_client_id: string, oauth_authorize_uri: string, scope: string; }, options: { uri: string; }): void {
+  export function doLogin(config: HawtioOAuth.OpenShiftConfig, options: { uri: string; }): void {
     const clientId = config.oauth_client_id;
     const targetURI = config.oauth_authorize_uri;
     const uri = new URI(targetURI);
@@ -105,9 +105,4 @@ namespace OSOAuth {
     return answer;
   }
 
-  export function ajaxSetup(token: string): void {
-    $.ajaxSetup({
-      beforeSend: xhr => xhr.setRequestHeader('Authorization', 'Bearer ' + token)
-    });
-  }
 }
