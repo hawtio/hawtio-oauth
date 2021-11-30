@@ -41,4 +41,10 @@ namespace HawtioOAuth {
     }));
   }
 
+  export function ajaxSetup(token: string): void {
+    $.ajaxSetup({
+      beforeSend: xhr => xhr.setRequestHeader('Authorization', 'Bearer ' + token)
+    });
+  }
+
 }

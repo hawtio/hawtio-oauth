@@ -3,12 +3,14 @@
 /// <reference path="googleOAuth/googleOAuth.module.ts"/>
 /// <reference path="osOAuth/osOAuth.module.ts"/>
 /// <reference path="keycloak/keycloak.module.ts"/>
+/// <reference path="form/form.module.ts"/>
 
 namespace HawtioOAuth {
 
   const hawtioOAuthModule = angular
     .module(pluginName, [
       'ngIdle',
+      FormAuth.pluginName,
       GithubOAuth.pluginName,
       GoogleOAuth.pluginName,
       HawtioKeycloak.pluginName,
