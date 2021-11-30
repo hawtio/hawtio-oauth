@@ -9,7 +9,6 @@ namespace Example {
     .module(pluginName, [])
     .config(addRoutes)
     .run(addTabs)
-    .run(addLogoutToUserDropdown)
     .controller("Example.Page1Controller", page1Controller)
     .controller("Example.Page2Controller", page2Controller)
     .name;
@@ -33,20 +32,6 @@ namespace Example {
     mainNavService.addItem({
       title: 'GitHub',
       href: 'github',
-    });
-  }
-
-  export function addLogoutToUserDropdown(
-    HawtioExtension: Core.HawtioExtension,
-    $compile: ng.ICompileService,
-    userDetails: Core.AuthService): void {
-    'ngInject';
-
-    HawtioExtension.add('hawtio-logout', ($scope) => {
-      $scope.userDetails = userDetails;
-      let template =
-        '<li><a class="pf-c-dropdown__menu-item" href="#" ng-focus="userDetails.logout()">Logout</a></li>';
-      return $compile(template)($scope);
     });
   }
 
