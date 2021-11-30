@@ -1,15 +1,16 @@
-const gulp = require('gulp'),
-      eventStream = require('event-stream'),
-      gulpLoadPlugins = require('gulp-load-plugins'),
-      fs = require('fs'),
-      del = require('del'),
-      path = require('path'),
-      uri = require('urijs'),
-      s = require('underscore.string'),
-      argv = require('yargs').argv,
-      stringifyObject = require('stringify-object'),
-      logger = require('js-logger'),
-      hawtio = require('@hawtio/node-backend');
+const
+  gulp = require('gulp'),
+  eventStream = require('event-stream'),
+  gulpLoadPlugins = require('gulp-load-plugins'),
+  fs = require('fs'),
+  del = require('del'),
+  path = require('path'),
+  uri = require('urijs'),
+  s = require('underscore.string'),
+  argv = require('yargs').argv,
+  stringifyObject = require('stringify-object'),
+  logger = require('js-logger'),
+  hawtio = require('@hawtio/node-backend');
 
 const package = require('./package.json');
 const plugins = gulpLoadPlugins({});
@@ -33,23 +34,23 @@ const config = {
   sourceMap: argv.sourcemap
 };
 
-gulp.task('clean-defs', function() {
+gulp.task('clean-defs', function () {
   return del(config.dist + '*.d.ts');
 });
 
-gulp.task('example-tsc', ['tsc'], function() {
-  var tsResult = gulp.src(config.testTs)
+gulp.task('example-tsc', ['tsc'], function () {
+  const tsResult = gulp.src(config.testTs)
     .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.init()))
     .pipe(config.testTsProject());
 
-    return tsResult.js
-        .pipe(plugins.ngAnnotate())
-        .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.write()))
-        .pipe(plugins.concat('test-compiled.js'))
-        .pipe(gulp.dest('.'));
+  return tsResult.js
+    .pipe(plugins.ngAnnotate())
+    .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.write()))
+    .pipe(plugins.concat('test-compiled.js'))
+    .pipe(gulp.dest('.'));
 });
 
-gulp.task('example-template', ['example-tsc'], function() {
+gulp.task('example-template', ['example-tsc'], function () {
   return gulp.src(config.testTemplates)
     .pipe(plugins.angularTemplatecache({
       filename: 'test-templates.js',
@@ -61,18 +62,18 @@ gulp.task('example-template', ['example-tsc'], function() {
     .pipe(gulp.dest('.'));
 });
 
-gulp.task('example-concat', ['example-template'], function() {
+gulp.task('example-concat', ['example-template'], function () {
   return gulp.src(['test-compiled.js', 'test-templates.js'])
     .pipe(plugins.concat(config.testJs))
     .pipe(gulp.dest(config.dist));
 });
 
-gulp.task('example-clean', ['example-concat', 'clean'], function() {
+gulp.task('example-clean', ['example-concat', 'clean'], function () {
   return del(['test-templates.js', 'test-compiled.js']);
 });
 
-gulp.task('tsc', ['clean-defs'], function() {
-  var tsResult = gulp.src(config.ts)
+gulp.task('tsc', ['clean-defs'], function () {
+  const tsResult = gulp.src(config.ts)
     .pipe(plugins.if(config.sourceMap, plugins.sourcemaps.init()))
     .pipe(config.tsProject());
 
@@ -86,7 +87,7 @@ gulp.task('tsc', ['clean-defs'], function() {
       .pipe(gulp.dest(config.dist)));
 });
 
-gulp.task('template', ['tsc'], function() {
+gulp.task('template', ['tsc'], function () {
   return gulp.src(config.templates)
     .pipe(plugins.angularTemplatecache({
       filename: 'templates.js',
@@ -98,32 +99,32 @@ gulp.task('template', ['tsc'], function() {
     .pipe(gulp.dest('.'));
 });
 
-gulp.task('vendor-defs', ['clean-defs'], function() {
+gulp.task('vendor-defs', ['clean-defs'], function () {
   return gulp.src('vendor/**/*.d.ts')
     .pipe(gulp.dest(config.dist));
-})
+});
 
-gulp.task('concat', ['template'], function() {
+gulp.task('concat', ['template'], function () {
   return gulp.src(['compiled.js', 'templates.js'])
     .pipe(plugins.concat(config.js))
     .pipe(gulp.dest(config.dist));
 });
 
-gulp.task('clean', ['concat'], function() {
+gulp.task('clean', ['concat'], function () {
   return del(['templates.js', 'compiled.js']);
 });
 
-gulp.task('watch', ['build', 'build-example'], function() {
+gulp.task('watch', ['build', 'build-example'], function () {
   gulp.watch(['index.html', config.dist + '/*'], ['reload']);
   gulp.watch([config.ts, config.templates], ['tsc', 'template', 'concat', 'clean']);
   gulp.watch([config.testTs, config.testTemplates], ['example-tsc', 'example-template', 'example-concat', 'example-clean']);
 });
 
 
-gulp.task('connect', ['watch'], function() {
+gulp.task('connect', ['watch'], function () {
   /*
    * Example of fetching a URL from the environment, in this case for kubernetes
-  var kube = uri(process.env.KUBERNETES_MASTER || 'http://localhost:8080');
+  const kube = uri(process.env.KUBERNETES_MASTER || 'http://localhost:8080');
   console.log("Connecting to Kubernetes on: " + kube);
   */
 
@@ -132,24 +133,24 @@ gulp.task('connect', ['watch'], function() {
     port: config.proxyPort,
     proxy: '/hawtio/proxy',
     staticProxies: [
-    /*
-    // proxy to a service, in this case kubernetes
-    {
-      proto: kube.protocol(),
-      port: kube.port(),
-      hostname: kube.hostname(),
-      path: '/services/kubernetes',
-      targetPath: kube.path()
-    },
-    // proxy to a jolokia instance
-    {
-      proto: kube.protocol(),
-      hostname: kube.hostname(),
-      port: kube.port(),
-      path: '/jolokia',
-      targetPath: '/hawtio/jolokia'
-    }
-    */
+      /*
+      // proxy to a service, in this case kubernetes
+      {
+        proto: kube.protocol(),
+        port: kube.port(),
+        hostname: kube.hostname(),
+        path: '/services/kubernetes',
+        targetPath: kube.path()
+      },
+      // proxy to a jolokia instance
+      {
+        proto: kube.protocol(),
+        hostname: kube.hostname(),
+        port: kube.port(),
+        path: '/jolokia',
+        targetPath: '/hawtio/jolokia'
+      }
+      */
     ],
     staticAssets: [{
       path: '/hawtio/',
@@ -162,10 +163,10 @@ gulp.task('connect', ['watch'], function() {
     }
   });
 
-  hawtio.use('/', function(req, res, next) {
+  hawtio.use('/', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    var path = req.originalUrl;
+    const path = req.originalUrl;
     if (path === '/') {
       res.redirect('/hawtio');
     } else if (s.startsWith(path, '/plugins/') && s.endsWith(path, 'html')) {
@@ -179,13 +180,12 @@ gulp.task('connect', ['watch'], function() {
     }
   });
 
-  hawtio.use('/hawtio/oauth/config.js', function(req, res, next) {
-    var kubeBase = process.env.KUBERNETES_MASTER || 'http://localhost:9000';
-    var config = {
-      openshift: {
-        oauth_authorize_uri: kubeBase + '/oauth/authorize',
-        oauth_client_id: 'fabric8'
-      },
+  hawtio.use('/hawtio/oauth/config.js', function (req, res, next) {
+    const kubeBase = process.env.KUBERNETES_MASTER || 'http://localhost:9000';
+    const useAuthentication = process.env.DISABLE_OAUTH !== "true";
+    const formUri = process.env.FORM_URI;
+    const config = {
+      master_uri: kubeBase,
       google: {
         clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
         clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET
@@ -197,23 +197,31 @@ gulp.task('connect', ['watch'], function() {
       }
     };
     // TODO for now 'disable oauth' means turn off the openshift oauth flow
-    if (process.env.DISABLE_OAUTH === "true") {
-      delete config.openshift;
+    if (useAuthentication) {
+      config.openshift = {
+        oauth_authorize_uri: kubeBase + '/oauth/authorize',
+        oauth_client_id: 'fabric8'
+      };
     }
-    var answer = "window.OPENSHIFT_CONFIG = window.HAWTIO_OAUTH_CONFIG = " + stringifyObject(config);
+    if (formUri) {
+      config.form = {
+        uri: formUri,
+      };
+    }
+    const answer = "window.OPENSHIFT_CONFIG = window.HAWTIO_OAUTH_CONFIG = " + stringifyObject(config);
     res.set('Content-Type', 'application/javascript');
     res.send(answer);
 
   });
 
-  hawtio.listen(function(server) {
-    var host = server.address().address;
-    var port = server.address().port;
+  hawtio.listen(function (server) {
+    const host = server.address().address;
+    const port = server.address().port;
     console.log("started from gulp file at ", host, ":", port);
   });
 });
 
-gulp.task('reload', function() {
+gulp.task('reload', function () {
   gulp.src('.')
     .pipe(hawtio.reload());
 });
