@@ -50,8 +50,10 @@ namespace FormAuthLogin {
             return;
           }
 
+          const apiEndpoint = UrlHelpers.join(masterUri, 'api');
+          log.debug('Try validating token with API endpoint:', apiEndpoint);
           this.$http
-            .get(masterUri, {
+            .get(apiEndpoint, {
               headers: {
                 'Authorization': `Bearer ${this.token}`
               }
