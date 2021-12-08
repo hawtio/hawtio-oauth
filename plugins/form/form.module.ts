@@ -24,8 +24,7 @@ namespace FormAuth {
   }
 
   function loginUser(authService: Core.AuthService, postLogoutTasks: Core.Tasks,
-    $window: ng.IWindowService, HawtioExtension: Core.HawtioExtension,
-    $compile: ng.ICompileService, $rootScope: ng.IRootScopeService): void {
+    $window: ng.IWindowService, $rootScope: ng.IRootScopeService): void {
     'ngInject';
 
     if (!userProfile) {
@@ -36,7 +35,6 @@ namespace FormAuth {
     // Apply login status to the frontend
     authService.login('token', null, userProfile.token);
     registerPostLogoutTasks(postLogoutTasks, $window, oauthConfig.form.uri);
-    addLogoutLink(authService, HawtioExtension, $compile);
     Core.$apply($rootScope);
   }
 
@@ -47,16 +45,6 @@ namespace FormAuth {
       clearTokenStorage();
       log.debug("Log out, redirecting to:", formUri);
       $window.location.href = formUri;
-    });
-  }
-
-  function addLogoutLink(authService: Core.AuthService, HawtioExtension: Core.HawtioExtension,
-    $compile: ng.ICompileService): void {
-    HawtioExtension.add('hawtio-logout', ($scope: any) => {
-      log.debug("Adding Logout item to menu");
-      $scope.authService = authService;
-      let template = '<li><a class="pf-c-dropdown__menu-item" href="#" ng-focus="authService.logout()">Logout ({{authService.username}})</a></li>';
-      return $compile(template)($scope);
     });
   }
 
