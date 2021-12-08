@@ -85,7 +85,7 @@ namespace FormAuth {
       clearTokenStorage();
       doLogin(formConfig, {
         uri: currentUri.toString()
-      });
+      }, next);
       return;
     }
 
