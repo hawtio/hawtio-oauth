@@ -42,7 +42,6 @@
     "stringify-object": "^2.4.0",
     "typescript": "^3.0.0",
     "underscore.string": "^3.0.0",
-    "urijs": "^1.17.0",
     "which": "^1.0.8",
     "yargs": "^8.0.0"
   },

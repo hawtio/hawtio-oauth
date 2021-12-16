@@ -1,4 +1,5 @@
 /// <reference path="form.helpers.ts"/>
+/// <reference path="jwt-decode.ts"/>
 /// <reference path="login/login.module.ts"/>
 /// <reference path="../oauth.helper.ts"/>
 
@@ -33,9 +34,15 @@ namespace FormAuth {
     }
 
     // Apply login status to the frontend
-    authService.login('token', null, userProfile.token);
+    const subject = getSubjectFromToken(userProfile.token);
+    authService.login(subject, null, userProfile.token);
     registerPostLogoutTasks(postLogoutTasks, $window, oauthConfig.form.uri);
     Core.$apply($rootScope);
+  }
+
+  function getSubjectFromToken(token: string): string {
+    const payload = jwtDecode(token);
+    return Core.trimLeading(payload.sub, 'system:serviceaccount:');
   }
 
   function registerPostLogoutTasks(postLogoutTasks: Core.Tasks, $window: ng.IWindowService, formUri: string): void {
