@@ -213,6 +213,8 @@
     "os-locale": "2.1.0",
     "which-module": "2.0.0",
     "yargs-parser": "7.0.0",
-    "patternfly-bootstrap-treeview": "2.1.10"
+    "patternfly-bootstrap-treeview": "2.1.10",
+    "has-symbols": "1.0.3",
+    "destroy": "1.2.0"
   }
 }
