@@ -104,7 +104,7 @@ namespace OSOAuth {
           if (obtainedAt) {
             const remainingTime = obtainedAt + expiry - currentTimeSeconds();
             if (remainingTime > 0) {
-              keepaliveInterval = Math.min(Math.round(remainingTime / 4), 60);
+              keepaliveInterval = Math.min(Math.round(remainingTime / 4), 24 * 60 * 60);
             }
           }
           if (!keepaliveInterval) {
