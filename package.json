@@ -161,7 +161,7 @@
     "lodash.templatesettings": "4.1.0",
     "through2": "2.0.3",
     "@types/marked": "0.3.0",
-    "urijs": "1.19.0",
+    "urijs": "1.19.9",
     "@types/jasmine": "2.8.5",
     "@types/lodash": "4.14.93",
     "patternfly": "3.32.1",
