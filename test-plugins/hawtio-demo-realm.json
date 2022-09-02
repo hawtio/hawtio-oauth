@@ -22,7 +22,10 @@
       ],
       "webOrigins" : [ "+" ],
       "bearerOnly" : false,
-      "publicClient" : true
+      "publicClient" : true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
     }
   ],
   "users" : [ {

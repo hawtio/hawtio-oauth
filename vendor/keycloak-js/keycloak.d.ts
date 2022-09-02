@@ -94,6 +94,13 @@ declare namespace Keycloak {
 		 * @default standard
 		 */
 		flow?: KeycloakFlow;
+
+		/**
+		 * The method for Proof Key Code Exchange (PKCE) to use.
+		 * Configuring this value enables the PKCE mechanism. Available options:
+		 * - "S256" - The SHA256 based PKCE method
+		 */
+		pkceMethod?: string; 
 	}
 
 	interface KeycloakLoginOptions {

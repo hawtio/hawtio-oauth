@@ -110,7 +110,12 @@ namespace HawtioKeycloak {
 
   function initKeycloak(callback: () => void): void {
     keycloak = Keycloak(config);
-    keycloak.init({ onLoad: 'login-required' })
+    let initOptions : Keycloak.KeycloakInitOptions = { onLoad: 'login-required' };
+    if(config.pkceMethod) {
+      log.debug("Using pkceMethod: ", config.pkceMethod);
+      initOptions.pkceMethod = config.pkceMethod; 
+    }
+    keycloak.init(initOptions)
       .success((authenticated) => {
         log.debug("Authenticated:", authenticated);
         if (!authenticated) {

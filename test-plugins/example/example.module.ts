@@ -68,7 +68,8 @@ namespace Example {
       HawtioKeycloak.config = {
         clientId: 'hawtio-client',
         url: 'http://localhost:8080/auth',
-        realm: 'hawtio-demo'
+        realm: 'hawtio-demo',
+        pkceMethod: 'S256'
       };
       next();
     }
