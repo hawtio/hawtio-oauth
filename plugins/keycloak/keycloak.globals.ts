@@ -13,6 +13,13 @@ namespace HawtioKeycloak {
      * Default: true
      */
     jaas?: boolean;
+
+    /**
+     * The method for Proof Key Code Exchange (PKCE) to use.
+     * Configuring this value enables the PKCE mechanism. Available options:
+     * - "S256" - The SHA256 based PKCE method
+     */
+    pkceMethod?: string; 
   };
 
   export const pluginName: string = 'hawtio-oauth-keycloak';
