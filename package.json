@@ -11,7 +11,8 @@
     "build": "gulp build",
     "build-example": "gulp build-example",
     "prepack": "gulp --series build version",
-    "test": "gulp build"
+    "test": "gulp build",
+    "preversion": "gulp build"
   },
   "dependencies": {
     "@hawtio/core": "^4.16.4",
