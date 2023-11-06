@@ -219,6 +219,7 @@
     "map-stream": "0.1.0",
     "split": "1.0.1",
     "stream-combiner": "0.2.2",
-    "content-type": "1.0.5"
+    "content-type": "1.0.5",
+    "function-bind": "1.1.2"
   }
 }
